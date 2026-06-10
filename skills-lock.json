@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "candid-chrome-qa": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-chrome-qa/SKILL.md",
+      "computedHash": "a3b115e1e8516cb3e3fd1d553cf5da06dc90fd974792e62d984391f541ee1bf7"
+    },
+    "candid-chrome-qa-fix": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-chrome-qa-fix/SKILL.md",
+      "computedHash": "2ef9a7792d2dd3aa57a5e2d4190c6587a787849d247d649f89d40df7a204a8d3"
+    },
+    "candid-improve-implementation": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-improve-implementation/SKILL.md",
+      "computedHash": "902317fa9215b789a4ef26e41b7dbb476b9914bafcecb497a7c4d901709e3e87"
+    },
+    "candid-init": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-init/SKILL.md",
+      "computedHash": "1c617af5512d3603f8ea13c08b0faf654b75253f8e00a9362655c77d713f7ec4"
+    },
+    "candid-optimize": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-optimize/SKILL.md",
+      "computedHash": "1935a965df8bf998e698f84e89aa148519491003dcaea2e372f668f1dd2540ac"
+    },
+    "candid-review": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-review/SKILL.md",
+      "computedHash": "f61adc7df2174d7acedb081c639df312355c6908294d7c0b6597c57e3df25f68"
+    },
+    "candid-validate-standards": {
+      "source": "ron-myers/candid",
+      "sourceType": "github",
+      "skillPath": "skills/candid-validate-standards/SKILL.md",
+      "computedHash": "d5ac059fe4481921a9a111a7dace6309e33cff537568ec78d4f9717e9b01e813"
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+	"id": "standard",
+	"name": "Standard (Wikipedia baseline)",
+	"description": "The baseline Forty-Fives rules as documented at https://en.wikipedia.org/wiki/Forty-fives. Regional variants (PEI, Northern NB, Cape Breton) will be added as separate files once validated with real players — see SPEC §6.",
+	"useJoker": false,
+	"jokerTrumpPosition": null,
+	"aceOfHeartsAlwaysTrump": true,
+	"trumpRankings": {
+		"hearts": ["5H", "JH", "AH", "KH", "QH", "10H", "9H", "8H", "7H", "6H", "4H", "3H", "2H"],
+		"diamonds": [
+			"5D",
+			"JD",
+			"AH",
+			"AD",
+			"KD",
+			"QD",
+			"10D",
+			"9D",
+			"8D",
+			"7D",
+			"6D",
+			"4D",
+			"3D",
+			"2D"
+		],
+		"clubs": [
+			"5C",
+			"JC",
+			"AH",
+			"AC",
+			"KC",
+			"QC",
+			"2C",
+			"3C",
+			"4C",
+			"6C",
+			"7C",
+			"8C",
+			"9C",
+			"10C"
+		],
+		"spades": [
+			"5S",
+			"JS",
+			"AH",
+			"AS",
+			"KS",
+			"QS",
+			"2S",
+			"3S",
+			"4S",
+			"6S",
+			"7S",
+			"8S",
+			"9S",
+			"10S"
+		]
+	},
+	"plainRankings": {
+		"hearts": ["KH", "QH", "JH", "10H", "9H", "8H", "7H", "6H", "5H", "4H", "3H", "2H"],
+		"diamonds": [
+			"KD",
+			"QD",
+			"JD",
+			"10D",
+			"9D",
+			"8D",
+			"7D",
+			"6D",
+			"5D",
+			"4D",
+			"3D",
+			"2D",
+			"AD"
+		],
+		"clubs": ["KC", "QC", "JC", "AC", "2C", "3C", "4C", "5C", "6C", "7C", "8C", "9C", "10C"],
+		"spades": ["KS", "QS", "JS", "AS", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S"]
+	},
+	"reneging": {
+		"renegableTrumpRanks": ["5", "J", "AH"],
+		"description": "The 5 and J of trumps and the A♥ may be withheld (reneged) when a lower trump is led; the holder is not forced to follow suit with them. They cannot renege when an equal or higher renegable trump is led. Enforced from Milestone 1 onward."
+	},
+	"scoring": {
+		"gameTarget": 45,
+		"trickValue": 5,
+		"highestTrumpBonus": 5
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"name": "Forty-Fives Ranking Trainer",
+	"short_name": "45s Trainer",
+	"description": "Learn the unusual card rankings of Forty-Fives, the Maritime Canadian trick-taking game.",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#14492e",
+	"theme_color": "#14492e",
+	"icons": [
+		{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+	]
+}
