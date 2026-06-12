@@ -89,6 +89,7 @@ A teaching tool, not a game.
 
 ### Milestone 1 — Forty-Fives, 1v1 vs AI
 
+- Building on milestone 0, user can choose Ranking Trainer or to play Forty-Fives (this milestone).
 - Full single-hand play (5 tricks).
 - Rule-based AI opponent.
 - Score tracking to 45.

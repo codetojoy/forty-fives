@@ -12,12 +12,12 @@
  *     so the trainer keeps working with no connection.
  */
 
-import { build, files, version } from '$service-worker';
+import { build, files, prerendered, version } from '$service-worker';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
 const CACHE = `forty-fives-${version}`;
-const ASSETS = [...build, ...files, '/'];
+const ASSETS = [...build, ...files, ...new Set([...prerendered, '/'])];
 
 sw.addEventListener('install', (event) => {
 	event.waitUntil(

@@ -6,6 +6,7 @@
 
 import { browser } from '$app/environment';
 import type { Suit } from '$lib/domain/cards.js';
+import { isPlausibleGameState, type GameState } from '$lib/domain/game-state.js';
 
 export type TrumpChoice = Suit | 'random';
 
@@ -57,5 +58,62 @@ export function saveState(state: SavedState): void {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	} catch {
 		// Storage may be unavailable (private browsing); the trainer still works.
+	}
+}
+
+// --- Game persistence (Milestone 1) ------------------------------------------
+
+export interface GameSettings {
+	/** Highlight which cards are legal to play (SPEC §7, toggleable). */
+	highlightLegal: boolean;
+	/** Tap once to raise, tap again to play (SPEC §7, default on). */
+	confirmPlay: boolean;
+}
+
+export interface SavedGame {
+	game: GameState | null;
+	settings: GameSettings;
+	opponentName: string;
+}
+
+const GAME_KEY = 'forty-fives.game.v1';
+
+function gameDefaults(): SavedGame {
+	return {
+		game: null,
+		settings: { highlightLegal: true, confirmPlay: true },
+		opponentName: 'Margaret'
+	};
+}
+
+export function loadGame(): SavedGame {
+	if (!browser) return gameDefaults();
+	try {
+		const raw = localStorage.getItem(GAME_KEY);
+		if (!raw) return gameDefaults();
+		const parsed = JSON.parse(raw) as SavedGame;
+		const d = gameDefaults();
+		return {
+			game: isPlausibleGameState(parsed.game) ? parsed.game : null,
+			settings: {
+				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
+				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
+			},
+			opponentName:
+				typeof parsed.opponentName === 'string' && parsed.opponentName
+					? parsed.opponentName
+					: d.opponentName
+		};
+	} catch {
+		return gameDefaults();
+	}
+}
+
+export function saveGame(saved: SavedGame): void {
+	if (!browser) return;
+	try {
+		localStorage.setItem(GAME_KEY, JSON.stringify(saved));
+	} catch {
+		// Storage may be unavailable; the game still works, it just won't resume.
 	}
 }

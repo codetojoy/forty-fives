@@ -2,51 +2,106 @@
 	import { SUIT_NAMES, SUIT_SYMBOLS, isRedSuit, type Card } from '$lib/domain/cards.js';
 
 	interface Props {
-		card: Card;
+		/** Omitted only for face-down cards. */
+		card?: Card;
+		/** Render the card back instead of the face. */
+		facedown?: boolean;
 		/** Caption above the card, e.g. "Led first". */
 		caption?: string;
 		onpick?: () => void;
 		disabled?: boolean;
-		/** Outcome highlight once the question is answered. */
+		/** Raised + ringed, for the confirm-before-playing first tap. */
+		selected?: boolean;
+		/** Faded, for cards that are not legal to play right now. */
+		dimmed?: boolean;
+		/** Outcome highlight once the trick/question is resolved. */
 		highlight?: 'winner' | 'wrong-pick' | null;
 	}
 
-	let { card, caption, onpick, disabled = false, highlight = null }: Props = $props();
+	let {
+		card,
+		facedown = false,
+		caption,
+		onpick,
+		disabled = false,
+		selected = false,
+		dimmed = false,
+		highlight = null
+	}: Props = $props();
+
+	const uid = $props.id();
 
 	const RANK_NAMES: Record<string, string> = { A: 'Ace', J: 'Jack', Q: 'Queen', K: 'King' };
 
-	const cardName = $derived(`${RANK_NAMES[card.rank] ?? card.rank} of ${SUIT_NAMES[card.suit]}`);
-	const color = $derived(isRedSuit(card.suit) ? '#c0262d' : '#1a1a1a');
-	const symbol = $derived(SUIT_SYMBOLS[card.suit]);
+	const cardName = $derived(
+		facedown || !card
+			? 'Face-down card'
+			: `${RANK_NAMES[card.rank] ?? card.rank} of ${SUIT_NAMES[card.suit]}`
+	);
+	const ariaLabel = $derived(caption ? `${caption}: ${cardName}` : cardName);
+	const color = $derived(card && isRedSuit(card.suit) ? '#c0262d' : '#1a1a1a');
 </script>
+
+{#snippet face()}
+	<svg viewBox="0 0 200 280" role="img" aria-hidden="true">
+		{#if facedown || !card}
+			<rect x="3" y="3" width="194" height="274" rx="14" fill="#fffdf6" stroke="#222" stroke-width="3" />
+			<defs>
+				<pattern id="back-{uid}" width="16" height="16" patternUnits="userSpaceOnUse">
+					<rect width="16" height="16" fill="#7a2026" />
+					<path d="M0 8 H16 M8 0 V16" stroke="#94363c" stroke-width="2" />
+				</pattern>
+			</defs>
+			<rect x="14" y="14" width="172" height="252" rx="8" fill="url(#back-{uid})" />
+			<circle cx="100" cy="140" r="42" fill="#7a2026" stroke="#f3efe4" stroke-width="3" />
+			<text x="100" y="156" font-size="44" font-weight="700" fill="#f3efe4" text-anchor="middle">45</text>
+		{:else}
+			<rect x="3" y="3" width="194" height="274" rx="14" fill="#fffdf6" stroke="#222" stroke-width="3" />
+			<g fill={color} text-anchor="middle">
+				<text x="30" y="48" font-size="36" font-weight="700">{card.rank}</text>
+				<text x="30" y="86" font-size="34">{SUIT_SYMBOLS[card.suit]}</text>
+				<g transform="rotate(180 100 140)">
+					<text x="30" y="48" font-size="36" font-weight="700">{card.rank}</text>
+					<text x="30" y="86" font-size="34">{SUIT_SYMBOLS[card.suit]}</text>
+				</g>
+				<text x="100" y="138" font-size="76" font-weight="700">{card.rank}</text>
+				<text x="100" y="232" font-size="86">{SUIT_SYMBOLS[card.suit]}</text>
+			</g>
+		{/if}
+	</svg>
+{/snippet}
 
 <div class="slot">
 	{#if caption}
 		<span class="caption">{caption}</span>
 	{/if}
-	<button
-		type="button"
-		class="card"
-		class:winner={highlight === 'winner'}
-		class:wrong-pick={highlight === 'wrong-pick'}
-		onclick={onpick}
-		{disabled}
-		aria-label={caption ? `${caption}: ${cardName}` : cardName}
-	>
-		<svg viewBox="0 0 200 280" role="img" aria-hidden="true">
-			<rect x="3" y="3" width="194" height="274" rx="14" fill="#fffdf6" stroke="#222" stroke-width="3" />
-			<g fill={color} text-anchor="middle">
-				<text x="30" y="48" font-size="36" font-weight="700">{card.rank}</text>
-				<text x="30" y="86" font-size="34">{symbol}</text>
-				<g transform="rotate(180 100 140)">
-					<text x="30" y="48" font-size="36" font-weight="700">{card.rank}</text>
-					<text x="30" y="86" font-size="34">{symbol}</text>
-				</g>
-				<text x="100" y="138" font-size="76" font-weight="700">{card.rank}</text>
-				<text x="100" y="232" font-size="86">{symbol}</text>
-			</g>
-		</svg>
-	</button>
+	{#if onpick}
+		<button
+			type="button"
+			class="card"
+			class:winner={highlight === 'winner'}
+			class:wrong-pick={highlight === 'wrong-pick'}
+			class:selected
+			class:dimmed
+			onclick={onpick}
+			{disabled}
+			aria-label={ariaLabel}
+			aria-pressed={selected}
+		>
+			{@render face()}
+		</button>
+	{:else}
+		<div
+			class="card static"
+			class:winner={highlight === 'winner'}
+			class:wrong-pick={highlight === 'wrong-pick'}
+			class:dimmed
+			role="img"
+			aria-label={ariaLabel}
+		>
+			{@render face()}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -65,26 +120,29 @@
 
 	.card {
 		display: block;
-		width: clamp(130px, 38vw, 190px);
+		width: var(--card-width, clamp(130px, 38vw, 190px));
 		padding: 0;
 		background: none;
 		border: none;
 		border-radius: 14px;
-		cursor: pointer;
 		transition: transform 120ms ease;
 	}
 
-	.card:not(:disabled):hover,
-	.card:not(:disabled):focus-visible {
+	button.card {
+		cursor: pointer;
+	}
+
+	button.card:not(:disabled):hover,
+	button.card:not(:disabled):focus-visible {
 		transform: translateY(-6px);
 	}
 
-	.card:focus-visible {
+	button.card:focus-visible {
 		outline: 5px solid #ffd54a;
 		outline-offset: 3px;
 	}
 
-	.card:disabled {
+	button.card:disabled {
 		cursor: default;
 	}
 
@@ -103,12 +161,27 @@
 		box-shadow: 0 0 0 6px #d2453a;
 	}
 
+	.card.selected {
+		transform: translateY(-10px);
+		box-shadow: 0 0 0 5px #ffd54a;
+	}
+
+	button.card.selected:not(:disabled):hover,
+	button.card.selected:not(:disabled):focus-visible {
+		transform: translateY(-10px);
+	}
+
+	.card.dimmed {
+		opacity: 0.45;
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.card {
 			transition: none;
 		}
-		.card:not(:disabled):hover,
-		.card:not(:disabled):focus-visible {
+		button.card:not(:disabled):hover,
+		button.card:not(:disabled):focus-visible,
+		.card.selected {
 			transform: none;
 		}
 	}
