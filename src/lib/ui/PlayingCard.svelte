@@ -48,13 +48,13 @@
 			<rect x="3" y="3" width="194" height="274" rx="14" fill="#fffdf6" stroke="#222" stroke-width="3" />
 			<defs>
 				<pattern id="back-{uid}" width="16" height="16" patternUnits="userSpaceOnUse">
-					<rect width="16" height="16" fill="#7a2026" />
-					<path d="M0 8 H16 M8 0 V16" stroke="#94363c" stroke-width="2" />
+					<rect width="16" height="16" fill="#9c4632" />
+					<path d="M0 8 H16 M8 0 V16" stroke="#b0503a" stroke-width="2" />
 				</pattern>
 			</defs>
 			<rect x="14" y="14" width="172" height="252" rx="8" fill="url(#back-{uid})" />
-			<circle cx="100" cy="140" r="42" fill="#7a2026" stroke="#f3efe4" stroke-width="3" />
-			<text x="100" y="156" font-size="44" font-weight="700" fill="#f3efe4" text-anchor="middle">45</text>
+			<circle cx="100" cy="140" r="42" fill="#9c4632" stroke="#f7f2e7" stroke-width="3" />
+			<text x="100" y="156" font-size="44" font-weight="700" fill="#f7f2e7" text-anchor="middle">45</text>
 		{:else}
 			<rect x="3" y="3" width="194" height="274" rx="14" fill="#fffdf6" stroke="#222" stroke-width="3" />
 			<g fill={color} text-anchor="middle">
@@ -114,8 +114,8 @@
 
 	.caption {
 		font-size: 1.1rem;
-		font-weight: 600;
-		color: #f3efe4;
+		font-weight: 700;
+		color: var(--muted);
 	}
 
 	.card {
@@ -138,7 +138,7 @@
 	}
 
 	button.card:focus-visible {
-		outline: 5px solid #ffd54a;
+		outline: 5px solid var(--focus);
 		outline-offset: 3px;
 	}
 
@@ -154,16 +154,16 @@
 	}
 
 	.card.winner {
-		box-shadow: 0 0 0 6px #2e9e54;
+		box-shadow: 0 0 0 6px var(--good);
 	}
 
 	.card.wrong-pick {
-		box-shadow: 0 0 0 6px #d2453a;
+		box-shadow: 0 0 0 6px var(--bad);
 	}
 
 	.card.selected {
 		transform: translateY(-10px);
-		box-shadow: 0 0 0 5px #ffd54a;
+		box-shadow: 0 0 0 5px var(--accent);
 	}
 
 	button.card.selected:not(:disabled):hover,

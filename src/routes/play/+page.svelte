@@ -66,7 +66,7 @@
 	const humanRobbing = $derived(
 		game !== null && game.phase.kind === 'robbing' && game.phase.seat === HUMAN && !lastTrick
 	);
-	const trumpColor = $derived(game && isRedSuit(game.trumpSuit) ? '#ffb3b8' : '#f3efe4');
+	const trumpColor = $derived(game && isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35');
 
 	function seatName(seat: number): string {
 		return seat === HUMAN ? 'You' : opponentName;
@@ -462,19 +462,19 @@
 		align-items: center;
 		min-height: 48px;
 		padding: 0 0.5rem;
-		color: #cfe3d6;
+		color: var(--accent-deep);
 		font-size: 1.05rem;
+		font-weight: 700;
 		text-decoration: none;
 	}
 
 	.home-link:hover,
 	.home-link:focus-visible {
-		color: #ffffff;
 		text-decoration: underline;
 	}
 
 	.home-link:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 		border-radius: 8px;
 	}
@@ -482,11 +482,16 @@
 	header {
 		text-align: center;
 		margin-bottom: 1rem;
+		padding-bottom: 1rem;
+		border-bottom: 2px solid var(--accent);
 	}
 
 	h1 {
+		font-family: var(--serif);
+		font-weight: 600;
 		font-size: 1.8rem;
 		margin: 0;
+		color: var(--accent);
 	}
 
 	h2 {
@@ -496,7 +501,9 @@
 
 	.subtitle {
 		margin: 0.25rem 0 0;
-		color: #cfe3d6;
+		font-family: var(--serif);
+		font-style: italic;
+		color: var(--muted);
 	}
 
 	.visually-hidden {
@@ -516,20 +523,21 @@
 		min-height: 60px;
 		padding: 0.75rem 1.25rem;
 		font-size: 1.2rem;
-		font-weight: 600;
-		border: 2px solid #0d3520;
-		border-radius: 12px;
-		background: #f3efe4;
-		color: #14311f;
+		font-weight: 700;
+		border: 1px solid var(--rule);
+		border-radius: 6px;
+		background: var(--panel);
+		color: var(--ink);
 		cursor: pointer;
+		box-shadow: 0 1px 3px rgba(61, 58, 53, 0.08);
 	}
 
 	.big-button:hover {
-		background: #ffffff;
+		border-color: var(--accent);
 	}
 
 	.big-button:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 	}
 
@@ -541,6 +549,8 @@
 	.game-header {
 		text-align: left;
 		margin-bottom: 0.75rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 2px solid var(--accent);
 	}
 
 	.status-bar {
@@ -559,7 +569,7 @@
 	.target {
 		font-weight: 400;
 		font-size: 0.95rem;
-		color: #cfe3d6;
+		color: var(--muted);
 	}
 
 	.trump-badge {
@@ -569,13 +579,13 @@
 
 	.hand-info {
 		font-size: 0.98rem;
-		color: #cfe3d6;
+		font-style: italic;
+		color: var(--muted);
 		margin-top: 0.2rem;
 	}
 
 	.opponent {
-		border-top: 2px solid rgba(243, 239, 228, 0.25);
-		padding-top: 0.75rem;
+		padding-top: 0.25rem;
 	}
 
 	.opponent-row {
@@ -588,6 +598,7 @@
 		font-size: 1.15rem;
 		font-weight: 700;
 		min-width: 5.5rem;
+		color: var(--accent-deep);
 	}
 
 	.opponent-cards {
@@ -605,15 +616,17 @@
 
 	.turn-up-note {
 		font-size: 0.85rem;
-		color: #cfe3d6;
+		font-style: italic;
+		color: var(--muted);
 	}
 
 	.trick-area {
 		min-height: 12rem;
 		margin: 1rem 0;
 		padding: 1rem;
-		border-radius: 14px;
-		background: rgba(0, 0, 0, 0.18);
+		border-radius: 6px;
+		border: 1px solid var(--rule);
+		background: rgba(61, 58, 53, 0.04);
 		text-align: center;
 	}
 
@@ -625,26 +638,27 @@
 
 	.trick-placeholder {
 		font-size: 1.15rem;
-		color: #f3efe4;
+		color: var(--ink);
 		margin: 0.75rem 0;
 	}
 
 	.feedback {
-		border-radius: 12px;
+		border-radius: 6px;
 		padding: 0.9rem 1.1rem;
 		margin: 1rem 0;
-		background: #f3efe4;
-		color: #1d2b22;
+		background: var(--panel);
+		color: var(--ink);
+		border: 1px solid var(--rule);
 		border-left: 10px solid;
 		text-align: left;
 	}
 
 	.feedback.correct {
-		border-color: #2e9e54;
+		border-left-color: var(--good);
 	}
 
 	.feedback.incorrect {
-		border-color: #d2453a;
+		border-left-color: var(--bad);
 	}
 
 	.verdict {
@@ -665,21 +679,25 @@
 	.message {
 		margin: 0.4rem 0;
 		font-size: 1.05rem;
-		font-weight: 600;
-		color: #ffd54a;
+		font-weight: 700;
+		color: var(--accent-deep);
 	}
 
 	.renege-note {
-		color: #cfe3d6;
+		color: var(--muted);
 		font-weight: 400;
+		font-style: italic;
 	}
 
 	.panel {
-		border-radius: 14px;
-		background: #f3efe4;
-		color: #1d2b22;
+		border-radius: 6px;
+		border: 1px solid var(--rule);
+		border-left: 4px solid var(--accent);
+		background: var(--panel);
+		color: var(--ink);
 		padding: 1rem 1.25rem;
 		margin: 1rem 0;
+		box-shadow: 0 1px 3px rgba(61, 58, 53, 0.08);
 	}
 
 	.panel-buttons {
@@ -701,7 +719,7 @@
 	.bonus-line {
 		list-style: none;
 		margin-left: -1.2rem;
-		color: #4a4031;
+		color: var(--muted);
 	}
 
 	.totals {
@@ -716,7 +734,7 @@
 	}
 
 	.game-result.won {
-		color: #1b6b3a;
+		color: var(--good);
 	}
 
 	.your-hand {
@@ -724,8 +742,14 @@
 	}
 
 	.hand-heading {
-		font-size: 1.1rem;
-		margin-bottom: 0.6rem;
+		font-size: 1rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--accent-deep);
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--rule);
+		margin-bottom: 0.75rem;
 	}
 
 	.hand-cards {
@@ -736,7 +760,8 @@
 
 	.confirm-hint {
 		font-size: 0.95rem;
-		color: #cfe3d6;
+		font-style: italic;
+		color: var(--muted);
 		margin: 0.6rem 0 0;
 	}
 
@@ -747,7 +772,7 @@
 		gap: 1rem;
 		margin-top: 1.75rem;
 		padding-top: 1rem;
-		border-top: 2px solid rgba(243, 239, 228, 0.25);
+		border-top: 1px solid var(--rule);
 	}
 
 	/* 48px tap targets for the toggles too (SPEC §7). */
@@ -763,12 +788,12 @@
 	.toggle input {
 		width: 26px;
 		height: 26px;
-		accent-color: #2e9e54;
+		accent-color: var(--accent);
 		cursor: pointer;
 	}
 
 	.toggle input:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 	}
 
@@ -776,20 +801,21 @@
 		min-height: 48px;
 		padding: 0.5rem 1rem;
 		font-size: 1rem;
-		border: 2px solid #cfe3d6;
-		border-radius: 10px;
+		border: 1px solid var(--muted);
+		border-radius: 6px;
 		background: transparent;
-		color: #f3efe4;
+		color: var(--ink);
 		cursor: pointer;
 		margin-left: auto;
 	}
 
 	.small-button:hover {
-		background: rgba(243, 239, 228, 0.12);
+		border-color: var(--accent);
+		color: var(--accent-deep);
 	}
 
 	.small-button:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 	}
 </style>

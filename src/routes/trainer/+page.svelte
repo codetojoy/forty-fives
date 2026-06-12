@@ -26,7 +26,7 @@
 	);
 	const wasCorrect = $derived(question !== null && picked !== null && picked === question.correct);
 	const trumpColor = $derived(
-		question && isRedSuit(question.trumpSuit) ? '#ffb3b8' : '#f3efe4'
+		question && isRedSuit(question.trumpSuit) ? '#c0262d' : '#3d3a35'
 	);
 
 	function persist() {
@@ -201,19 +201,19 @@
 		align-items: center;
 		min-height: 48px;
 		padding: 0 0.5rem;
-		color: #cfe3d6;
+		color: var(--accent-deep);
 		font-size: 1.05rem;
+		font-weight: 700;
 		text-decoration: none;
 	}
 
 	.home-link:hover,
 	.home-link:focus-visible {
-		color: #ffffff;
 		text-decoration: underline;
 	}
 
 	.home-link:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 		border-radius: 8px;
 	}
@@ -221,20 +221,33 @@
 	header {
 		text-align: center;
 		margin-bottom: 1.5rem;
+		padding-bottom: 1rem;
+		border-bottom: 2px solid var(--accent);
 	}
 
 	h1 {
+		font-family: var(--serif);
+		font-weight: 600;
 		font-size: 1.8rem;
 		margin: 0;
+		color: var(--accent);
 	}
 
 	.subtitle {
 		margin: 0.25rem 0 0;
-		color: #cfe3d6;
+		font-family: var(--serif);
+		font-style: italic;
+		color: var(--muted);
 	}
 
 	h2 {
-		font-size: 1.3rem;
+		font-size: 1.05rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--accent-deep);
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--rule);
 	}
 
 	.visually-hidden {
@@ -251,20 +264,21 @@
 		min-height: 60px;
 		padding: 0.75rem 1.25rem;
 		font-size: 1.2rem;
-		font-weight: 600;
-		border: 2px solid #0d3520;
-		border-radius: 12px;
-		background: #f3efe4;
-		color: #14311f;
+		font-weight: 700;
+		border: 1px solid var(--rule);
+		border-radius: 6px;
+		background: var(--panel);
+		color: var(--ink);
 		cursor: pointer;
+		box-shadow: 0 1px 3px rgba(61, 58, 53, 0.08);
 	}
 
 	.big-button:hover {
-		background: #ffffff;
+		border-color: var(--accent);
 	}
 
 	.big-button:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 	}
 
@@ -296,7 +310,8 @@
 
 	.scheme-note {
 		font-size: 0.95rem;
-		color: #cfe3d6;
+		font-style: italic;
+		color: var(--muted);
 	}
 
 	.status-bar {
@@ -315,7 +330,7 @@
 
 	.score {
 		font-size: 1.05rem;
-		color: #cfe3d6;
+		color: var(--muted);
 	}
 
 	.prompt {
@@ -335,20 +350,21 @@
 	}
 
 	.feedback {
-		border-radius: 12px;
+		border-radius: 6px;
 		padding: 1rem 1.25rem;
 		margin-bottom: 1rem;
-		background: #f3efe4;
-		color: #1d2b22;
+		background: var(--panel);
+		color: var(--ink);
+		border: 1px solid var(--rule);
 		border-left: 10px solid;
 	}
 
 	.feedback.correct {
-		border-color: #2e9e54;
+		border-left-color: var(--good);
 	}
 
 	.feedback.incorrect {
-		border-color: #d2453a;
+		border-left-color: var(--bad);
 	}
 
 	.verdict {
@@ -377,19 +393,20 @@
 		min-height: 48px;
 		padding: 0.5rem 1rem;
 		font-size: 1rem;
-		border: 2px solid #cfe3d6;
-		border-radius: 10px;
+		border: 1px solid var(--muted);
+		border-radius: 6px;
 		background: transparent;
-		color: #f3efe4;
+		color: var(--ink);
 		cursor: pointer;
 	}
 
 	.small-button:hover {
-		background: rgba(243, 239, 228, 0.12);
+		border-color: var(--accent);
+		color: var(--accent-deep);
 	}
 
 	.small-button:focus-visible {
-		outline: 4px solid #ffd54a;
+		outline: 4px solid var(--focus);
 		outline-offset: 2px;
 	}
 </style>
