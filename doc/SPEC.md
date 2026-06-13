@@ -100,11 +100,14 @@ A teaching tool, not a game.
 
 ### Milestone 2 — Partners Mode (2v2)
 
-- 4 players, 1 human + 3 AI (2 opponents, 1 teammate).
-- AI shows basic partnership awareness (does not "shoot" its own partner).
+- deprecated: do not implement
 
 ### Milestone 3 — Auction Forty-Fives
 
+- this is a new game, distinct from Forty-Fives
+- new entry point on the main page
+- 4 players, 1 human + 3 AI (2 opponents, 1 teammate).
+- AI shows basic partnership awareness (does not "shoot" its own partner).
 - Adds bidding (15/20/25/30, optional "30 for 60").
 - AI bid estimation from 5-card hand.
 - Kitty mechanics.
