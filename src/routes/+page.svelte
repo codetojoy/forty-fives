@@ -13,7 +13,7 @@
 <main>
 	<header>
 		<h1>Forty-Fives</h1>
-		<p class="subtitle">The Maritime trick-taking card game — learn it, then play it.</p>
+		<p class="subtitle">For Maritimers!</p>
 	</header>
 
 	<nav class="modes" aria-label="Choose a mode">
@@ -22,27 +22,25 @@
 			<span class="mode-text">
 				<span class="mode-title">Play Forty-Fives</span>
 				<span class="mode-desc">
-					Head-to-head against a friendly opponent. Five tricks a hand, five points a trick,
-					first to 45 wins.
+					Head-to-head against a friendly opponent.
 				</span>
 			</span>
 		</a>
 		<a class="mode" href="{base}/auction">
 			<span class="mode-icon" aria-hidden="true">🃏</span>
 			<span class="mode-text">
-				<span class="mode-title">Auction</span>
+				<span class="mode-title">Play Auction</span>
 				<span class="mode-desc">
-					Auction Forty-Fives for four: you and a partner against two opponents. Bid, name trump,
-					take the kitty, and play to 120.
+					Auction Forty-Fives for four: you and a partner against two opponents.
 				</span>
 			</span>
 		</a>
 		<a class="mode" href="{base}/trainer">
 			<span class="mode-icon" aria-hidden="true">🎓</span>
 			<span class="mode-text">
-				<span class="mode-title">Ranking Trainer</span>
+				<span class="mode-title">Learn Ranking</span>
 				<span class="mode-desc">
-					Learn the famous trump rankings two cards at a time, with an explanation for every
+					Practice the tricky trump rankings, two cards at a time, with an explanation for every
 					answer.
 				</span>
 			</span>
@@ -50,8 +48,7 @@
 	</nav>
 
 	<p class="note">
-		Free and open source. No accounts, no ads, no tracking — and it keeps working offline once
-		you've opened it.
+		Free and open source. No accounts, no ads, no tracking.
 	</p>
 </main>
 
