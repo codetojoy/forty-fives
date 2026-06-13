@@ -22,8 +22,8 @@ an installable, offline-capable PWA with two modes:
   releases like Node 23) and npm.
 - Any modern browser.
 
-> macOS + Homebrew tip: `brew install node@22`, then prefix commands with
-> `PATH="/opt/homebrew/opt/node@22/bin:$PATH"` (or `brew link node@22`).
+> macOS + Homebrew tip: `brew install node` (the unversioned formula tracks the latest
+> release, which satisfies the range above).
 
 ### Development server
 

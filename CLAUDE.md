@@ -8,13 +8,7 @@ A free, open-source app for Forty-Fives, a Maritime Canadian trick-taking card g
 
 ## Node version (required)
 
-The machine's default `node` is v23, which Svelte tooling rejects, and `engine-strict=true` is set globally — do not bypass it with `--force` or by relaxing `.npmrc`. Use the keg-only Homebrew Node 22:
-
-```sh
-export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
-```
-
-Prefix every npm/node command with this.
+Node must satisfy the `engines` range in `package.json` (currently `^20.19 || ^22.12 || >=24`, mirroring `@sveltejs/vite-plugin-svelte` — note it excludes the odd-numbered Node 23). `engine-strict=true` is set, so a non-matching Node fails fast — that is deliberate; do not bypass it with `--force` or by relaxing `.npmrc`, and do not loosen the `engines` range. The machine's default `node` satisfies the range, so run npm/node commands plainly.
 
 ## Commands
 
