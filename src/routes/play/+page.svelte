@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import {
 		cardLabel,
 		sameCard,
@@ -245,7 +246,7 @@
 
 <main>
 	<nav class="top-nav">
-		<a class="home-link" href="/">← Home</a>
+		<a class="home-link" href="{base}/">← Home</a>
 	</nav>
 
 	{#if game === null}

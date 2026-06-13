@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { SUITS, SUIT_NAMES, SUIT_SYMBOLS, cardLabel, isRedSuit } from '$lib/domain/cards.js';
 	import { createRng } from '$lib/domain/rng.js';
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
@@ -86,7 +87,7 @@
 
 <main>
 	<nav class="top-nav">
-		<a class="home-link" href="/">← Home</a>
+		<a class="home-link" href="{base}/">← Home</a>
 	</nav>
 	<header>
 		<h1>Forty-Fives Ranking Trainer</h1>

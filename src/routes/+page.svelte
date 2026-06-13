@@ -1,3 +1,7 @@
+<script lang="ts">
+	import { base } from '$app/paths';
+</script>
+
 <svelte:head>
 	<title>Forty-Fives</title>
 	<meta
@@ -13,7 +17,7 @@
 	</header>
 
 	<nav class="modes" aria-label="Choose a mode">
-		<a class="mode" href="/play">
+		<a class="mode" href="{base}/play">
 			<span class="mode-icon" aria-hidden="true">🂠</span>
 			<span class="mode-text">
 				<span class="mode-title">Play Forty-Fives</span>
@@ -23,7 +27,7 @@
 				</span>
 			</span>
 		</a>
-		<a class="mode" href="/trainer">
+		<a class="mode" href="{base}/trainer">
 			<span class="mode-icon" aria-hidden="true">🎓</span>
 			<span class="mode-text">
 				<span class="mode-title">Ranking Trainer</span>

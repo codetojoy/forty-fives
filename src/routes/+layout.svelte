@@ -12,49 +12,11 @@
 
 <style>
 	/*
-	 * Self-hosted fonts (no network calls at runtime — privacy, SPEC §3).
-	 * Lato & Lora, both SIL OFL; provenance in ASSETS.md.
+	 * The self-hosted @font-face rules live in src/app.html so their URLs can be
+	 * base-path-aware via %sveltekit.assets% (CSS url() in a component <style> is
+	 * not rewritten for the base path). Fonts: Lato & Lora, both SIL OFL,
+	 * no runtime network calls (privacy, SPEC §3); provenance in ASSETS.md.
 	 */
-	@font-face {
-		font-family: 'Lato';
-		font-style: normal;
-		font-weight: 400;
-		font-display: swap;
-		src: url('/fonts/lato-400.woff2') format('woff2');
-	}
-
-	@font-face {
-		font-family: 'Lato';
-		font-style: italic;
-		font-weight: 400;
-		font-display: swap;
-		src: url('/fonts/lato-400-italic.woff2') format('woff2');
-	}
-
-	@font-face {
-		font-family: 'Lato';
-		font-style: normal;
-		font-weight: 700;
-		font-display: swap;
-		src: url('/fonts/lato-700.woff2') format('woff2');
-	}
-
-	@font-face {
-		font-family: 'Lora';
-		font-style: normal;
-		font-weight: 600;
-		font-display: swap;
-		src: url('/fonts/lora-600.woff2') format('woff2');
-	}
-
-	@font-face {
-		font-family: 'Lora';
-		font-style: italic;
-		font-weight: 400;
-		font-display: swap;
-		src: url('/fonts/lora-400-italic.woff2') format('woff2');
-	}
-
 	:global(*, *::before, *::after) {
 		box-sizing: border-box;
 	}
