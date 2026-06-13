@@ -34,3 +34,31 @@ export function deal(rng: Rng, players: number, handSize = 5): Deal {
 	const stock = deck.slice(players * handSize + 1);
 	return { hands, turnUp, stock };
 }
+
+export interface AuctionDeal {
+	/** One 5-card hand per player. */
+	hands: Card[][];
+	/** Three face-down cards the winning bidder takes after naming trump. */
+	kitty: Card[];
+	/** The undealt remainder, face down and out of play. */
+	stock: Card[];
+}
+
+/**
+ * Auction Forty-Fives deal: five cards to each player plus a three-card kitty,
+ * and no turn-up — the winning bidder names trump. Cards are dealt in the
+ * traditional order (three to each player, then the kitty, then two to each),
+ * though a uniform shuffle makes the order cosmetic.
+ */
+export function dealAuction(rng: Rng, players = 4): AuctionDeal {
+	const deck = shuffledDeck(rng);
+	const hands: Card[][] = Array.from({ length: players }, () => []);
+
+	let i = 0;
+	for (let p = 0; p < players; p++) for (let n = 0; n < 3; n++) hands[p].push(deck[i++]);
+	const kitty = deck.slice(i, i + 3);
+	i += 3;
+	for (let p = 0; p < players; p++) for (let n = 0; n < 2; n++) hands[p].push(deck[i++]);
+
+	return { hands, kitty, stock: deck.slice(i) };
+}

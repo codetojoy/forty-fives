@@ -7,6 +7,11 @@
 import { browser } from '$app/environment';
 import type { Suit } from '$lib/domain/cards.js';
 import { isPlausibleGameState, type GameState } from '$lib/domain/game-state.js';
+import {
+	isPlausibleAuctionState,
+	AUCTION_SEATS,
+	type AuctionGameState
+} from '$lib/domain/auction-game-state.js';
 
 export type TrumpChoice = Suit | 'random';
 
@@ -113,6 +118,65 @@ export function saveGame(saved: SavedGame): void {
 	if (!browser) return;
 	try {
 		localStorage.setItem(GAME_KEY, JSON.stringify(saved));
+	} catch {
+		// Storage may be unavailable; the game still works, it just won't resume.
+	}
+}
+
+// --- Auction game persistence (Milestone 3) ----------------------------------
+
+export interface SavedAuctionGame {
+	game: AuctionGameState | null;
+	settings: GameSettings;
+	/** Display names per seat; seat 0 (the human) is always "You". */
+	names: string[];
+}
+
+const AUCTION_KEY = 'forty-fives.auction.v1';
+
+/** Default table names — seat 0 is the human, seats 1/3 opponents, seat 2 partner. */
+function auctionNames(): string[] {
+	return ['You', 'Stewart', 'Margaret', 'Bernadette'];
+}
+
+function auctionDefaults(): SavedAuctionGame {
+	return {
+		game: null,
+		settings: { highlightLegal: true, confirmPlay: true },
+		names: auctionNames()
+	};
+}
+
+export function loadAuctionGame(): SavedAuctionGame {
+	if (!browser) return auctionDefaults();
+	try {
+		const raw = localStorage.getItem(AUCTION_KEY);
+		if (!raw) return auctionDefaults();
+		const parsed = JSON.parse(raw) as SavedAuctionGame;
+		const d = auctionDefaults();
+		const names =
+			Array.isArray(parsed.names) &&
+			parsed.names.length === AUCTION_SEATS &&
+			parsed.names.every((n) => typeof n === 'string' && n)
+				? parsed.names
+				: d.names;
+		return {
+			game: isPlausibleAuctionState(parsed.game) ? parsed.game : null,
+			settings: {
+				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
+				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
+			},
+			names
+		};
+	} catch {
+		return auctionDefaults();
+	}
+}
+
+export function saveAuctionGame(saved: SavedAuctionGame): void {
+	if (!browser) return;
+	try {
+		localStorage.setItem(AUCTION_KEY, JSON.stringify(saved));
 	} catch {
 		// Storage may be unavailable; the game still works, it just won't resume.
 	}

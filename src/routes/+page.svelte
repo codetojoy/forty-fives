@@ -27,6 +27,16 @@
 				</span>
 			</span>
 		</a>
+		<a class="mode" href="{base}/auction">
+			<span class="mode-icon" aria-hidden="true">🃏</span>
+			<span class="mode-text">
+				<span class="mode-title">Auction</span>
+				<span class="mode-desc">
+					Auction Forty-Fives for four: you and a partner against two opponents. Bid, name trump,
+					take the kitty, and play to 120.
+				</span>
+			</span>
+		</a>
 		<a class="mode" href="{base}/trainer">
 			<span class="mode-icon" aria-hidden="true">🎓</span>
 			<span class="mode-text">

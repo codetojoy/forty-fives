@@ -42,6 +42,30 @@ export function trickWinner(
 	return plainStrength(second, scheme)! > plainStrength(led, scheme)! ? 'second' : 'led';
 }
 
+/**
+ * Winner of a trick with any number of plays (e.g. four seats in Auction
+ * Forty-Fives). `plays[0]` is the led card; the index returned is into `plays`.
+ *
+ * Resolved by folding the two-card `trickWinner` across the plays: the running
+ * best is always either a trump or a card of the led suit, so a later off-suit
+ * non-trump card correctly loses to it, and the led-suit semantics of
+ * `trickWinner` continue to hold at each step.
+ */
+export function trickWinnerMulti(
+	plays: readonly Card[],
+	trumpSuit: Suit,
+	scheme: TrumpScheme
+): number {
+	if (plays.length === 0) throw new Error('Cannot resolve an empty trick');
+	let bestIndex = 0;
+	for (let i = 1; i < plays.length; i++) {
+		if (trickWinner(plays[bestIndex], plays[i], trumpSuit, scheme) === 'second') {
+			bestIndex = i;
+		}
+	}
+	return bestIndex;
+}
+
 function ordinal(n: number): string {
 	if (n === 1) return 'highest';
 	if (n === 2) return '2nd-highest';

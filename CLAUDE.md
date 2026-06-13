@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-A free, open-source app for Forty-Fives, a Maritime Canadian trick-taking card game with unusual, region-specific trump rankings. The authoritative project plan is `doc/SPEC.md` — read it before making design decisions; work items arrive as `doc/TODO-*.md` files. Current state: Phase A / Milestones 0 and 1 are implemented — the Ranking Trainer (`/trainer`) plus full 1v1 play vs. a heuristic AI (`/play`): deal, turn-up trump, robbing, renege enforcement, scoring to 45. Milestone 2 (2v2 partners mode) is next.
+A free, open-source app for Forty-Fives, a Maritime Canadian trick-taking card game with unusual, region-specific trump rankings. The authoritative project plan is `doc/SPEC.md` — read it before making design decisions; work items arrive as `doc/TODO-*.md` files. Current state: Phase A / Milestones 0, 1, and 3 are implemented — the Ranking Trainer (`/trainer`), full 1v1 play vs. a heuristic AI (`/play`: deal, turn-up trump, robbing, renege enforcement, scoring to 45), and **Auction Forty-Fives** (`/auction`): a distinct 4-player partnership game (1 human + 3 AI) with bidding (15/20/25/30), a three-card kitty, partnership-aware AI, and make/set scoring to 120. Milestone 2 (2v2 partners) is deprecated per SPEC §5 and was skipped. Milestone 4 (online multiplayer) is deferred indefinitely.
+
+Auction Forty-Fives reuses the shared card/scheme/rules/trick layer; its game-specific logic lives in `auction-game-state.ts`, `auction-scoring.ts`, `bidding.ts`, and `ai/auction-ai.ts`. Three rule calls await real-player validation (recorded in `doc/TODO-008.md`): only the bid winner uses the kitty (others keep their dealt five); the bidding team is *set* (subtracts its bid) when it falls short while defenders always bank their points, and the bidding team counts out first on a same-hand tie at 120; the optional "30 for 60" bid is not implemented. The 120 target is a property of the auction game (`AUCTION_TARGET`), not the scheme — the scheme's `scoring.gameTarget` (45) is the 1v1 target.
 
 ## Node version (required)
 

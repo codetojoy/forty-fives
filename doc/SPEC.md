@@ -105,7 +105,9 @@ A teaching tool, not a game.
 ### Milestone 3 — Auction Forty-Fives
 
 - this is a new game, distinct from Forty-Fives
-- new entry point on the main page
+- see "Auction Forty-Fives" section at [1] (below)
+  - [1] - https://en.wikipedia.org/wiki/Forty-fives
+- new entry point on the main page, called "Auction"
 - 4 players, 1 human + 3 AI (2 opponents, 1 teammate).
 - AI shows basic partnership awareness (does not "shoot" its own partner).
 - Adds bidding (15/20/25/30, optional "30 for 60").
