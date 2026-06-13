@@ -12,13 +12,37 @@ const base = (rawBase && !rawBase.startsWith('/') ? `/${rawBase}` : rawBase) as
 	| ''
 	| `/${string}`;
 
+// Format a Date as dd-MMM-YYYY HH:mm tz in Atlantic Time, e.g. "13-JUN-2026 15:30 ADT".
+function formatAtlanticTimestamp(date: Date): string {
+	const parts = new Intl.DateTimeFormat('en-US', {
+		timeZone: 'America/Halifax',
+		day: '2-digit',
+		month: 'short',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false,
+		timeZoneName: 'short'
+	}).formatToParts(date);
+	const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+	const day = get('day');
+	const month = get('month').toUpperCase();
+	const year = get('year');
+	const hour = get('hour') === '24' ? '00' : get('hour'); // 24h clock can emit '24' at midnight
+	const minute = get('minute');
+	const tz = get('timeZoneName');
+	return `${day}-${month}-${year} ${hour}:${minute} ${tz}`;
+}
+
 // Build-time metadata baked into the prerendered /about page (TODO-006). Captured
 // at config-eval time and injected via `define` (textual replacement), so the values
 // end up as literals in the static HTML — no runtime/network lookup. Bump the version
 // here manually for now. The commit hash is HEAD at build time, so a later
 // "bump version" commit won't be reflected — that's acceptable per the spec.
 const appVersion = '0.0.9';
-const buildTime = new Date().toISOString();
+// Displayed as dd-MMM-YYYY HH:mm tz in Atlantic Time (e.g. 13-JUN-2026 15:30 ADT),
+// per TODO-007. America/Halifax gives the correct ADT/AST abbreviation and offset.
+const buildTime = formatAtlanticTimestamp(new Date());
 let gitCommit = 'unknown';
 try {
 	gitCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();

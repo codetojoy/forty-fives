@@ -1,5 +1,5 @@
 
-### TODO-006
+### TODO-006 [COMPLETE]
 
 Add a new route/page that contains the following:
 

@@ -1,5 +1,5 @@
 
-### TODO-003 
+### TODO-003 [COMPLETE] 
 
 This is a UI theme task. No new milestones or change in functionality.
 

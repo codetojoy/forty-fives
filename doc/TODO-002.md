@@ -1,5 +1,5 @@
 
-### TODO-002 
+### TODO-002 [COMPLETE]
 
 Please read ./doc/SPEC.md and enhance the webapp by implementing Phase A/Milestone 1.
 

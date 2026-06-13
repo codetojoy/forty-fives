@@ -1,5 +1,5 @@
 
-### TODO-005
+### TODO-005 [COMPLETE]
 
 This is a deployment/hosting task. No new milestones or change in game functionality.
 

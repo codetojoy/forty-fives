@@ -1,5 +1,5 @@
 
-### TODO-001 
+### TODO-001 [COMPLETE]
 
 Please read ./doc/SPEC.md and implement Phase A/Milestone 0 as a first pass for this project.
 
