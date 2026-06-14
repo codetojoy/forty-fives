@@ -12,6 +12,11 @@ import {
 	AUCTION_SEATS,
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
+import {
+	defaultAuctionConfig,
+	normalizeAuctionConfig,
+	type AuctionConfig
+} from '$lib/domain/auction-config.js';
 
 export type TrumpChoice = Suit | 'random';
 
@@ -179,5 +184,31 @@ export function saveAuctionGame(saved: SavedAuctionGame): void {
 		localStorage.setItem(AUCTION_KEY, JSON.stringify(saved));
 	} catch {
 		// Storage may be unavailable; the game still works, it just won't resume.
+	}
+}
+
+// --- Auction rules config (TODO-010) -----------------------------------------
+// Separate from the in-game GameSettings above: this is the rules profile
+// (kitty/discard) chosen on /auction/config. Inert for now — see TODO-010.
+
+const AUCTION_CONFIG_KEY = 'forty-fives.auction-config.v1';
+
+export function loadAuctionConfig(): AuctionConfig {
+	if (!browser) return defaultAuctionConfig();
+	try {
+		const raw = localStorage.getItem(AUCTION_CONFIG_KEY);
+		if (!raw) return defaultAuctionConfig();
+		return normalizeAuctionConfig(JSON.parse(raw));
+	} catch {
+		return defaultAuctionConfig();
+	}
+}
+
+export function saveAuctionConfig(config: AuctionConfig): void {
+	if (!browser) return;
+	try {
+		localStorage.setItem(AUCTION_CONFIG_KEY, JSON.stringify(config));
+	} catch {
+		// Storage may be unavailable (private browsing); config just won't persist.
 	}
 }

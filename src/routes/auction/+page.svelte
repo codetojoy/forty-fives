@@ -333,6 +333,9 @@
 				trump — first team to {AUCTION_TARGET} wins.
 			</p>
 			<button type="button" class="big-button start-button" onclick={newGame}>Start a game</button>
+			<p class="config-link-wrap">
+				<a class="config-link" href="{base}/auction/config">Configure rules →</a>
+			</p>
 		</section>
 	{:else}
 		<header class="game-header">
@@ -659,6 +662,32 @@
 	.start-button {
 		width: 100%;
 		margin-top: 1rem;
+	}
+
+	.config-link-wrap {
+		text-align: center;
+		margin: 1rem 0 0;
+	}
+
+	.config-link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 48px;
+		padding: 0 0.5rem;
+		color: var(--accent-deep);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.config-link:hover,
+	.config-link:focus-visible {
+		text-decoration: underline;
+	}
+
+	.config-link:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+		border-radius: 8px;
 	}
 
 	.game-header {

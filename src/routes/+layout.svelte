@@ -1,7 +1,20 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
+	import { base } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
+
+	// Register the service worker ourselves, production-only. SvelteKit's
+	// auto-registration is disabled (serviceWorker.register: false in vite.config.ts)
+	// because it also fires in dev as a module worker that Chrome can't evaluate.
+	// The built worker is a classic script served at `${base}/service-worker.js`.
+	onMount(() => {
+		if (!dev && 'serviceWorker' in navigator) {
+			navigator.serviceWorker.register(`${base}/service-worker.js`);
+		}
+	});
 </script>
 
 <svelte:head>
