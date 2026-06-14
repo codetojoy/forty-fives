@@ -546,7 +546,9 @@
 					</li>
 					<li class="bonus-line">
 						{name(game.biddingSeat!)} bid {game.bid} —
-						{hs.bidMade ? 'made it.' : `set! ${teamOf(game.biddingSeat!) === myTeam ? 'Your team' : 'Opponents'} lose ${game.bid}.`}
+						{hs.bidMade
+							? 'made it.'
+							: `came up short, so ${teamOf(game.biddingSeat!) === myTeam ? 'your team loses' : 'the opponents lose'} ${game.bid}.`}
 					</li>
 				</ul>
 				<p class="totals">
