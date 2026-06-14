@@ -160,3 +160,20 @@ describe('chooseBid', () => {
 		expect(chooseBid(biddingState(strong), scheme, 1).bid).not.toBeNull();
 	});
 });
+
+describe('AI opens often enough (regression: it once almost never bid)', () => {
+	it('a healthy share of deals have at least one seat willing to open', () => {
+		// Guards against the valuation drifting back to where it was so pessimistic
+		// the dealer was almost always stuck at 15 because nobody actively bid.
+		const N = 300;
+		let dealsWithABidder = 0;
+		for (let seed = 0; seed < N; seed++) {
+			const g = startAuction(scheme, createRng(seed));
+			// highBid is null at the open, so chooseBid here is each seat's opening call.
+			if ([0, 1, 2, 3].some((seat) => chooseBid(g, scheme, seat).bid !== null)) {
+				dealsWithABidder++;
+			}
+		}
+		expect(dealsWithABidder / N).toBeGreaterThan(0.4);
+	});
+});

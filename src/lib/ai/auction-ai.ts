@@ -56,8 +56,10 @@ export interface BidEstimate {
 
 /**
  * Estimate expected points if `trumpSuit` were trump. Top trumps are near-sure
- * tricks, lower trumps and length give partial control, and the bidder also
- * expects a small lift from the kitty.
+ * tricks, lower trumps and length give partial control, the bidder expects a
+ * small lift from the kitty, and — crucially for a *partnership* game — credits
+ * the partner with about a trick. Without the partner term the AI valued only
+ * its own five cards and so almost never cleared even a 15 bid (TODO-011 follow-up).
  */
 function powerForSuit(
 	hand: readonly Card[],
@@ -73,18 +75,22 @@ function powerForSuit(
 		const strength = trumpStrength(c, trumpSuit, scheme)!;
 		// Position from the top: 1 = highest trump (the 5).
 		const positionFromTop = total - strength + 1;
-		if (positionFromTop <= 3) expectedTricks += 0.85;
-		else if (positionFromTop <= 5) expectedTricks += 0.55;
-		else expectedTricks += 0.2;
+		if (positionFromTop <= 3) expectedTricks += 0.95; // 5, J, A♥ — near-certain
+		else if (positionFromTop <= 5) expectedTricks += 0.65; // A / K of trump
+		else expectedTricks += 0.4; // low trumps still pull a trick
 	}
 	// A long trump holding gives extra control beyond the individual cards.
-	if (trumps.length >= 4) expectedTricks += 0.5 * (trumps.length - 3);
+	if (trumps.length >= 4) expectedTricks += 0.6 * (trumps.length - 3);
 
 	// Off-suit aces sometimes steal a trick.
 	const offAces = hand.filter(
 		(c) => c.rank === 'A' && !isTrump(c, trumpSuit, scheme) && plainStrength(c, scheme) !== null
 	);
-	expectedTricks += 0.25 * offAces.length;
+	expectedTricks += 0.35 * offAces.length;
+
+	// Partnership allowance: the bidder's partner is expected to contribute about
+	// a trick, so a hand is valued on the pair's strength, not the bidder's alone.
+	expectedTricks += 1.2;
 
 	const expectedPoints = expectedTricks * 5;
 	// Small lift for the three-card kitty the winning bidder will take — only when
@@ -110,11 +116,10 @@ export function estimateBid(
 	return best;
 }
 
-/** The highest bid value this hand can afford (power − cushion), or null to pass. */
+/** The highest bid value this hand can afford, or null to pass. */
 function affordableBid(power: number): BidValue | null {
-	const cushion = 2; // bid a touch under the estimate; being set is costly
 	let result: BidValue | null = null;
-	for (const v of BID_VALUES) if (power >= v + cushion) result = v;
+	for (const v of BID_VALUES) if (power >= v) result = v;
 	return result;
 }
 
