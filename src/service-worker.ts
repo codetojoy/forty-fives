@@ -7,9 +7,12 @@
  * Offline support via SvelteKit's built-in service worker
  * (https://svelte.dev/docs/kit/service-workers). Strategy:
  *   - precache the app shell (built JS/CSS) and everything in static/
- *   - serve precached assets cache-first
- *   - for anything else, try the network and fall back to the cache,
- *     so the trainer keeps working with no connection.
+ *   - serve content-hashed build assets cache-first (their URLs are immutable, so
+ *     this is fast and always correct)
+ *   - serve HTML navigations (and anything else) network-first, falling back to
+ *     the cache when offline. Network-first on HTML means a new deploy shows up
+ *     on the next normal reload — no hard refresh needed — while the app still
+ *     works with no connection.
  */
 
 import { base, build, files, prerendered, version } from '$service-worker';
@@ -46,24 +49,42 @@ sw.addEventListener('activate', (event) => {
 	);
 });
 
+// Content-hashed app assets (a new build gives them new URLs), so a cached copy
+// is never stale — serve those cache-first.
+const immutable = new Set(build);
+
 sw.addEventListener('fetch', (event) => {
 	if (event.request.method !== 'GET') return;
+	const url = new URL(event.request.url);
 
+	// Immutable build assets: cache-first.
+	if (url.origin === location.origin && immutable.has(url.pathname)) {
+		event.respondWith(
+			caches.open(CACHE).then(async (cache) => {
+				const cached = await cache.match(event.request);
+				if (cached) return cached;
+				const response = await fetch(event.request);
+				if (response.ok) cache.put(event.request, response.clone());
+				return response;
+			})
+		);
+		return;
+	}
+
+	// Everything else (HTML navigations, static files): network-first so new
+	// deploys show immediately when online; fall back to the cache when offline.
 	event.respondWith(
 		(async () => {
 			const cache = await caches.open(CACHE);
-
-			const cached = await cache.match(event.request);
-			if (cached) return cached;
-
 			try {
 				const response = await fetch(event.request);
-				if (response.ok && new URL(event.request.url).origin === location.origin) {
+				if (response.ok && url.origin === location.origin) {
 					cache.put(event.request, response.clone());
 				}
 				return response;
 			} catch (err) {
-				// Offline navigation falls back to the cached app shell.
+				const cached = await cache.match(event.request);
+				if (cached) return cached;
 				if (event.request.mode === 'navigate') {
 					const shell = await cache.match(`${base}/`);
 					if (shell) return shell;
