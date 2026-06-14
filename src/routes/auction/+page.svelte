@@ -17,6 +17,7 @@
 		passBid,
 		nameTrump,
 		discardKitty,
+		drawCards,
 		playCard,
 		nextHand,
 		currentSeat,
@@ -33,6 +34,7 @@
 		chooseBid,
 		chooseTrump,
 		chooseKittyDiscards,
+		chooseDraw,
 		chooseCardAuction
 	} from '$lib/ai/auction-ai.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
@@ -68,6 +70,11 @@
 	const humanToDiscard = $derived(
 		game?.phase.kind === 'discarding' && game.biddingSeat === HUMAN_SEAT
 	);
+	const humanToDraw = $derived(
+		game?.phase.kind === 'drawing' && currentSeat(game) === HUMAN_SEAT
+	);
+	/** Cards being chosen: exactly 3 for the kitty discard, 0–5 for the draw. */
+	const maxSelect = $derived(humanToDraw ? 5 : 3);
 	const humanToPlay = $derived(
 		game !== null &&
 			game.phase.kind === 'playing' &&
@@ -173,6 +180,18 @@
 				advance();
 				return;
 			}
+			case 'drawing': {
+				const seat = currentSeat(g)!;
+				if (seat === HUMAN_SEAT) return;
+				const discards = chooseDraw(g, scheme, seat);
+				message =
+					discards.length === 0
+						? `${name(seat)} stood pat.`
+						: `${name(seat)} drew ${discards.length}.`;
+				setGame(drawCards(g, seat, discards));
+				advance();
+				return;
+			}
 			case 'playing': {
 				const seat = currentSeat(g)!;
 				if (seat === HUMAN_SEAT) return;
@@ -225,7 +244,7 @@
 	function toggleDiscard(card: Card) {
 		const i = discardSel.findIndex((c) => sameCard(c, card));
 		if (i >= 0) discardSel = discardSel.filter((_, j) => j !== i);
-		else if (discardSel.length < 3) discardSel = [...discardSel, card];
+		else if (discardSel.length < maxSelect) discardSel = [...discardSel, card];
 	}
 	function confirmDiscard() {
 		if (!game || discardSel.length !== 3) return;
@@ -234,11 +253,18 @@
 		message = '';
 		advance();
 	}
+	function confirmDraw() {
+		if (!game || !humanToDraw) return;
+		setGame(drawCards(game, HUMAN_SEAT, discardSel));
+		discardSel = [];
+		message = '';
+		advance();
+	}
 
 	function tapCard(card: Card) {
 		if (!game) return;
 		quitArmed = false;
-		if (humanToDiscard) {
+		if (humanToDiscard || humanToDraw) {
 			toggleDiscard(card);
 			return;
 		}
@@ -268,7 +294,7 @@
 		return !analysis.legal.some((c) => sameCard(c, card));
 	}
 	function isSelected(card: Card): boolean {
-		if (humanToDiscard) return discardSel.some((c) => sameCard(c, card));
+		if (humanToDiscard || humanToDraw) return discardSel.some((c) => sameCard(c, card));
 		return selected !== null && sameCard(selected, card);
 	}
 
@@ -296,6 +322,10 @@
 				return humanToDiscard
 					? 'Choose three cards to discard.'
 					: `${name(game.biddingSeat!)} is taking the kitty…`;
+			case 'drawing':
+				return humanToDraw
+					? 'Choose cards to exchange (or stand pat).'
+					: `${name(currentSeat(game)!)} is drawing…`;
 			case 'playing':
 				if (currentSeat(game) !== HUMAN_SEAT) return `${name(currentSeat(game)!)} is thinking…`;
 				if (ledCard(game) === null) return 'Your lead — play any card.';
@@ -483,6 +513,21 @@
 			</section>
 		{/if}
 
+		{#if humanToDraw && !lastTrick}
+			<section class="panel" aria-label="Exchange cards">
+				<h2>Exchange cards</h2>
+				<p>
+					Tap up to five cards to exchange with the deck, then draw — or stand pat to keep your
+					hand ({discardSel.length} chosen).
+				</p>
+				<div class="panel-buttons">
+					<button type="button" class="big-button" onclick={confirmDraw}>
+						{discardSel.length === 0 ? 'Stand pat' : `Exchange ${discardSel.length}`}
+					</button>
+				</div>
+			</section>
+		{/if}
+
 		{#if game.phase.kind === 'hand-over' && !lastTrick}
 			{@const hs = game.phase.handScore}
 			{@const myTeam = teamOf(HUMAN_SEAT)}
@@ -522,13 +567,17 @@
 
 		{#if game.hands[HUMAN_SEAT].length > 0}
 			<section class="your-hand" aria-label="Your hand">
-				<h2 class="hand-heading">Your hand{humanToDiscard ? ' — tap three to discard' : ''}</h2>
+				<h2 class="hand-heading">
+					Your hand{humanToDiscard ? ' — tap three to discard' : ''}{humanToDraw
+						? ' — tap to exchange'
+						: ''}
+				</h2>
 				<div class="hand-cards" style="--card-width: clamp(72px, 16vw, 104px)">
 					{#each game.hands[HUMAN_SEAT] as card (cardLabel(card))}
 						<PlayingCard
 							{card}
 							onpick={() => tapCard(card)}
-							disabled={!humanToPlay && !humanToDiscard}
+							disabled={!humanToPlay && !humanToDiscard && !humanToDraw}
 							selected={isSelected(card)}
 							dimmed={isDimmed(card)}
 						/>

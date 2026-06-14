@@ -8,6 +8,7 @@ import {
 	passBid,
 	nameTrump,
 	discardKitty,
+	drawCards,
 	playCard,
 	nextHand,
 	currentSeat,
@@ -15,10 +16,17 @@ import {
 	AUCTION_SEATS,
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
-import { BUILTIN_PROFILES } from '$lib/domain/auction-config.js';
+import type { AuctionSettingValues } from '$lib/domain/auction-config.js';
 
 const scheme = STANDARD_SCHEME;
-const NO_KITTY = BUILTIN_PROFILES['Rec Hall']; // { USE_KITTY: false, ALLOW_DISCARD: true }
+const NO_KITTY: AuctionSettingValues = { USE_KITTY: false, ALLOW_DISCARD: false };
+const KITTY_DRAW: AuctionSettingValues = { USE_KITTY: true, ALLOW_DISCARD: true };
+const NOKITTY_DRAW: AuctionSettingValues = { USE_KITTY: false, ALLOW_DISCARD: true };
+
+/** All card ids across hands + stock, to assert nothing is duplicated or lost. */
+function liveCardIds(g: AuctionGameState): string[] {
+	return [...g.hands.flat(), ...g.stock].map((c) => `${c.rank}${c.suit}`);
+}
 
 describe('bidding', () => {
 	it('eldest hand (dealer + 1) bids first', () => {
@@ -182,6 +190,93 @@ describe('no-kitty config (TODO-011)', () => {
 			expect(next.config.USE_KITTY).toBe(false);
 			expect(next.kitty).toHaveLength(0);
 		}
+	});
+});
+
+describe('optional draw (TODO-012)', () => {
+	function reachAuctionWinner(g: AuctionGameState): AuctionGameState {
+		g = placeBid(g, 1, 15);
+		g = passBid(g, 2);
+		g = passBid(g, 3);
+		g = passBid(g, 0);
+		return g; // bidder is seat 1 (eldest), dealer 0
+	}
+	function reachDrawNoKitty(seed: number): AuctionGameState {
+		let g = reachAuctionWinner(startAuction(scheme, createRng(seed), 0, NOKITTY_DRAW));
+		return nameTrump(g, g.biddingSeat!, g.hands[g.biddingSeat!][0].suit);
+	}
+	function reachDrawKitty(seed: number): AuctionGameState {
+		let g = reachAuctionWinner(startAuction(scheme, createRng(seed), 0, KITTY_DRAW));
+		g = nameTrump(g, g.biddingSeat!, g.hands[g.biddingSeat!][0].suit);
+		return discardKitty(g, g.biddingSeat!, g.hands[g.biddingSeat!].slice(0, 3));
+	}
+
+	it('no-kitty + draw: all four seats draw, eldest first', () => {
+		const g = reachDrawNoKitty(21);
+		expect(g.phase.kind).toBe('drawing');
+		if (g.phase.kind !== 'drawing') return;
+		expect(g.phase.drawn).toEqual([false, false, false, false]);
+		expect(g.phase.turn).toBe(1); // eldest (dealer 0)
+		expect(new Set(liveCardIds(g)).size).toBe(52); // nothing lost: 20 in hands + 32 stock
+	});
+
+	it('kitty + draw: the bid winner is skipped (used the kitty)', () => {
+		const g = reachDrawKitty(22);
+		expect(g.phase.kind).toBe('drawing');
+		if (g.phase.kind !== 'drawing') return;
+		expect(g.phase.drawn[1]).toBe(true); // bidder (seat 1) already used the kitty
+		expect(g.phase.turn).toBe(2); // first non-bidder in eldest order
+		const ids = liveCardIds(g);
+		expect(new Set(ids).size).toBe(ids.length); // no duplicates
+		expect(ids.length).toBe(49); // 20 in hands + 29 stock (3 kitty discards are gone)
+	});
+
+	it('exchanges cards: keeps the rest, refills to five, shrinks the stock', () => {
+		const g = reachDrawNoKitty(23);
+		if (g.phase.kind !== 'drawing') throw new Error('expected drawing');
+		const seat = g.phase.turn;
+		const discards = g.hands[seat].slice(0, 2);
+		const stockBefore = g.stock.length;
+		const next = drawCards(g, seat, discards);
+		expect(next.hands[seat]).toHaveLength(5);
+		expect(next.stock).toHaveLength(stockBefore - 2);
+		// The discarded cards are gone from the hand and not in the stock.
+		for (const d of discards) {
+			expect(next.hands[seat].some((c) => c.rank === d.rank && c.suit === d.suit)).toBe(false);
+		}
+		const ids = liveCardIds(next);
+		expect(new Set(ids).size).toBe(ids.length); // still no duplicates
+	});
+
+	it('stand pat (0 discards) keeps the hand and stock, and advances the turn', () => {
+		const g = reachDrawNoKitty(24);
+		if (g.phase.kind !== 'drawing') throw new Error('expected drawing');
+		const seat = g.phase.turn;
+		const next = drawCards(g, seat, []);
+		expect(next.hands[seat]).toEqual(g.hands[seat]);
+		expect(next.stock).toEqual(g.stock);
+		if (next.phase.kind === 'drawing') expect(next.phase.turn).not.toBe(seat);
+	});
+
+	it('rejects drawing out of turn or a card not in hand', () => {
+		const g = reachDrawNoKitty(25);
+		if (g.phase.kind !== 'drawing') throw new Error('expected drawing');
+		const seat = g.phase.turn;
+		const notSeat = (seat + 1) % AUCTION_SEATS;
+		expect(() => drawCards(g, notSeat, [])).toThrow();
+		const notInHand = g.stock[0]; // a stock card the seat doesn't hold
+		expect(() => drawCards(g, seat, [notInHand])).toThrow();
+	});
+
+	it('completes the draw round and begins play with five cards each', () => {
+		let g = reachDrawNoKitty(26);
+		let guard = 0;
+		while (g.phase.kind === 'drawing') {
+			g = drawCards(g, g.phase.turn, []); // everyone stands pat
+			if (++guard > 4) throw new Error('draw did not complete');
+		}
+		expect(g.phase.kind).toBe('playing');
+		expect(g.hands.every((h) => h.length === 5)).toBe(true);
 	});
 });
 

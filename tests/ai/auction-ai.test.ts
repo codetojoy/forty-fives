@@ -15,6 +15,7 @@ import {
 	passBid,
 	nameTrump,
 	discardKitty,
+	drawCards,
 	playCard,
 	nextHand,
 	currentSeat,
@@ -25,9 +26,10 @@ import {
 	chooseBid,
 	chooseTrump,
 	chooseKittyDiscards,
+	chooseDraw,
 	chooseCardAuction
 } from '$lib/ai/auction-ai.js';
-import { BUILTIN_PROFILES, defaultSettingValues } from '$lib/domain/auction-config.js';
+import { defaultSettingValues } from '$lib/domain/auction-config.js';
 
 const scheme = STANDARD_SCHEME;
 
@@ -46,6 +48,10 @@ function step(g: AuctionGameState, rng: ReturnType<typeof createRng>): AuctionGa
 			const seat = g.biddingSeat!;
 			return discardKitty(g, seat, chooseKittyDiscards(g, scheme, seat));
 		}
+		case 'drawing': {
+			const seat = currentSeat(g)!;
+			return drawCards(g, seat, chooseDraw(g, scheme, seat));
+		}
 		case 'playing': {
 			const seat = currentSeat(g)!;
 			return playCard(g, scheme, seat, chooseCardAuction(g, scheme, seat));
@@ -55,11 +61,14 @@ function step(g: AuctionGameState, rng: ReturnType<typeof createRng>): AuctionGa
 	}
 }
 
-// Run the property under both rules profiles so the no-kitty path (TODO-011),
-// where naming trump goes straight to play, is exercised end-to-end too.
+// Run the property under all four rules combos so every routing path is
+// exercised end-to-end: the kitty take/discard (TODO-011), the no-kitty
+// straight-to-play, and the optional draw (TODO-012) for both kitty settings.
 const SELF_PLAY_CONFIGS = [
-	{ label: 'with kitty', config: defaultSettingValues() },
-	{ label: 'no kitty', config: BUILTIN_PROFILES['Rec Hall'] }
+	{ label: 'kitty, no draw', config: { USE_KITTY: true, ALLOW_DISCARD: false } },
+	{ label: 'no kitty, no draw', config: { USE_KITTY: false, ALLOW_DISCARD: false } },
+	{ label: 'kitty + draw', config: { USE_KITTY: true, ALLOW_DISCARD: true } },
+	{ label: 'no kitty + draw', config: { USE_KITTY: false, ALLOW_DISCARD: true } }
 ];
 
 for (const { label, config } of SELF_PLAY_CONFIGS) {
@@ -128,6 +137,7 @@ describe('chooseBid', () => {
 			dealer: 0,
 			hands: [hand, hand, hand, hand],
 			kitty: [],
+			stock: [],
 			bid: null,
 			biddingSeat: null,
 			trumpSuit: null,
@@ -158,6 +168,51 @@ describe('chooseBid', () => {
 			card('Q', 'hearts')
 		];
 		expect(chooseBid(biddingState(strong), scheme, 1).bid).not.toBeNull();
+	});
+});
+
+describe('chooseDraw', () => {
+	function drawingState(hand: Card[]): AuctionGameState {
+		return {
+			schemeId: scheme.id,
+			config: { USE_KITTY: false, ALLOW_DISCARD: true },
+			handNumber: 1,
+			dealer: 0,
+			hands: [hand, hand, hand, hand],
+			kitty: [],
+			stock: [],
+			bid: 15,
+			biddingSeat: 1,
+			trumpSuit: 'hearts',
+			currentTrick: [],
+			completedTricks: [],
+			scores: [0, 0],
+			phase: { kind: 'drawing', turn: 0, drawn: [false, false, false, false] }
+		};
+	}
+
+	it('keeps trumps and off-suit honours, exchanges only weak non-trump numbers', () => {
+		const hand = [
+			card('5', 'hearts'), // trump — keep
+			card('K', 'hearts'), // trump — keep
+			card('A', 'spades'), // off-suit honour — keep
+			card('7', 'clubs'), // weak non-trump — exchange
+			card('3', 'diamonds') // weak non-trump — exchange
+		];
+		const out = chooseDraw(drawingState(hand), scheme, 0);
+		const ids = out.map((c) => `${c.rank}${c.suit}`).sort();
+		expect(ids).toEqual(['3diamonds', '7clubs']);
+	});
+
+	it('stands pat on an all-trump hand', () => {
+		const hand = [
+			card('5', 'hearts'),
+			card('J', 'hearts'),
+			card('A', 'hearts'),
+			card('K', 'hearts'),
+			card('Q', 'hearts')
+		];
+		expect(chooseDraw(drawingState(hand), scheme, 0)).toHaveLength(0);
 	});
 });
 

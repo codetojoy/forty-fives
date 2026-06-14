@@ -155,13 +155,17 @@ function auctionDefaults(): SavedAuctionGame {
 }
 
 /**
- * Games saved before the rules config was wired in (TODO-011) have no `config`
- * field; default them to current behaviour (kitty on) so they keep resuming.
+ * Fill fields added after a game might have been saved, so older saves keep
+ * resuming: `config` (TODO-011, default to current behaviour — kitty on) and
+ * `stock` (TODO-012; an old save can't be mid-draw, so an empty stock is fine).
  */
-function withConfigDefault(game: AuctionGameState): AuctionGameState {
-	return (game as { config?: AuctionSettingValues }).config
-		? game
-		: { ...game, config: defaultSettingValues() };
+function withSavedGameDefaults(game: AuctionGameState): AuctionGameState {
+	const g = game as { config?: AuctionSettingValues; stock?: readonly unknown[] };
+	return {
+		...game,
+		config: g.config ?? defaultSettingValues(),
+		stock: Array.isArray(g.stock) ? game.stock : []
+	};
 }
 
 export function loadAuctionGame(): SavedAuctionGame {
@@ -178,7 +182,7 @@ export function loadAuctionGame(): SavedAuctionGame {
 				? parsed.names
 				: d.names;
 		return {
-			game: isPlausibleAuctionState(parsed.game) ? withConfigDefault(parsed.game) : null,
+			game: isPlausibleAuctionState(parsed.game) ? withSavedGameDefaults(parsed.game) : null,
 			settings: {
 				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
 				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay

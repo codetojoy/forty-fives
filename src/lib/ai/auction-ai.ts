@@ -167,6 +167,25 @@ export function chooseKittyDiscards(
 	return sorted.slice(0, 3);
 }
 
+/** Honour ranks worth keeping off-suit (they can still take or protect a trick). */
+const OFF_HONOURS = new Set(['A', 'K', 'Q', 'J']);
+
+/**
+ * The optional draw (ALLOW_DISCARD, TODO-012): the cards to exchange. Conservative
+ * — keep every trump and every off-suit honour, exchange only clearly weak
+ * non-trump number cards. Drawing from a large stock rarely improves a hand, so
+ * the AI frequently stands pat (returns an empty list).
+ */
+export function chooseDraw(state: AuctionGameState, scheme: TrumpScheme, seat: number): Card[] {
+	if (state.phase.kind !== 'drawing') throw new Error('No draw is expected right now');
+	if (seat !== currentSeat(state)) throw new Error(`It is not seat ${seat}'s turn`);
+	if (state.trumpSuit === null) throw new Error('Trump has not been named');
+	const trumpSuit = state.trumpSuit;
+	return state.hands[seat].filter(
+		(c) => !isTrump(c, trumpSuit, scheme) && !OFF_HONOURS.has(c.rank)
+	);
+}
+
 // --- Play --------------------------------------------------------------------
 
 /** Cards this seat has not seen: outside its hand and the cards played so far. */

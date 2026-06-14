@@ -60,6 +60,17 @@ export type AuctionPhase =
 	  }
 	| { readonly kind: 'naming-trump' }
 	| { readonly kind: 'discarding' }
+	| {
+			/**
+			 * The optional draw (ALLOW_DISCARD, TODO-012): seats exchange 0–5 cards
+			 * with the stock, in eldest-hand order.
+			 */
+			readonly kind: 'drawing';
+			/** Seat to act. */
+			readonly turn: number;
+			/** Seats that have already drawn (or are skipped, e.g. the kitty bidder). */
+			readonly drawn: readonly boolean[];
+	  }
 	| { readonly kind: 'playing' }
 	| {
 			readonly kind: 'hand-over';
@@ -71,10 +82,9 @@ export type AuctionPhase =
 export interface AuctionGameState {
 	readonly schemeId: string;
 	/**
-	 * The resolved rules config for this game (TODO-011), snapshotted at
+	 * The resolved rules config for this game (TODO-011/012), snapshotted at
 	 * startAuction. A game keeps the rules it started with; changing the config
-	 * page mid-game only affects the next New game. ALLOW_DISCARD is carried but
-	 * not yet acted on (deferred — see doc/TODO-011.md).
+	 * page mid-game only affects the next New game.
 	 */
 	readonly config: AuctionSettingValues;
 	readonly handNumber: number;
@@ -82,6 +92,8 @@ export interface AuctionGameState {
 	readonly hands: readonly (readonly Card[])[];
 	/** The kitty, before the winning bidder takes it (empty once taken). */
 	readonly kitty: readonly Card[];
+	/** Undealt cards, drawn from during the optional draw (ALLOW_DISCARD, TODO-012). */
+	readonly stock: readonly Card[];
 	/** The winning bid, or null until the auction resolves. */
 	readonly bid: BidValue | null;
 	/** The seat that won the bid (and names trump / takes the kitty), or null. */
@@ -103,7 +115,7 @@ function dealHand(
 	handNumber: number,
 	config: AuctionSettingValues
 ): AuctionGameState {
-	const { hands, kitty } = dealAuction(rng, AUCTION_SEATS, config.USE_KITTY);
+	const { hands, kitty, stock } = dealAuction(rng, AUCTION_SEATS, config.USE_KITTY);
 	return {
 		schemeId: scheme.id,
 		config,
@@ -111,6 +123,7 @@ function dealHand(
 		dealer,
 		hands,
 		kitty,
+		stock,
 		bid: null,
 		biddingSeat: null,
 		trumpSuit: null,
@@ -213,8 +226,8 @@ export function nameTrump(
 	if (state.phase.kind !== 'naming-trump') throw new Error('Trump is not being named right now');
 	if (seat !== state.biddingSeat) throw new Error(`Only the winning bidder names trump`);
 	if (!state.config.USE_KITTY) {
-		// No kitty: trump is named and play starts; no take-kitty / discard step.
-		return { ...state, trumpSuit, phase: { kind: 'playing' } };
+		// No kitty: trump is named, then the optional draw (or straight to play).
+		return beginDrawOrPlay({ ...state, trumpSuit });
 	}
 	const taken = [...state.hands[seat], ...state.kitty];
 	return {
@@ -247,11 +260,83 @@ export function discardKitty(
 	if (kept.length !== TRICKS_PER_HAND) {
 		throw new Error('Discards must be distinct cards from the hand');
 	}
-	return {
+	// The kitty discards leave play (they are not returned to the draw stock).
+	return beginDrawOrPlay({
 		...state,
-		hands: state.hands.map((h, s) => (s === seat ? kept : h)),
-		phase: { kind: 'playing' }
-	};
+		hands: state.hands.map((h, s) => (s === seat ? kept : h))
+	});
+}
+
+// --- The optional draw (ALLOW_DISCARD, TODO-012) ------------------------------
+
+/** The next seat in eldest order (from `start`, inclusive) that has not drawn. */
+function nextDrawer(start: number, drawn: readonly boolean[]): number | null {
+	for (let step = 0; step < AUCTION_SEATS; step++) {
+		const seat = (start + step) % AUCTION_SEATS;
+		if (!drawn[seat]) return seat;
+	}
+	return null;
+}
+
+/**
+ * Enter the optional draw (ALLOW_DISCARD), or go straight to play. Everyone may
+ * exchange cards in eldest-hand order; with a kitty the bid winner already
+ * exchanged via the kitty, so they are skipped here.
+ */
+function beginDrawOrPlay(state: AuctionGameState): AuctionGameState {
+	if (!state.config.ALLOW_DISCARD) {
+		return { ...state, phase: { kind: 'playing' } };
+	}
+	const drawn = Array.from(
+		{ length: AUCTION_SEATS },
+		(_, s) => state.config.USE_KITTY && s === state.biddingSeat
+	);
+	const turn = nextDrawer((state.dealer + 1) % AUCTION_SEATS, drawn);
+	if (turn === null) return { ...state, phase: { kind: 'playing' } };
+	return { ...state, phase: { kind: 'drawing', turn, drawn } };
+}
+
+/**
+ * Exchange 0–5 cards with the stock. The seat keeps the rest of its hand and
+ * draws the same number of replacements from the top of the stock, returning to
+ * five. An empty `discards` is a legal "stand pat".
+ */
+export function drawCards(
+	state: AuctionGameState,
+	seat: number,
+	discards: readonly Card[]
+): AuctionGameState {
+	if (state.phase.kind !== 'drawing') throw new Error('There is no draw happening right now');
+	const phase = state.phase;
+	if (seat !== phase.turn) throw new Error(`It is not seat ${seat}'s turn to draw`);
+	if (discards.length > TRICKS_PER_HAND) {
+		throw new Error(`Cannot exchange more than ${TRICKS_PER_HAND} cards`);
+	}
+	const hand = state.hands[seat];
+	for (const d of discards) {
+		if (!hand.some((c) => sameCard(c, d))) {
+			throw new Error(`Cannot discard the ${cardLabel(d)}: it is not in the hand`);
+		}
+	}
+	const kept = hand.filter((c) => !discards.some((d) => sameCard(d, c)));
+	if (kept.length !== hand.length - discards.length) {
+		throw new Error('Draw discards must be distinct cards from the hand');
+	}
+	if (discards.length > state.stock.length) {
+		// Invariant: with at most five cards per seat the stock always suffices.
+		throw new Error('Not enough stock to draw');
+	}
+
+	const drawnCards = state.stock.slice(0, discards.length);
+	const stock = state.stock.slice(discards.length);
+	const hands = state.hands.map((h, s) => (s === seat ? [...kept, ...drawnCards] : h));
+
+	const drawn = phase.drawn.map((d, s) => (s === seat ? true : d));
+	const turn = nextDrawer((seat + 1) % AUCTION_SEATS, drawn);
+	if (turn === null) {
+		return { ...state, hands, stock, phase: { kind: 'playing' } };
+	}
+	return { ...state, hands, stock, phase: { kind: 'drawing', turn, drawn } };
 }
 
 // --- Play --------------------------------------------------------------------
@@ -275,6 +360,8 @@ export function currentSeat(state: AuctionGameState): number | null {
 		case 'naming-trump':
 		case 'discarding':
 			return state.biddingSeat;
+		case 'drawing':
+			return state.phase.turn;
 		case 'playing':
 			return (trickLeader(state) + state.currentTrick.length) % AUCTION_SEATS;
 		case 'hand-over':
@@ -394,6 +481,8 @@ export function isPlausibleAuctionState(value: unknown): value is AuctionGameSta
 		Array.isArray(s.completedTricks) &&
 		Array.isArray(s.currentTrick) &&
 		!!s.phase &&
-		['bidding', 'naming-trump', 'discarding', 'playing', 'hand-over'].includes(s.phase.kind)
+		['bidding', 'naming-trump', 'discarding', 'drawing', 'playing', 'hand-over'].includes(
+			s.phase.kind
+		)
 	);
 }

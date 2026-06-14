@@ -1,5 +1,13 @@
 
-### TODO-012
+### TODO-012 [COMPLETE]
+
+Wired `ALLOW_DISCARD` into gameplay: the stock is retained in `AuctionGameState`,
+a new `drawing` phase (`drawCards`) runs after trump is named, and the auction
+page has an exchange panel. Everyone may exchange 0–5 cards with the stock in
+eldest-hand order; the bid winner is skipped only when they used the kitty (whose
+discards stay out of play). The AI (`chooseDraw`) is conservative — it keeps
+trumps and off-suit honours and often stands pat. Self-play covers all four
+config combos. Original task notes below.
 
 * Deferred from TODO-011 (which wired `USE_KITTY` only).
 * Goal: wire `ALLOW_DISCARD` ("allow discard when not bid-winner") into gameplay.
