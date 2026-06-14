@@ -36,6 +36,7 @@ import { trickWinnerMulti } from './trick.js';
 import type { TrumpScheme } from './trump-scheme.js';
 import { cardLabel } from './cards.js';
 import { legalBids, MIN_BID, type BidValue } from './bidding.js';
+import { defaultSettingValues, type AuctionSettingValues } from './auction-config.js';
 import type { CompletedTrick, TrickPlay } from './game-state.js';
 
 /** Auction Forty-Fives is a four-seat game. */
@@ -69,6 +70,13 @@ export type AuctionPhase =
 
 export interface AuctionGameState {
 	readonly schemeId: string;
+	/**
+	 * The resolved rules config for this game (TODO-011), snapshotted at
+	 * startAuction. A game keeps the rules it started with; changing the config
+	 * page mid-game only affects the next New game. ALLOW_DISCARD is carried but
+	 * not yet acted on (deferred — see doc/TODO-011.md).
+	 */
+	readonly config: AuctionSettingValues;
 	readonly handNumber: number;
 	readonly dealer: number;
 	readonly hands: readonly (readonly Card[])[];
@@ -92,11 +100,13 @@ function dealHand(
 	rng: Rng,
 	dealer: number,
 	scores: readonly number[],
-	handNumber: number
+	handNumber: number,
+	config: AuctionSettingValues
 ): AuctionGameState {
-	const { hands, kitty } = dealAuction(rng, AUCTION_SEATS);
+	const { hands, kitty } = dealAuction(rng, AUCTION_SEATS, config.USE_KITTY);
 	return {
 		schemeId: scheme.id,
+		config,
 		handNumber,
 		dealer,
 		hands,
@@ -120,10 +130,11 @@ function dealHand(
 export function startAuction(
 	scheme: TrumpScheme,
 	rng: Rng,
-	firstDealer?: number
+	firstDealer?: number,
+	config: AuctionSettingValues = defaultSettingValues()
 ): AuctionGameState {
 	const dealer = firstDealer ?? rng.int(AUCTION_SEATS);
-	return dealHand(scheme, rng, dealer, Array.from({ length: NUM_TEAMS }, () => 0), 1);
+	return dealHand(scheme, rng, dealer, Array.from({ length: NUM_TEAMS }, () => 0), 1, config);
 }
 
 // --- Bidding -----------------------------------------------------------------
@@ -189,8 +200,10 @@ export function passBid(state: AuctionGameState, seat: number): AuctionGameState
 // --- Naming trump + kitty ----------------------------------------------------
 
 /**
- * Name the trump suit. The winning bidder then takes the three-card kitty into
- * hand (now eight cards) and must discard back to five (see `discardKitty`).
+ * Name the trump suit. When the kitty is in play (USE_KITTY) the winning bidder
+ * then takes the three-card kitty into hand (now eight cards) and must discard
+ * back to five (see `discardKitty`). With no kitty (TODO-011) play begins
+ * immediately after trump is named.
  */
 export function nameTrump(
 	state: AuctionGameState,
@@ -199,6 +212,10 @@ export function nameTrump(
 ): AuctionGameState {
 	if (state.phase.kind !== 'naming-trump') throw new Error('Trump is not being named right now');
 	if (seat !== state.biddingSeat) throw new Error(`Only the winning bidder names trump`);
+	if (!state.config.USE_KITTY) {
+		// No kitty: trump is named and play starts; no take-kitty / discard step.
+		return { ...state, trumpSuit, phase: { kind: 'playing' } };
+	}
 	const taken = [...state.hands[seat], ...state.kitty];
 	return {
 		...state,
@@ -348,7 +365,8 @@ export function nextHand(
 		rng,
 		(state.dealer + 1) % AUCTION_SEATS,
 		state.scores,
-		state.handNumber + 1
+		state.handNumber + 1,
+		state.config
 	);
 }
 

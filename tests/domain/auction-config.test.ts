@@ -7,6 +7,7 @@ import {
 	isCustom,
 	defaultCustomValues,
 	defaultAuctionConfig,
+	defaultSettingValues,
 	resolveConfig,
 	normalizeAuctionConfig,
 	type AuctionConfig
@@ -53,6 +54,10 @@ describe('auction config — defaults', () => {
 
 	it('Custom seeds from Wikipedia values', () => {
 		expect(defaultCustomValues()).toEqual(BUILTIN_PROFILES.Wikipedia);
+	});
+
+	it('defaultSettingValues resolves to current play (kitty on)', () => {
+		expect(defaultSettingValues()).toEqual({ USE_KITTY: true, ALLOW_DISCARD: false });
 	});
 
 	it('returns fresh objects (no shared mutable state)', () => {

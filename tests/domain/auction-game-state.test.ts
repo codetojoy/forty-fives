@@ -15,8 +15,10 @@ import {
 	AUCTION_SEATS,
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
+import { BUILTIN_PROFILES } from '$lib/domain/auction-config.js';
 
 const scheme = STANDARD_SCHEME;
+const NO_KITTY = BUILTIN_PROFILES['Rec Hall']; // { USE_KITTY: false, ALLOW_DISCARD: true }
 
 describe('bidding', () => {
 	it('eldest hand (dealer + 1) bids first', () => {
@@ -126,6 +128,62 @@ function playOneHand(g: AuctionGameState, rng: ReturnType<typeof createRng>): Au
 	while (g.phase.kind === 'playing') g = playRandomLegal(g, rng);
 	return g;
 }
+
+describe('no-kitty config (TODO-011)', () => {
+	function reachNamingNoKitty(seed: number): AuctionGameState {
+		let g = startAuction(scheme, createRng(seed), 0, NO_KITTY);
+		g = placeBid(g, 1, 15);
+		g = passBid(g, 2);
+		g = passBid(g, 3);
+		g = passBid(g, 0);
+		return g;
+	}
+
+	it('deals no kitty and five cards to each seat', () => {
+		const g = startAuction(scheme, createRng(11), 0, NO_KITTY);
+		expect(g.config.USE_KITTY).toBe(false);
+		expect(g.kitty).toHaveLength(0);
+		expect(g.hands.every((h) => h.length === 5)).toBe(true);
+	});
+
+	it('naming trump goes straight to play — no take-kitty or discard', () => {
+		let g = reachNamingNoKitty(12);
+		const bidder = g.biddingSeat!;
+		g = nameTrump(g, bidder, 'hearts');
+		expect(g.trumpSuit).toBe('hearts');
+		expect(g.phase.kind).toBe('playing');
+		expect(g.hands[bidder]).toHaveLength(5); // kept the dealt five
+		expect(() => discardKitty(g, bidder, g.hands[bidder].slice(0, 3))).toThrow();
+	});
+
+	it('plays a full no-kitty hand to a tally', () => {
+		const rng = createRng(13);
+		let g = startAuction(scheme, rng, 0, NO_KITTY);
+		g = placeBid(g, currentSeat(g)!, 15);
+		while (g.phase.kind === 'bidding') g = passBid(g, currentSeat(g)!);
+		const bidder = g.biddingSeat!;
+		g = nameTrump(g, bidder, g.hands[bidder][0].suit);
+		expect(g.phase.kind).toBe('playing');
+		while (g.phase.kind === 'playing') g = playRandomLegal(g, rng);
+		expect(g.phase.kind).toBe('hand-over');
+		expect(g.completedTricks).toHaveLength(5);
+	});
+
+	it('carries the config forward to the next hand', () => {
+		const rng = createRng(14);
+		let g = startAuction(scheme, rng, 0, NO_KITTY);
+		g = placeBid(g, currentSeat(g)!, 15);
+		while (g.phase.kind === 'bidding') g = passBid(g, currentSeat(g)!);
+		const bidder = g.biddingSeat!;
+		g = nameTrump(g, bidder, g.hands[bidder][0].suit);
+		while (g.phase.kind === 'playing') g = playRandomLegal(g, rng);
+		if (g.phase.kind === 'hand-over' && g.phase.gameWinner === null) {
+			const next = nextHand(g, scheme, rng);
+			expect(next.config.USE_KITTY).toBe(false);
+			expect(next.kitty).toHaveLength(0);
+		}
+	});
+});
 
 describe('playing a hand', () => {
 	it('plays five four-card tricks, tallies, and advances dealer on the next hand', () => {

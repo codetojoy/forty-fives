@@ -47,4 +47,14 @@ describe('dealAuction', () => {
 		expect(a.hands.flat().map(cardId).join()).toBe(b.hands.flat().map(cardId).join());
 		expect(a.kitty.map(cardId).join()).toBe(b.kitty.map(cardId).join());
 	});
+
+	it('deals no kitty when useKitty is false (5 each, 32-card stock)', () => {
+		const { hands, kitty, stock } = dealAuction(createRng(42), 4, false);
+		expect(hands).toHaveLength(4);
+		for (const h of hands) expect(h).toHaveLength(5);
+		expect(kitty).toHaveLength(0);
+		expect(stock).toHaveLength(32);
+		const all = [...hands.flat(), ...kitty, ...stock].map(cardId);
+		expect(new Set(all).size).toBe(52);
+	});
 });

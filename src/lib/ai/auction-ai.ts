@@ -59,7 +59,12 @@ export interface BidEstimate {
  * tricks, lower trumps and length give partial control, and the bidder also
  * expects a small lift from the kitty.
  */
-function powerForSuit(hand: readonly Card[], trumpSuit: Suit, scheme: TrumpScheme): number {
+function powerForSuit(
+	hand: readonly Card[],
+	trumpSuit: Suit,
+	scheme: TrumpScheme,
+	useKitty: boolean
+): number {
 	const trumps = hand.filter((c) => isTrump(c, trumpSuit, scheme));
 	const total = scheme.trumpStrengths[trumpSuit].size; // ~14 trumps
 
@@ -82,15 +87,24 @@ function powerForSuit(hand: readonly Card[], trumpSuit: Suit, scheme: TrumpSchem
 	expectedTricks += 0.25 * offAces.length;
 
 	const expectedPoints = expectedTricks * 5;
-	// Small lift for the three-card kitty the winning bidder will take.
-	return expectedPoints + 3;
+	// Small lift for the three-card kitty the winning bidder will take — only when
+	// the kitty is in play (TODO-011); otherwise the bidder gains no cards.
+	return expectedPoints + (useKitty ? 3 : 0);
 }
 
-/** Pick the strongest trump suit for this hand and its estimated power. */
-export function estimateBid(hand: readonly Card[], scheme: TrumpScheme): BidEstimate {
+/**
+ * Pick the strongest trump suit for this hand and its estimated power. `useKitty`
+ * (default true) reflects whether the winning bidder will gain the kitty; it only
+ * shifts the magnitude, not which suit is strongest.
+ */
+export function estimateBid(
+	hand: readonly Card[],
+	scheme: TrumpScheme,
+	useKitty = true
+): BidEstimate {
 	let best: BidEstimate = { suit: SUITS[0], power: -Infinity };
 	for (const suit of SUITS) {
-		const power = powerForSuit(hand, suit, scheme);
+		const power = powerForSuit(hand, suit, scheme, useKitty);
 		if (power > best.power) best = { suit, power };
 	}
 	return best;
@@ -117,7 +131,7 @@ export interface AuctionBidDecision {
  */
 export function chooseBid(state: AuctionGameState, scheme: TrumpScheme, seat: number): AuctionBidDecision {
 	if (state.phase.kind !== 'bidding') throw new Error('There is no bid to make right now');
-	const est = estimateBid(state.hands[seat], scheme);
+	const est = estimateBid(state.hands[seat], scheme, state.config.USE_KITTY);
 	const ceiling = affordableBid(est.power);
 	if (ceiling === null) return { bid: null, suit: est.suit };
 
@@ -128,7 +142,7 @@ export function chooseBid(state: AuctionGameState, scheme: TrumpScheme, seat: nu
 
 /** The suit the winning bidder should name: whichever the hand is strongest in. */
 export function chooseTrump(state: AuctionGameState, scheme: TrumpScheme, seat: number): Suit {
-	return estimateBid(state.hands[seat], scheme).suit;
+	return estimateBid(state.hands[seat], scheme, state.config.USE_KITTY).suit;
 }
 
 /**

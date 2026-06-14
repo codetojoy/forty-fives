@@ -69,6 +69,15 @@ export function defaultAuctionConfig(): AuctionConfig {
 }
 
 /**
+ * The resolved setting values used when none are supplied — matches the game's
+ * current play (kitty on, no extra discard). Used as the fallback for games
+ * started or saved before the config was wired in (TODO-011).
+ */
+export function defaultSettingValues(): AuctionSettingValues {
+	return resolveConfig(defaultAuctionConfig());
+}
+
+/**
  * The effective setting values for a config: a built-in profile resolves to its
  * preset; "Custom" resolves to the stored custom values. Returns a fresh copy.
  */

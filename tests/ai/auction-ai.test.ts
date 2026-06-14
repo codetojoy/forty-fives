@@ -27,6 +27,7 @@ import {
 	chooseKittyDiscards,
 	chooseCardAuction
 } from '$lib/ai/auction-ai.js';
+import { BUILTIN_PROFILES, defaultSettingValues } from '$lib/domain/auction-config.js';
 
 const scheme = STANDARD_SCHEME;
 
@@ -54,23 +55,32 @@ function step(g: AuctionGameState, rng: ReturnType<typeof createRng>): AuctionGa
 	}
 }
 
-describe('all-AI self-play terminates with a winner', () => {
-	for (let seed = 1; seed <= 40; seed++) {
-		it(`seed ${seed}`, () => {
-			const rng = createRng(seed);
-			let g = startAuction(scheme, rng);
-			let guard = 0;
-			while (!(g.phase.kind === 'hand-over' && g.phase.gameWinner !== null)) {
-				g = step(g, rng);
-				if (++guard > 5000) throw new Error('game did not terminate');
-			}
-			expect(g.phase.kind).toBe('hand-over');
-			const winner = g.phase.kind === 'hand-over' ? g.phase.gameWinner : null;
-			expect(winner).not.toBeNull();
-			expect(g.scores[winner!]).toBeGreaterThanOrEqual(120);
-		});
-	}
-});
+// Run the property under both rules profiles so the no-kitty path (TODO-011),
+// where naming trump goes straight to play, is exercised end-to-end too.
+const SELF_PLAY_CONFIGS = [
+	{ label: 'with kitty', config: defaultSettingValues() },
+	{ label: 'no kitty', config: BUILTIN_PROFILES['Rec Hall'] }
+];
+
+for (const { label, config } of SELF_PLAY_CONFIGS) {
+	describe(`all-AI self-play terminates with a winner (${label})`, () => {
+		for (let seed = 1; seed <= 40; seed++) {
+			it(`seed ${seed}`, () => {
+				const rng = createRng(seed);
+				let g = startAuction(scheme, rng, undefined, config);
+				let guard = 0;
+				while (!(g.phase.kind === 'hand-over' && g.phase.gameWinner !== null)) {
+					g = step(g, rng);
+					if (++guard > 5000) throw new Error('game did not terminate');
+				}
+				expect(g.phase.kind).toBe('hand-over');
+				const winner = g.phase.kind === 'hand-over' ? g.phase.gameWinner : null;
+				expect(winner).not.toBeNull();
+				expect(g.scores[winner!]).toBeGreaterThanOrEqual(120);
+			});
+		}
+	});
+}
 
 describe('estimateBid', () => {
 	it('rates a hand full of top trumps highly and names that suit', () => {
@@ -84,6 +94,17 @@ describe('estimateBid', () => {
 		const est = estimateBid(monster, scheme);
 		expect(est.suit).toBe('hearts');
 		expect(est.power).toBeGreaterThanOrEqual(20);
+	});
+
+	it('drops the kitty lift when useKitty is false (TODO-011)', () => {
+		const hand: Card[] = [
+			card('5', 'hearts'),
+			card('J', 'hearts'),
+			card('A', 'hearts'),
+			card('K', 'hearts'),
+			card('Q', 'hearts')
+		];
+		expect(estimateBid(hand, scheme, false).power).toBe(estimateBid(hand, scheme, true).power - 3);
 	});
 
 	it('rates a junk hand low', () => {
@@ -102,6 +123,7 @@ describe('chooseBid', () => {
 	function biddingState(hand: Card[]): AuctionGameState {
 		return {
 			schemeId: scheme.id,
+			config: defaultSettingValues(),
 			handNumber: 1,
 			dealer: 0,
 			hands: [hand, hand, hand, hand],

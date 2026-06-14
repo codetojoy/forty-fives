@@ -36,7 +36,8 @@
 		chooseCardAuction
 	} from '$lib/ai/auction-ai.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
-	import { loadAuctionGame, saveAuctionGame } from '$lib/ui/persistence.js';
+	import { loadAuctionGame, saveAuctionGame, loadAuctionConfig } from '$lib/ui/persistence.js';
+	import { resolveConfig } from '$lib/domain/auction-config.js';
 
 	const scheme = STANDARD_SCHEME;
 	const rng = createRng();
@@ -104,7 +105,10 @@
 		quitArmed = false;
 		lastTrick = null;
 		message = '';
-		setGame(startAuction(scheme, rng));
+		// Snapshot the current rules config into the new game (TODO-011); a game in
+		// progress keeps its own rules even if the config page changes later.
+		const config = resolveConfig(loadAuctionConfig());
+		setGame(startAuction(scheme, rng, undefined, config));
 		advance();
 	}
 
@@ -353,6 +357,7 @@
 			</div>
 			<div class="hand-info">
 				Hand {game.handNumber}
+				{#if game.config && !game.config.USE_KITTY}· no kitty{/if}
 				{#if game.bid}· bid {game.bid} by {name(game.biddingSeat!)}{/if}
 				{#if game.phase.kind === 'playing'}
 					· trick {Math.min(game.completedTricks.length + 1, 5)} of 5

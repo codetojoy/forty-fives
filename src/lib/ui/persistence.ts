@@ -14,8 +14,10 @@ import {
 } from '$lib/domain/auction-game-state.js';
 import {
 	defaultAuctionConfig,
+	defaultSettingValues,
 	normalizeAuctionConfig,
-	type AuctionConfig
+	type AuctionConfig,
+	type AuctionSettingValues
 } from '$lib/domain/auction-config.js';
 
 export type TrumpChoice = Suit | 'random';
@@ -152,6 +154,16 @@ function auctionDefaults(): SavedAuctionGame {
 	};
 }
 
+/**
+ * Games saved before the rules config was wired in (TODO-011) have no `config`
+ * field; default them to current behaviour (kitty on) so they keep resuming.
+ */
+function withConfigDefault(game: AuctionGameState): AuctionGameState {
+	return (game as { config?: AuctionSettingValues }).config
+		? game
+		: { ...game, config: defaultSettingValues() };
+}
+
 export function loadAuctionGame(): SavedAuctionGame {
 	if (!browser) return auctionDefaults();
 	try {
@@ -166,7 +178,7 @@ export function loadAuctionGame(): SavedAuctionGame {
 				? parsed.names
 				: d.names;
 		return {
-			game: isPlausibleAuctionState(parsed.game) ? parsed.game : null,
+			game: isPlausibleAuctionState(parsed.game) ? withConfigDefault(parsed.game) : null,
 			settings: {
 				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
 				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
