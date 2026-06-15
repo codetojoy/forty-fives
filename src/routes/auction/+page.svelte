@@ -92,6 +92,8 @@
 	const trumpColor = $derived(
 		game?.trumpSuit ? (isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35') : '#3d3a35'
 	);
+	/** The game is finished once a team has crossed the target and a winner is set. */
+	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
 
 	function persist() {
 		saveAuctionGame({
@@ -595,19 +597,21 @@
 			</section>
 		{/if}
 
-		<section class="game-footer">
-			<label class="toggle">
-				<input type="checkbox" bind:checked={settings.highlightLegal} onchange={persist} />
-				Highlight legal cards
-			</label>
-			<label class="toggle">
-				<input type="checkbox" bind:checked={settings.confirmPlay} onchange={persist} />
-				Confirm before playing
-			</label>
-			<button type="button" class="small-button quit" onclick={quitGame}>
-				{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
-			</button>
-		</section>
+		{#if !gameOver}
+			<section class="game-footer">
+				<label class="toggle">
+					<input type="checkbox" bind:checked={settings.highlightLegal} onchange={persist} />
+					Highlight legal cards
+				</label>
+				<label class="toggle">
+					<input type="checkbox" bind:checked={settings.confirmPlay} onchange={persist} />
+					Confirm before playing
+				</label>
+				<button type="button" class="small-button quit" onclick={quitGame}>
+					{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
+				</button>
+			</section>
+		{/if}
 	{/if}
 </main>
 

@@ -7,5 +7,5 @@
         - A bids 20
         - B holds
         - A can raise to 25 or forfeit ?
-- what is "set" when losing the round?
+x - what is "set" when losing the round?
 x - cache-buster
