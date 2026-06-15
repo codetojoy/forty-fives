@@ -389,7 +389,6 @@
 			</div>
 			<div class="hand-info">
 				Hand {game.handNumber}
-				{#if game.config && !game.config.USE_KITTY}· no kitty{/if}
 				{#if game.bid}· bid {game.bid} by {name(game.biddingSeat!)}{/if}
 				{#if game.phase.kind === 'playing'}
 					· trick {Math.min(game.completedTricks.length + 1, 5)} of 5

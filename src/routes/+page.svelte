@@ -46,10 +46,6 @@
 			</span>
 		</a>
 	</nav>
-
-	<p class="note">
-		Free and open source. No accounts, no ads, no tracking.
-	</p>
 </main>
 
 <style>
@@ -136,15 +132,5 @@
 	.mode-desc {
 		font-size: 1.02rem;
 		line-height: 1.4;
-	}
-
-	.note {
-		margin-top: 2rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--rule);
-		text-align: center;
-		font-style: italic;
-		font-size: 0.95rem;
-		color: var(--muted);
 	}
 </style>
