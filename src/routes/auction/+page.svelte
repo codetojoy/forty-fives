@@ -397,9 +397,16 @@
 			</div>
 		</header>
 
-		<section class="seats" aria-label="The other players">
+		<div class="table-layout">
+			<section class="seats" aria-label="The other players">
 			{#each [2, 1, 3] as seat (seat)}
-				<div class="seat" class:active={!lastTrick && actor(game) === seat}>
+				<div
+					class="seat"
+					class:north={seat === 2}
+					class:east={seat === 1}
+					class:west={seat === 3}
+					class:active={!lastTrick && actor(game) === seat}
+				>
 					<span class="seat-name">{name(seat)}</span>
 					<span class="seat-role" class:partner={teamOf(seat) === teamOf(HUMAN_SEAT)}>
 						{role(seat)}
@@ -595,6 +602,7 @@
 				{/if}
 			</section>
 		{/if}
+		</div>
 
 		{#if !gameOver}
 			<section class="game-footer">
@@ -1031,5 +1039,69 @@
 	.small-button:focus-visible {
 		outline: 4px solid var(--focus);
 		outline-offset: 2px;
+	}
+
+	/* Larger than mobile: seat the four players around the central trick area —
+	   user at south, partner at north, opponents at east/west (TODO-014). This is
+	   a CSS-only re-layout via grid-template-areas; the DOM order is unchanged, so
+	   keyboard tab order and screen-reader flow stay exactly as on mobile. */
+	@media (min-width: 48rem) {
+		main {
+			max-width: 58rem;
+		}
+
+		.table-layout {
+			display: grid;
+			grid-template-columns: minmax(7rem, 1fr) minmax(0, 2fr) minmax(7rem, 1fr);
+			grid-template-areas:
+				'.      north  .'
+				'west   center east'
+				'south  south  south'
+				'msg    msg    msg'
+				'panels panels panels';
+			column-gap: 1rem;
+			row-gap: 0.75rem;
+			align-items: center;
+		}
+
+		/* Let the three seat panels become direct grid items of .table-layout so
+		   each can be placed at its own compass point. */
+		.seats {
+			display: contents;
+		}
+
+		.seat {
+			justify-self: center;
+			width: 100%;
+			max-width: 13rem;
+		}
+
+		.seat.north {
+			grid-area: north;
+		}
+		.seat.east {
+			grid-area: east;
+		}
+		.seat.west {
+			grid-area: west;
+		}
+
+		.trick-area {
+			grid-area: center;
+			margin: 0;
+		}
+
+		.message-area {
+			grid-area: msg;
+		}
+
+		.your-hand {
+			grid-area: south;
+		}
+
+		/* Only one action panel renders at a time, so they can share one area. */
+		.panel {
+			grid-area: panels;
+		}
 	}
 </style>
