@@ -30,6 +30,7 @@ import {
 	chooseCardAuction
 } from '$lib/ai/auction-ai.js';
 import { defaultSettingValues, type AuctionSettingValues } from '$lib/domain/auction-config.js';
+import { handsPerGame } from '$lib/domain/auction-scoring.js';
 
 const scheme = STANDARD_SCHEME;
 
@@ -122,6 +123,32 @@ for (const { label, config } of SELF_PLAY_CONFIGS) {
 		}
 	});
 }
+
+// The FOUR_TURNS finish rule (TODO-018) ends a game by hand count, not by points,
+// so it gets its own block with a count-based termination assertion.
+describe('all-AI self-play terminates under FOUR_TURNS', () => {
+	const config: AuctionSettingValues = {
+		USE_KITTY: true,
+		ALLOW_DISCARD: false,
+		FINISH_RULE: 'FOUR_TURNS',
+		FIRST_LEAD: 'ELDEST'
+	};
+	for (let seed = 1; seed <= 40; seed++) {
+		it(`seed ${seed}`, () => {
+			const rng = createRng(seed);
+			let g = startAuction(scheme, rng, undefined, config);
+			let guard = 0;
+			while (!(g.phase.kind === 'hand-over' && g.phase.gameWinner !== null)) {
+				g = step(g, rng);
+				if (++guard > 5000) throw new Error('game did not terminate');
+			}
+			expect(g.handNumber).toBeGreaterThanOrEqual(handsPerGame());
+			const winner = g.phase.kind === 'hand-over' ? g.phase.gameWinner! : -1;
+			// No points target: the leading team wins outright.
+			expect(g.scores[winner]).toBeGreaterThan(g.scores[1 - winner]);
+		});
+	}
+});
 
 describe('estimateBid', () => {
 	it('rates a hand full of top trumps highly and names that suit', () => {

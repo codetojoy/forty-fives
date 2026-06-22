@@ -22,16 +22,31 @@ import type { Card } from './cards.js';
 import { scoreHand } from './scoring.js';
 import type { CompletedTrick } from './game-state.js';
 import type { TrumpScheme } from './trump-scheme.js';
+import type { FinishGameRule } from './auction-config.js';
 
 /** Number of partnerships at the auction table. */
 export const NUM_TEAMS = 2;
 
 /**
- * The game is played to 120. This is a property of Auction Forty-Fives itself,
- * not of the card scheme — the scheme's scoring.gameTarget (45) is the 1v1
- * Forty-Fives target and is not used here.
+ * The game is played to 120 under the POINTS_120 finish rule. This is a property
+ * of Auction Forty-Fives itself, not of the card scheme — the scheme's
+ * scoring.gameTarget (45) is the 1v1 Forty-Fives target and is not used here.
  */
 export const AUCTION_TARGET = 120;
+
+/**
+ * Under the FOUR_TURNS finish rule the game runs a fixed number of hands: "a
+ * turn of the table" is one deal (the deal passing to the next player), so the
+ * game is "4 turns of the table" = 4 hands. This is a fast game, matching
+ * real-world rec-hall play on Prince Edward Island (TODO-019, correcting the
+ * 16-hand reading of TODO-018).
+ */
+export const TABLE_TURNS = 4;
+
+/** Hands in a FOUR_TURNS game: one hand per turn of the table. */
+export function handsPerGame(): number {
+	return TABLE_TURNS;
+}
 
 /** Which team a seat belongs to: partners sit opposite (0&2 vs 1&3). */
 export function teamOf(seat: number): number {
@@ -104,4 +119,31 @@ export function auctionGameWinner(
 	if (totals[biddingTeam] >= target) return biddingTeam;
 	const other = totals.findIndex((t, team) => team !== biddingTeam && t >= target);
 	return other === -1 ? null : other;
+}
+
+/**
+ * The winning team after a hand under the configured finish rule (TODO-018), or
+ * null if the game continues.
+ *
+ *  - POINTS_120: first team to the target (bidding team counts out first) — see
+ *    auctionGameWinner.
+ *  - FOUR_TURNS: a fixed-length game of `handsPerGame()` hands (4). Crossing the
+ *    points target early does NOT end it; only the hand limit does, at which
+ *    point the higher running total wins. An exact tie at the limit returns
+ *    null, so another hand is dealt (sudden death) until the tie breaks.
+ */
+export function decideGameWinner(
+	finishRule: FinishGameRule,
+	totals: readonly number[],
+	biddingTeam: number,
+	handNumber: number,
+	target = AUCTION_TARGET
+): number | null {
+	if (finishRule === 'FOUR_TURNS') {
+		if (handNumber < handsPerGame()) return null;
+		const max = Math.max(...totals);
+		const leaders = totals.filter((t) => t === max).length;
+		return leaders > 1 ? null : totals.indexOf(max);
+	}
+	return auctionGameWinner(totals, biddingTeam, target);
 }

@@ -18,6 +18,7 @@ import {
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
 import type { AuctionSettingValues } from '$lib/domain/auction-config.js';
+import { handsPerGame } from '$lib/domain/auction-scoring.js';
 
 const scheme = STANDARD_SCHEME;
 const NO_KITTY: AuctionSettingValues = {
@@ -376,6 +377,43 @@ describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 		const order = firstTrickOrder(g);
 		expect(order).toEqual([0, 3, 2, 1]);
 		expect(order[order.length - 1]).toBe(bidder);
+	});
+});
+
+describe('FOUR_TURNS finish rule (TODO-018)', () => {
+	const FOUR_TURNS_CFG: AuctionSettingValues = {
+		USE_KITTY: true,
+		ALLOW_DISCARD: false,
+		FINISH_RULE: 'FOUR_TURNS',
+		FIRST_LEAD: 'ELDEST'
+	};
+
+	it('never declares a winner before the fixed hand limit', () => {
+		const rng = createRng(5);
+		let g = startAuction(scheme, rng, 0, FOUR_TURNS_CFG);
+		const limit = handsPerGame();
+		// Play the first limit-1 hands: each must end with no game winner.
+		for (let i = 0; i < limit - 1; i++) {
+			g = playOneHand(g, rng);
+			expect(g.phase.kind === 'hand-over' && g.phase.gameWinner === null).toBe(true);
+			g = nextHand(g, scheme, rng);
+		}
+		expect(g.handNumber).toBe(limit);
+	});
+
+	it('ends at the hand limit with the strictly-higher total winning', () => {
+		const rng = createRng(5);
+		let g = startAuction(scheme, rng, 0, FOUR_TURNS_CFG);
+		let guard = 0;
+		while (!(g.phase.kind === 'hand-over' && g.phase.gameWinner !== null)) {
+			if (g.phase.kind === 'hand-over') g = nextHand(g, scheme, rng);
+			else g = playOneHand(g, rng);
+			if (++guard > 2000) throw new Error('game did not terminate');
+		}
+		expect(g.handNumber).toBeGreaterThanOrEqual(handsPerGame());
+		const winner = g.phase.kind === 'hand-over' ? g.phase.gameWinner! : -1;
+		// The winner is the leading team (no points target; score alone decides).
+		expect(g.scores[winner]).toBeGreaterThan(g.scores[1 - winner]);
 	});
 });
 

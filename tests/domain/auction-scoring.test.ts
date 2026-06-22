@@ -5,6 +5,8 @@ import type { CompletedTrick } from '$lib/domain/game-state.js';
 import {
 	scoreAuctionHand,
 	auctionGameWinner,
+	decideGameWinner,
+	handsPerGame,
 	teamOf,
 	seatsOfTeam
 } from '$lib/domain/auction-scoring.js';
@@ -84,5 +86,47 @@ describe('auctionGameWinner', () => {
 	it('counts the bidding team out first when both cross in the same hand', () => {
 		// Team 1 has the higher total, but team 0 bid and reached 120, so team 0 wins.
 		expect(auctionGameWinner([120, 121], 0)).toBe(0);
+	});
+});
+
+describe('decideGameWinner — finish rules (TODO-018)', () => {
+	const LIMIT = handsPerGame(); // 4 hands — a fast rec-hall game (TODO-019)
+
+	it('handsPerGame is 4 turns of the table = 4 hands', () => {
+		expect(handsPerGame()).toBe(4);
+	});
+
+	describe('POINTS_120', () => {
+		it('defers to the points rule (counts the bidder out first)', () => {
+			expect(decideGameWinner('POINTS_120', [120, 121], 0, 3)).toBe(0);
+		});
+
+		it('continues while both teams are below 120, regardless of hand number', () => {
+			expect(decideGameWinner('POINTS_120', [100, 90], 0, 99)).toBeNull();
+		});
+	});
+
+	describe('FOUR_TURNS', () => {
+		it('continues before the hand limit even when a team is well past 120', () => {
+			expect(decideGameWinner('FOUR_TURNS', [200, 30], 0, LIMIT - 1)).toBeNull();
+		});
+
+		it('ends at the limit with the higher total winning', () => {
+			expect(decideGameWinner('FOUR_TURNS', [85, 70], 1, LIMIT)).toBe(0);
+			expect(decideGameWinner('FOUR_TURNS', [70, 85], 0, LIMIT)).toBe(1);
+		});
+
+		it('does not let the bidding team count out first — only the score decides', () => {
+			// Team 1 leads on points; even though team 0 bid, team 1 wins at the limit.
+			expect(decideGameWinner('FOUR_TURNS', [90, 95], 0, LIMIT)).toBe(1);
+		});
+
+		it('plays on (sudden death) when tied at the limit', () => {
+			expect(decideGameWinner('FOUR_TURNS', [100, 100], 0, LIMIT)).toBeNull();
+		});
+
+		it('breaks a sudden-death tie once the totals separate past the limit', () => {
+			expect(decideGameWinner('FOUR_TURNS', [110, 100], 1, LIMIT + 1)).toBe(0);
+		});
 	});
 });

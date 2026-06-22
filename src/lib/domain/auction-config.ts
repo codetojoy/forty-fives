@@ -4,10 +4,10 @@
  * (SPEC §10).
  *
  * The resolved values are snapshotted into a game at startAuction and read by
- * the pure transitions, so most settings now shape play: USE_KITTY (TODO-011),
- * ALLOW_DISCARD (TODO-012), and FIRST_LEAD (TODO-017). FINISH_RULE (TODO-016)
- * is still stored-only. All remain rule calls awaiting real-player validation
- * (SPEC §6).
+ * the pure transitions, so every setting now shapes play: USE_KITTY (TODO-011),
+ * ALLOW_DISCARD (TODO-012), FIRST_LEAD (TODO-017), and FINISH_RULE (TODO-016
+ * setting, wired into game-end in TODO-018). All remain rule calls awaiting
+ * real-player validation (SPEC §6).
  *
  * A *setting* is one atomic, named value — either a boolean or a choice from a
  * fixed set (the "Finish Game Rule" added in TODO-016). A *profile* is a named
@@ -17,7 +17,11 @@
 
 export type AuctionSettingCode = 'USE_KITTY' | 'ALLOW_DISCARD' | 'FINISH_RULE' | 'FIRST_LEAD';
 
-/** When the game ends (TODO-016). Stored only; no gameplay impact yet. */
+/**
+ * When the game ends (TODO-016, wired into play in TODO-018). `POINTS_120` ends
+ * when a team reaches 120; `FOUR_TURNS` plays a fixed 4 turns of the table (4
+ * hands, a fast rec-hall game — TODO-019) and the higher total wins.
+ */
 export type FinishGameRule = 'POINTS_120' | 'FOUR_TURNS';
 
 /**

@@ -25,11 +25,10 @@ import { dealAuction } from './deck.js';
 import type { Rng } from './rng.js';
 import { analyzePlays, isLegalPlay, type PlayAnalysis } from './rules-engine.js';
 import {
-	auctionGameWinner,
+	decideGameWinner,
 	scoreAuctionHand,
 	teamOf,
 	NUM_TEAMS,
-	AUCTION_TARGET,
 	type AuctionHandScore
 } from './auction-scoring.js';
 import { trickWinnerMulti } from './trick.js';
@@ -456,7 +455,12 @@ export function playCard(
 		phase: {
 			kind: 'hand-over',
 			handScore,
-			gameWinner: auctionGameWinner(scores, biddingTeam, AUCTION_TARGET)
+			gameWinner: decideGameWinner(
+				state.config.FINISH_RULE,
+				scores,
+				biddingTeam,
+				state.handNumber
+			)
 		}
 	};
 }

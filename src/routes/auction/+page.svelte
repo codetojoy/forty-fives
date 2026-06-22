@@ -25,7 +25,7 @@
 		HUMAN_SEAT,
 		type AuctionGameState
 	} from '$lib/domain/auction-game-state.js';
-	import { teamOf, AUCTION_TARGET } from '$lib/domain/auction-scoring.js';
+	import { teamOf, AUCTION_TARGET, handsPerGame } from '$lib/domain/auction-scoring.js';
 	import { legalBids, type BidValue } from '$lib/domain/bidding.js';
 	import { analyzePlays } from '$lib/domain/rules-engine.js';
 	import { createRng } from '$lib/domain/rng.js';
@@ -94,6 +94,18 @@
 	);
 	/** The game is finished once a team has crossed the target and a winner is set. */
 	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
+
+	/**
+	 * How the active game finishes (TODO-018). For the in-progress game we read
+	 * the snapshotted config; before a game starts, the intro reflects the rule
+	 * the next New game will use.
+	 */
+	const nextGameFinishRule = resolveConfig(loadAuctionConfig()).FINISH_RULE;
+	const finishRule = $derived(game?.config.FINISH_RULE ?? nextGameFinishRule);
+	/** Short parenthetical shown beside the score. */
+	const finishNote = $derived(
+		finishRule === 'FOUR_TURNS' ? '(4 turns of the table)' : `(first to ${AUCTION_TARGET})`
+	);
 
 	function persist() {
 		saveAuctionGame({
@@ -359,14 +371,19 @@
 	{#if game === null}
 		<header>
 			<h1>Auction Forty-Fives</h1>
-			<p class="subtitle">Four players · partners to 120 · bid, name trump, take the kitty</p>
+			<p class="subtitle">Four players · partners · bid, name trump, take the kitty</p>
 		</header>
 		<section class="intro">
 			<p>
 				You and your partner sit opposite two opponents. Everyone gets five cards and a three-card
 				kitty waits in the middle. Bid 15, 20, 25 or 30 for the right to name trump and take the
 				kitty; make your bid or be set. Tricks are five points each, plus five for the highest
-				trump — first team to {AUCTION_TARGET} wins.
+				trump —
+				{#if nextGameFinishRule === 'FOUR_TURNS'}
+					highest score after 4 turns of the table ({handsPerGame()} hands) wins.
+				{:else}
+					first team to {AUCTION_TARGET} wins.
+				{/if}
 			</p>
 			<button type="button" class="big-button start-button" onclick={newGame}>Start a game</button>
 			<p class="config-link-wrap">
@@ -379,7 +396,7 @@
 			<div class="status-bar">
 				<span class="score" aria-label="Game score">
 					Your team {game.scores[teamOf(HUMAN_SEAT)]} · Opponents {game.scores[1 - teamOf(HUMAN_SEAT)]}
-					<span class="target">(first to {AUCTION_TARGET})</span>
+					<span class="target">{finishNote}</span>
 				</span>
 				{#if game.trumpSuit}
 					<span class="trump-badge" style="color: {trumpColor}">
@@ -388,7 +405,9 @@
 				{/if}
 			</div>
 			<div class="hand-info">
-				Hand {game.handNumber}
+				Hand {finishRule === 'FOUR_TURNS'
+					? `${game.handNumber} of ${handsPerGame()}`
+					: game.handNumber}
 				{#if game.bid}· bid {game.bid} by {name(game.biddingSeat!)}{/if}
 				{#if game.phase.kind === 'playing'}
 					· trick {Math.min(game.completedTricks.length + 1, 5)} of 5
