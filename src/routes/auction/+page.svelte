@@ -416,9 +416,9 @@
 							<PlayingCard facedown />
 						{/each}
 					</div>
-					{#if game.phase.kind === 'bidding'}
-						<span class="seat-status">{bidStatus(seat)}</span>
-					{/if}
+					<!-- Always rendered (empty off-bidding) so the seat panel keeps a constant
+					     height across phases — see TODO-015 (anti-jump). -->
+					<span class="seat-status">{game.phase.kind === 'bidding' ? bidStatus(seat) : ''}</span>
 				</div>
 			{/each}
 		</section>
@@ -427,7 +427,7 @@
 			{#if shownPlays.length === 0}
 				<p class="trick-placeholder">{turnPrompt}</p>
 			{:else}
-				<div class="trick-cards" style="--card-width: clamp(64px, 18vw, 96px)">
+				<div class="trick-cards">
 					{#each shownPlays as play (play.seat)}
 						<PlayingCard
 							card={play.card}
@@ -466,6 +466,10 @@
 			{/if}
 		</div>
 
+		<!-- Persistent slot for the one-at-a-time action panels: it reserves a
+		     constant block of space (in the wide table layout) so phase changes
+		     don't collapse/expand the bottom of the table — TODO-015 (anti-jump). -->
+		<div class="panel-slot">
 		{#if humanToBid && !lastTrick}
 			<section class="panel" aria-label="Your bid">
 				<h2>Your bid</h2>
@@ -574,9 +578,10 @@
 				{/if}
 			</section>
 		{/if}
+		</div>
 
-		{#if game.hands[HUMAN_SEAT].length > 0}
-			<section class="your-hand" aria-label="Your hand">
+		<section class="your-hand" aria-label="Your hand">
+			{#if game.hands[HUMAN_SEAT].length > 0}
 				<h2 class="hand-heading">
 					Your hand{humanToDiscard ? ' — tap three to discard' : ''}{humanToDraw
 						? ' — tap to exchange'
@@ -600,8 +605,8 @@
 							: 'Tap a card to raise it, tap again to play.'}
 					</p>
 				{/if}
-			</section>
-		{/if}
+			{/if}
+		</section>
 		</div>
 
 		{#if !gameOver}
@@ -839,12 +844,18 @@
 		display: flex;
 		gap: 0.15rem;
 		margin-top: 0.2rem;
+		/* Reserve a row's height so a seat doesn't shrink as its face-down cards
+		   are played out (5 → 0) — TODO-015 (anti-jump). */
+		min-height: 48px;
 	}
 
 	.seat-status {
 		font-size: 0.9rem;
 		font-weight: 700;
 		color: var(--ink);
+		/* Always reserved (the span renders empty off-bidding) so the seat keeps a
+		   constant height across phases — TODO-015 (anti-jump). */
+		min-height: 1.25rem;
 	}
 
 	.trick-area {
@@ -862,6 +873,7 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: clamp(0.75rem, 4vw, 1.75rem);
+		--card-width: clamp(64px, 18vw, 96px);
 	}
 
 	.trick-placeholder {
@@ -1070,10 +1082,13 @@
 			display: contents;
 		}
 
+		/* Reserve a constant height for each seat so the side/partner panels never
+		   resize between phases (bid-status line, cards played out) — TODO-015. */
 		.seat {
 			justify-self: center;
 			width: 100%;
 			max-width: 13rem;
+			min-height: 9.5rem;
 		}
 
 		.seat.north {
@@ -1086,21 +1101,40 @@
 			grid-area: west;
 		}
 
+		/* Fixed height sized to the worst case (four played cards + the trick-winner
+		   feedback + the Next-trick button), so finishing a trick fills already-
+		   reserved space instead of growing the cell and re-centering the cross.
+		   The trick cards are pinned to a single row (below) to keep this sane. */
 		.trick-area {
 			grid-area: center;
 			margin: 0;
+			height: 18rem;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
+
+		.trick-cards {
+			flex-wrap: nowrap;
+			gap: 0.6rem;
+			--card-width: 64px;
 		}
 
 		.message-area {
 			grid-area: msg;
 		}
 
+		/* Reserve the South row so it doesn't collapse when the hand empties at the
+		   end of a hand (the section stays mounted but renders nothing then). */
 		.your-hand {
 			grid-area: south;
+			min-height: 13rem;
 		}
 
-		/* Only one action panel renders at a time, so they can share one area. */
-		.panel {
+		/* The one-at-a-time action panels share a single slot. It sits below the
+		   cross (south/msg/panels rows), so its growth moves only the footer, not
+		   the table — hence it is left to size naturally. */
+		.panel-slot {
 			grid-area: panels;
 		}
 	}
