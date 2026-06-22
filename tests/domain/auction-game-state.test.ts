@@ -12,6 +12,7 @@ import {
 	playCard,
 	nextHand,
 	currentSeat,
+	trickLeader,
 	analyzeCurrent,
 	AUCTION_SEATS,
 	type AuctionGameState
@@ -22,17 +23,20 @@ const scheme = STANDARD_SCHEME;
 const NO_KITTY: AuctionSettingValues = {
 	USE_KITTY: false,
 	ALLOW_DISCARD: false,
-	FINISH_RULE: 'POINTS_120'
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
 };
 const KITTY_DRAW: AuctionSettingValues = {
 	USE_KITTY: true,
 	ALLOW_DISCARD: true,
-	FINISH_RULE: 'POINTS_120'
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
 };
 const NOKITTY_DRAW: AuctionSettingValues = {
 	USE_KITTY: false,
 	ALLOW_DISCARD: true,
-	FINISH_RULE: 'POINTS_120'
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
 };
 
 /** All card ids across hands + stock, to assert nothing is duplicated or lost. */
@@ -310,6 +314,68 @@ describe('playing a hand', () => {
 			expect(next.handNumber).toBe(2);
 			expect(next.phase.kind).toBe('bidding');
 		}
+	});
+});
+
+describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
+	const ELDEST_CFG: AuctionSettingValues = {
+		USE_KITTY: false,
+		ALLOW_DISCARD: false,
+		FINISH_RULE: 'POINTS_120',
+		FIRST_LEAD: 'ELDEST'
+	};
+	const LEFT_CFG: AuctionSettingValues = {
+		USE_KITTY: false,
+		ALLOW_DISCARD: false,
+		FINISH_RULE: 'POINTS_120',
+		FIRST_LEAD: 'LEFT_OF_BIDDER'
+	};
+
+	// Eldest (seat 1, since dealer is 0) opens 15 and everyone else passes, so the
+	// bid winner is the known seat 1; trump is named and play begins immediately
+	// (no kitty, no draw).
+	function reachPlaying(config: AuctionSettingValues, seed: number): AuctionGameState {
+		let g = startAuction(scheme, createRng(seed), 0, config);
+		g = placeBid(g, 1, 15);
+		g = passBid(g, 2);
+		g = passBid(g, 3);
+		g = passBid(g, 0);
+		const bidder = g.biddingSeat!;
+		g = nameTrump(g, bidder, g.hands[bidder][0].suit);
+		if (g.phase.kind !== 'playing') throw new Error('expected playing');
+		return g;
+	}
+
+	/** The seats acting in the first trick, in play order. */
+	function firstTrickOrder(g: AuctionGameState): number[] {
+		const rng = createRng(7);
+		const order: number[] = [];
+		while (g.completedTricks.length === 0 && g.phase.kind === 'playing') {
+			const seat = currentSeat(g)!;
+			order.push(seat);
+			const { legal } = analyzeCurrent(g, scheme);
+			g = playCard(g, scheme, seat, rng.pick(legal));
+		}
+		return order;
+	}
+
+	it('ELDEST: eldest hand (dealer + 1) leads and play runs up the seats', () => {
+		const g = reachPlaying(ELDEST_CFG, 31);
+		expect(g.biddingSeat).toBe(1);
+		expect(trickLeader(g)).toBe(1); // dealer 0 → eldest seat 1
+		expect(firstTrickOrder(g)).toEqual([1, 2, 3, 0]);
+	});
+
+	it('LEFT_OF_BIDDER: the bid winner’s left leads and the bid winner plays last', () => {
+		const g = reachPlaying(LEFT_CFG, 31);
+		const bidder = g.biddingSeat!;
+		expect(bidder).toBe(1);
+		// Leader is the seat to the bid winner's left: (bidder - 1) mod 4.
+		expect(trickLeader(g)).toBe((bidder + AUCTION_SEATS - 1) % AUCTION_SEATS);
+		// Rotation reverses, so the bid winner is last to play in the trick.
+		const order = firstTrickOrder(g);
+		expect(order).toEqual([0, 3, 2, 1]);
+		expect(order[order.length - 1]).toBe(bidder);
 	});
 });
 

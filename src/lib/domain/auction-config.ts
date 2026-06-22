@@ -3,10 +3,11 @@
  * helpers, so it stays unit-testable and portable to the planned Flutter client
  * (SPEC §10).
  *
- * This layer is inert: it only stores a *preference*. None of these settings
- * affect gameplay yet — wiring the resolved config into the game transitions is
- * a deferred follow-up (see doc/TODO-010.md), and these two settings remain
- * rule calls awaiting real-player validation (SPEC §6).
+ * The resolved values are snapshotted into a game at startAuction and read by
+ * the pure transitions, so most settings now shape play: USE_KITTY (TODO-011),
+ * ALLOW_DISCARD (TODO-012), and FIRST_LEAD (TODO-017). FINISH_RULE (TODO-016)
+ * is still stored-only. All remain rule calls awaiting real-player validation
+ * (SPEC §6).
  *
  * A *setting* is one atomic, named value — either a boolean or a choice from a
  * fixed set (the "Finish Game Rule" added in TODO-016). A *profile* is a named
@@ -14,10 +15,17 @@
  * "Custom", whose values the user chooses.
  */
 
-export type AuctionSettingCode = 'USE_KITTY' | 'ALLOW_DISCARD' | 'FINISH_RULE';
+export type AuctionSettingCode = 'USE_KITTY' | 'ALLOW_DISCARD' | 'FINISH_RULE' | 'FIRST_LEAD';
 
 /** When the game ends (TODO-016). Stored only; no gameplay impact yet. */
 export type FinishGameRule = 'POINTS_120' | 'FOUR_TURNS';
+
+/**
+ * Who leads the first trick (TODO-017). `ELDEST` is the eldest hand (dealer's
+ * left), the standard rule; `LEFT_OF_BIDDER` (the Rec Hall rule) seats the bid
+ * winner's left-hand player as leader, so the bid winner plays last.
+ */
+export type FirstLeadRule = 'ELDEST' | 'LEFT_OF_BIDDER';
 
 interface BooleanSetting {
 	readonly code: 'USE_KITTY' | 'ALLOW_DISCARD';
@@ -25,14 +33,17 @@ interface BooleanSetting {
 	readonly type: 'boolean';
 }
 
-interface ChoiceSetting {
-	readonly code: 'FINISH_RULE';
+interface ChoiceSetting<C extends AuctionSettingCode, V extends string> {
+	readonly code: C;
 	readonly desc: string;
 	readonly type: 'choice';
-	readonly options: readonly { readonly value: FinishGameRule; readonly label: string }[];
+	readonly options: readonly { readonly value: V; readonly label: string }[];
 }
 
-export type AuctionSetting = BooleanSetting | ChoiceSetting;
+export type AuctionSetting =
+	| BooleanSetting
+	| ChoiceSetting<'FINISH_RULE', FinishGameRule>
+	| ChoiceSetting<'FIRST_LEAD', FirstLeadRule>;
 
 /** The settings, in display order. */
 export const SETTINGS: readonly AuctionSetting[] = [
@@ -46,14 +57,24 @@ export const SETTINGS: readonly AuctionSetting[] = [
 			{ value: 'POINTS_120', label: '120 points reached' },
 			{ value: 'FOUR_TURNS', label: '4 turns of the table completed' }
 		]
+	},
+	{
+		code: 'FIRST_LEAD',
+		desc: 'First-trick leader',
+		type: 'choice',
+		options: [
+			{ value: 'ELDEST', label: 'Eldest hand (left of dealer)' },
+			{ value: 'LEFT_OF_BIDDER', label: 'Left of the bid winner' }
+		]
 	}
 ];
 
-/** Effective value for every setting (heterogeneous: booleans plus the choice). */
+/** Effective value for every setting (heterogeneous: booleans plus the choices). */
 export interface AuctionSettingValues {
 	USE_KITTY: boolean;
 	ALLOW_DISCARD: boolean;
 	FINISH_RULE: FinishGameRule;
+	FIRST_LEAD: FirstLeadRule;
 }
 
 export type AuctionProfileId = 'Wikipedia' | 'Rec Hall' | 'Custom';
@@ -63,8 +84,18 @@ export const PROFILE_IDS: readonly AuctionProfileId[] = ['Wikipedia', 'Rec Hall'
 
 /** Read-only preset values for the built-in profiles. */
 export const BUILTIN_PROFILES: Record<'Wikipedia' | 'Rec Hall', AuctionSettingValues> = {
-	Wikipedia: { USE_KITTY: true, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' },
-	'Rec Hall': { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'FOUR_TURNS' }
+	Wikipedia: {
+		USE_KITTY: true,
+		ALLOW_DISCARD: false,
+		FINISH_RULE: 'POINTS_120',
+		FIRST_LEAD: 'ELDEST'
+	},
+	'Rec Hall': {
+		USE_KITTY: false,
+		ALLOW_DISCARD: true,
+		FINISH_RULE: 'FOUR_TURNS',
+		FIRST_LEAD: 'LEFT_OF_BIDDER'
+	}
 };
 
 /** Whether a profile's values are user-editable (only "Custom"). */
@@ -136,7 +167,8 @@ function normalizeValues(value: unknown, fallback: AuctionSettingValues): Auctio
 			if (s.type === 'boolean') {
 				if (typeof raw === 'boolean') result[s.code] = raw;
 			} else if (s.options.some((o) => o.value === raw)) {
-				result[s.code] = raw as FinishGameRule;
+				// raw matched one of this choice setting's declared option values.
+				(result as Record<string, unknown>)[s.code] = raw;
 			}
 		}
 	}

@@ -346,10 +346,32 @@ export function ledCard(state: AuctionGameState): Card | null {
 	return state.currentTrick[0]?.card ?? null;
 }
 
-/** Who leads the trick in progress? Eldest hand leads trick 1; winners lead on. */
+/**
+ * Who leads the trick in progress? Subsequent tricks are led by the previous
+ * winner. For the first trick the leader depends on the FIRST_LEAD rule
+ * (TODO-017): `ELDEST` is the eldest hand (dealer's left); `LEFT_OF_BIDDER` (Rec
+ * Hall) is the bid winner's left-hand player, paired with the reversed play
+ * rotation in `currentSeat` so the bid winner plays last.
+ */
 export function trickLeader(state: AuctionGameState): number {
 	const last = state.completedTricks[state.completedTricks.length - 1];
-	return last ? last.winner : (state.dealer + 1) % AUCTION_SEATS;
+	if (last) return last.winner;
+	if (state.config.FIRST_LEAD === 'LEFT_OF_BIDDER' && state.biddingSeat !== null) {
+		return (state.biddingSeat + AUCTION_SEATS - 1) % AUCTION_SEATS;
+	}
+	return (state.dealer + 1) % AUCTION_SEATS;
+}
+
+/**
+ * The play rotation. Normally seats act in increasing order from the leader;
+ * under the Rec Hall LEFT_OF_BIDDER rule (TODO-017) play runs the other way so
+ * the bid winner — seated to the leader's right — plays last in every trick.
+ */
+function seatToAct(state: AuctionGameState, leader: number, offset: number): number {
+	if (state.config.FIRST_LEAD === 'LEFT_OF_BIDDER') {
+		return (leader + AUCTION_SEATS - offset) % AUCTION_SEATS;
+	}
+	return (leader + offset) % AUCTION_SEATS;
 }
 
 /** Whose decision is it right now? null when the hand is over. */
@@ -363,7 +385,7 @@ export function currentSeat(state: AuctionGameState): number | null {
 		case 'drawing':
 			return state.phase.turn;
 		case 'playing':
-			return (trickLeader(state) + state.currentTrick.length) % AUCTION_SEATS;
+			return seatToAct(state, trickLeader(state), state.currentTrick.length);
 		case 'hand-over':
 			return null;
 	}

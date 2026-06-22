@@ -1,6 +1,7 @@
 
 - 45s game should stop at 45
 - auction
+    - reduce the text into pop-over info 
     x - no kitty
     x - everyone can discard, regardless of winning bid
     - hold vs pass

@@ -14,8 +14,13 @@ import {
 } from '$lib/domain/auction-config.js';
 
 describe('auction config — settings registry', () => {
-	it('defines the two boolean settings plus the Finish Game Rule choice', () => {
-		expect(SETTINGS.map((s) => s.code)).toEqual(['USE_KITTY', 'ALLOW_DISCARD', 'FINISH_RULE']);
+	it('defines the two boolean settings plus the two choice settings', () => {
+		expect(SETTINGS.map((s) => s.code)).toEqual([
+			'USE_KITTY',
+			'ALLOW_DISCARD',
+			'FINISH_RULE',
+			'FIRST_LEAD'
+		]);
 		expect(SETTINGS.find((s) => s.code === 'USE_KITTY')?.type).toBe('boolean');
 		expect(SETTINGS.find((s) => s.code === 'ALLOW_DISCARD')?.type).toBe('boolean');
 		expect(SETTINGS.find((s) => s.code === 'USE_KITTY')?.desc).toBe('Use kitty');
@@ -34,25 +39,37 @@ describe('auction config — settings registry', () => {
 		]);
 	});
 
+	it('models the first-trick leader as a two-option choice (TODO-017)', () => {
+		const s = SETTINGS.find((s) => s.code === 'FIRST_LEAD');
+		expect(s?.type).toBe('choice');
+		expect(s?.desc).toBe('First-trick leader');
+		expect(s?.type === 'choice' ? s.options : []).toEqual([
+			{ value: 'ELDEST', label: 'Eldest hand (left of dealer)' },
+			{ value: 'LEFT_OF_BIDDER', label: 'Left of the bid winner' }
+		]);
+	});
+
 	it('lists the three profiles in display order', () => {
 		expect(PROFILE_IDS).toEqual(['Wikipedia', 'Rec Hall', 'Custom']);
 	});
 });
 
 describe('auction config — built-in profiles', () => {
-	it('Wikipedia uses the kitty, forbids extra discard, finishes at 120 points', () => {
+	it('Wikipedia uses the kitty, forbids extra discard, finishes at 120, eldest leads', () => {
 		expect(BUILTIN_PROFILES.Wikipedia).toEqual({
 			USE_KITTY: true,
 			ALLOW_DISCARD: false,
-			FINISH_RULE: 'POINTS_120'
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
 		});
 	});
 
-	it('Rec Hall drops the kitty, allows extra discard, finishes after four turns', () => {
+	it('Rec Hall drops the kitty, allows discard, four turns, left-of-bidder leads', () => {
 		expect(BUILTIN_PROFILES['Rec Hall']).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: true,
-			FINISH_RULE: 'FOUR_TURNS'
+			FINISH_RULE: 'FOUR_TURNS',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
@@ -79,7 +96,8 @@ describe('auction config — defaults', () => {
 		expect(defaultSettingValues()).toEqual({
 			USE_KITTY: true,
 			ALLOW_DISCARD: false,
-			FINISH_RULE: 'POINTS_120'
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
 		});
 	});
 
@@ -94,24 +112,36 @@ describe('auction config — resolveConfig', () => {
 	it('resolves built-in profiles to their presets, ignoring stored custom', () => {
 		const config: AuctionConfig = {
 			profile: 'Rec Hall',
-			custom: { USE_KITTY: true, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' }
+			custom: {
+				USE_KITTY: true,
+				ALLOW_DISCARD: false,
+				FINISH_RULE: 'POINTS_120',
+				FIRST_LEAD: 'ELDEST'
+			}
 		};
 		expect(resolveConfig(config)).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: true,
-			FINISH_RULE: 'FOUR_TURNS'
+			FINISH_RULE: 'FOUR_TURNS',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
 	it('resolves Custom to its stored values', () => {
 		const config: AuctionConfig = {
 			profile: 'Custom',
-			custom: { USE_KITTY: false, ALLOW_DISCARD: false, FINISH_RULE: 'FOUR_TURNS' }
+			custom: {
+				USE_KITTY: false,
+				ALLOW_DISCARD: false,
+				FINISH_RULE: 'FOUR_TURNS',
+				FIRST_LEAD: 'LEFT_OF_BIDDER'
+			}
 		};
 		expect(resolveConfig(config)).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: false,
-			FINISH_RULE: 'FOUR_TURNS'
+			FINISH_RULE: 'FOUR_TURNS',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
@@ -128,7 +158,12 @@ describe('auction config — normalizeAuctionConfig', () => {
 	it('passes through a valid config', () => {
 		const config: AuctionConfig = {
 			profile: 'Custom',
-			custom: { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'FOUR_TURNS' }
+			custom: {
+				USE_KITTY: false,
+				ALLOW_DISCARD: true,
+				FINISH_RULE: 'FOUR_TURNS',
+				FIRST_LEAD: 'LEFT_OF_BIDDER'
+			}
 		};
 		expect(normalizeAuctionConfig(config)).toEqual(config);
 	});
@@ -150,7 +185,8 @@ describe('auction config — normalizeAuctionConfig', () => {
 		expect(out.custom).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: false,
-			FINISH_RULE: 'POINTS_120'
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
 		});
 	});
 
@@ -159,7 +195,12 @@ describe('auction config — normalizeAuctionConfig', () => {
 			profile: 'Custom',
 			custom: { USE_KITTY: 'yes', ALLOW_DISCARD: true, BOGUS: 1 }
 		});
-		expect(out.custom).toEqual({ USE_KITTY: true, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' });
+		expect(out.custom).toEqual({
+			USE_KITTY: true,
+			ALLOW_DISCARD: true,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
+		});
 		expect('BOGUS' in out.custom).toBe(false);
 	});
 
@@ -175,6 +216,20 @@ describe('auction config — normalizeAuctionConfig', () => {
 			custom: { USE_KITTY: true, ALLOW_DISCARD: false, FINISH_RULE: 'SOMEDAY' }
 		});
 		expect(rejected.custom.FINISH_RULE).toBe('POINTS_120');
+	});
+
+	it('keeps a valid first-lead choice and rejects a bogus one (TODO-017)', () => {
+		const kept = normalizeAuctionConfig({
+			profile: 'Custom',
+			custom: { USE_KITTY: true, ALLOW_DISCARD: false, FIRST_LEAD: 'LEFT_OF_BIDDER' }
+		});
+		expect(kept.custom.FIRST_LEAD).toBe('LEFT_OF_BIDDER');
+
+		const rejected = normalizeAuctionConfig({
+			profile: 'Custom',
+			custom: { USE_KITTY: true, ALLOW_DISCARD: false, FIRST_LEAD: 'SOMEONE' }
+		});
+		expect(rejected.custom.FIRST_LEAD).toBe('ELDEST');
 	});
 
 	it('defaults custom entirely when it is missing', () => {

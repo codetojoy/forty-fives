@@ -65,10 +65,42 @@ function step(g: AuctionGameState, rng: ReturnType<typeof createRng>): AuctionGa
 // exercised end-to-end: the kitty take/discard (TODO-011), the no-kitty
 // straight-to-play, and the optional draw (TODO-012) for both kitty settings.
 const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
-	{ label: 'kitty, no draw', config: { USE_KITTY: true, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' } },
-	{ label: 'no kitty, no draw', config: { USE_KITTY: false, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' } },
-	{ label: 'kitty + draw', config: { USE_KITTY: true, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' } },
-	{ label: 'no kitty + draw', config: { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' } }
+	{
+		label: 'kitty, no draw',
+		config: {
+			USE_KITTY: true,
+			ALLOW_DISCARD: false,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
+		}
+	},
+	{
+		label: 'no kitty, no draw',
+		config: {
+			USE_KITTY: false,
+			ALLOW_DISCARD: false,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
+		}
+	},
+	{
+		label: 'kitty + draw, left-of-bidder lead',
+		config: {
+			USE_KITTY: true,
+			ALLOW_DISCARD: true,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
+		}
+	},
+	{
+		label: 'no kitty + draw, left-of-bidder lead',
+		config: {
+			USE_KITTY: false,
+			ALLOW_DISCARD: true,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
+		}
+	}
 ];
 
 for (const { label, config } of SELF_PLAY_CONFIGS) {
@@ -175,7 +207,12 @@ describe('chooseDraw', () => {
 	function drawingState(hand: Card[]): AuctionGameState {
 		return {
 			schemeId: scheme.id,
-			config: { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' },
+			config: {
+				USE_KITTY: false,
+				ALLOW_DISCARD: true,
+				FINISH_RULE: 'POINTS_120',
+				FIRST_LEAD: 'ELDEST'
+			},
 			handNumber: 1,
 			dealer: 0,
 			hands: [hand, hand, hand, hand],

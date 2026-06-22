@@ -6,7 +6,6 @@
 		BUILTIN_PROFILES,
 		isCustom,
 		type AuctionProfileId,
-		type FinishGameRule,
 		type AuctionSettingValues
 	} from '$lib/domain/auction-config.js';
 	import { loadAuctionConfig, saveAuctionConfig } from '$lib/ui/persistence.js';
@@ -40,7 +39,10 @@
 		custom = { ...custom, [code]: !custom[code] };
 	}
 
-	function setChoice(code: 'FINISH_RULE', value: FinishGameRule) {
+	function setChoice<C extends 'FINISH_RULE' | 'FIRST_LEAD'>(
+		code: C,
+		value: AuctionSettingValues[C]
+	) {
 		if (!isCustom(profile)) return;
 		custom = { ...custom, [code]: value };
 	}
@@ -71,8 +73,8 @@
 	<header>
 		<h1>Auction Settings</h1>
 		<p class="subtitle">
-			Pick a rules profile to specify settings below. These don't change play yet — they're
-			saved for later.
+			Pick a rules profile to specify settings below. These take effect the next time you
+			start a New game.
 		</p>
 	</header>
 
