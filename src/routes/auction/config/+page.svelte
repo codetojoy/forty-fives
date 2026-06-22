@@ -6,7 +6,7 @@
 		BUILTIN_PROFILES,
 		isCustom,
 		type AuctionProfileId,
-		type AuctionSettingCode,
+		type FinishGameRule,
 		type AuctionSettingValues
 	} from '$lib/domain/auction-config.js';
 	import { loadAuctionConfig, saveAuctionConfig } from '$lib/ui/persistence.js';
@@ -35,9 +35,14 @@
 		profile = next;
 	}
 
-	function toggle(code: AuctionSettingCode) {
+	function toggle(code: 'USE_KITTY' | 'ALLOW_DISCARD') {
 		if (!isCustom(profile)) return;
 		custom = { ...custom, [code]: !custom[code] };
+	}
+
+	function setChoice(code: 'FINISH_RULE', value: FinishGameRule) {
+		if (!isCustom(profile)) return;
+		custom = { ...custom, [code]: value };
 	}
 
 	function save() {
@@ -94,26 +99,49 @@
 		<fieldset class="settings">
 			<legend>Settings {isCustom(profile) ? '(editable)' : '(read-only)'}</legend>
 			{#each SETTINGS as s (s.code)}
-				<div class="setting">
+				<div class="setting" class:stacked={s.type === 'choice'}>
 					<span class="setting-desc">{s.desc}</span>
-					{#if isCustom(profile)}
-						<label class="toggle">
-							<input
-								type="checkbox"
-								aria-label={s.desc}
-								checked={custom[s.code]}
-								onchange={() => toggle(s.code)}
-							/>
-							<span class="toggle-value">{custom[s.code] ? 'On' : 'Off'}</span>
-						</label>
-					{:else}
-						<span
-							class="value-readonly"
-							class:on={displayed[s.code]}
-							aria-label={`${s.desc} is ${displayed[s.code] ? 'on' : 'off'}`}
-						>
-							{displayed[s.code] ? 'On' : 'Off'}
-						</span>
+					{#if s.type === 'boolean'}
+						{#if isCustom(profile)}
+							<label class="toggle">
+								<input
+									type="checkbox"
+									aria-label={s.desc}
+									checked={custom[s.code]}
+									onchange={() => toggle(s.code)}
+								/>
+								<span class="toggle-value">{custom[s.code] ? 'On' : 'Off'}</span>
+							</label>
+						{:else}
+							<span
+								class="value-readonly"
+								class:on={displayed[s.code]}
+								aria-label={`${s.desc} is ${displayed[s.code] ? 'on' : 'off'}`}
+							>
+								{displayed[s.code] ? 'On' : 'Off'}
+							</span>
+						{/if}
+					{:else if s.type === 'choice'}
+						{#if isCustom(profile)}
+							<div class="choice" role="radiogroup" aria-label={s.desc}>
+								{#each s.options as opt (opt.value)}
+									<label class="choice-option" class:selected={custom[s.code] === opt.value}>
+										<input
+											type="radio"
+											name={s.code}
+											value={opt.value}
+											checked={custom[s.code] === opt.value}
+											onchange={() => setChoice(s.code, opt.value)}
+										/>
+										<span>{opt.label}</span>
+									</label>
+								{/each}
+							</div>
+						{:else}
+							<span class="value-readonly on">
+								{s.options.find((o) => o.value === displayed[s.code])?.label}
+							</span>
+						{/if}
 					{/if}
 				</div>
 			{/each}
@@ -260,9 +288,51 @@
 		border-top: 1px solid var(--rule);
 	}
 
+	/* A choice setting (e.g. Finish Game Rule) stacks its label above the options,
+	   since the option labels are too long to sit beside the description. */
+	.setting.stacked {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.5rem;
+	}
+
 	.setting-desc {
 		font-size: 1.1rem;
 		font-weight: 600;
+	}
+
+	.choice {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.choice-option {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-height: 48px;
+		padding: 0.4rem 0.5rem;
+		border-radius: 6px;
+		font-size: 1.05rem;
+		cursor: pointer;
+	}
+
+	.choice-option.selected {
+		background: rgba(176, 80, 58, 0.08);
+		font-weight: 700;
+	}
+
+	.choice-option input {
+		width: 24px;
+		height: 24px;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+
+	.choice-option input:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
 	}
 
 	.toggle {

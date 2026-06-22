@@ -160,10 +160,12 @@ function auctionDefaults(): SavedAuctionGame {
  * `stock` (TODO-012; an old save can't be mid-draw, so an empty stock is fine).
  */
 function withSavedGameDefaults(game: AuctionGameState): AuctionGameState {
-	const g = game as { config?: AuctionSettingValues; stock?: readonly unknown[] };
+	const g = game as { config?: Partial<AuctionSettingValues>; stock?: readonly unknown[] };
 	return {
 		...game,
-		config: g.config ?? defaultSettingValues(),
+		// Per-field merge so a save predating a setting (e.g. FINISH_RULE, TODO-016)
+		// gains the new field's default rather than carrying a partial config.
+		config: { ...defaultSettingValues(), ...(g.config ?? {}) },
 		stock: Array.isArray(g.stock) ? game.stock : []
 	};
 }

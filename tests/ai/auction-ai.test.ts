@@ -29,7 +29,7 @@ import {
 	chooseDraw,
 	chooseCardAuction
 } from '$lib/ai/auction-ai.js';
-import { defaultSettingValues } from '$lib/domain/auction-config.js';
+import { defaultSettingValues, type AuctionSettingValues } from '$lib/domain/auction-config.js';
 
 const scheme = STANDARD_SCHEME;
 
@@ -64,11 +64,11 @@ function step(g: AuctionGameState, rng: ReturnType<typeof createRng>): AuctionGa
 // Run the property under all four rules combos so every routing path is
 // exercised end-to-end: the kitty take/discard (TODO-011), the no-kitty
 // straight-to-play, and the optional draw (TODO-012) for both kitty settings.
-const SELF_PLAY_CONFIGS = [
-	{ label: 'kitty, no draw', config: { USE_KITTY: true, ALLOW_DISCARD: false } },
-	{ label: 'no kitty, no draw', config: { USE_KITTY: false, ALLOW_DISCARD: false } },
-	{ label: 'kitty + draw', config: { USE_KITTY: true, ALLOW_DISCARD: true } },
-	{ label: 'no kitty + draw', config: { USE_KITTY: false, ALLOW_DISCARD: true } }
+const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
+	{ label: 'kitty, no draw', config: { USE_KITTY: true, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' } },
+	{ label: 'no kitty, no draw', config: { USE_KITTY: false, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' } },
+	{ label: 'kitty + draw', config: { USE_KITTY: true, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' } },
+	{ label: 'no kitty + draw', config: { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' } }
 ];
 
 for (const { label, config } of SELF_PLAY_CONFIGS) {
@@ -175,7 +175,7 @@ describe('chooseDraw', () => {
 	function drawingState(hand: Card[]): AuctionGameState {
 		return {
 			schemeId: scheme.id,
-			config: { USE_KITTY: false, ALLOW_DISCARD: true },
+			config: { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'POINTS_120' },
 			handNumber: 1,
 			dealer: 0,
 			hands: [hand, hand, hand, hand],

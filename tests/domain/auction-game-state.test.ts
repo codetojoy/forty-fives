@@ -19,9 +19,21 @@ import {
 import type { AuctionSettingValues } from '$lib/domain/auction-config.js';
 
 const scheme = STANDARD_SCHEME;
-const NO_KITTY: AuctionSettingValues = { USE_KITTY: false, ALLOW_DISCARD: false };
-const KITTY_DRAW: AuctionSettingValues = { USE_KITTY: true, ALLOW_DISCARD: true };
-const NOKITTY_DRAW: AuctionSettingValues = { USE_KITTY: false, ALLOW_DISCARD: true };
+const NO_KITTY: AuctionSettingValues = {
+	USE_KITTY: false,
+	ALLOW_DISCARD: false,
+	FINISH_RULE: 'POINTS_120'
+};
+const KITTY_DRAW: AuctionSettingValues = {
+	USE_KITTY: true,
+	ALLOW_DISCARD: true,
+	FINISH_RULE: 'POINTS_120'
+};
+const NOKITTY_DRAW: AuctionSettingValues = {
+	USE_KITTY: false,
+	ALLOW_DISCARD: true,
+	FINISH_RULE: 'POINTS_120'
+};
 
 /** All card ids across hands + stock, to assert nothing is duplicated or lost. */
 function liveCardIds(g: AuctionGameState): string[] {

@@ -8,27 +8,53 @@
  * a deferred follow-up (see doc/TODO-010.md), and these two settings remain
  * rule calls awaiting real-player validation (SPEC §6).
  *
- * A *setting* is one atomic, named value (currently all boolean). A *profile*
- * is a named group of setting values: two built-in presets that are read-only,
- * plus "Custom", whose values the user chooses.
+ * A *setting* is one atomic, named value — either a boolean or a choice from a
+ * fixed set (the "Finish Game Rule" added in TODO-016). A *profile* is a named
+ * group of setting values: two built-in presets that are read-only, plus
+ * "Custom", whose values the user chooses.
  */
 
-export type AuctionSettingCode = 'USE_KITTY' | 'ALLOW_DISCARD';
+export type AuctionSettingCode = 'USE_KITTY' | 'ALLOW_DISCARD' | 'FINISH_RULE';
 
-export interface AuctionSetting {
-	readonly code: AuctionSettingCode;
+/** When the game ends (TODO-016). Stored only; no gameplay impact yet. */
+export type FinishGameRule = 'POINTS_120' | 'FOUR_TURNS';
+
+interface BooleanSetting {
+	readonly code: 'USE_KITTY' | 'ALLOW_DISCARD';
 	readonly desc: string;
 	readonly type: 'boolean';
 }
 
-/** The settings, in display order. Currently all boolean (see TODO-010). */
+interface ChoiceSetting {
+	readonly code: 'FINISH_RULE';
+	readonly desc: string;
+	readonly type: 'choice';
+	readonly options: readonly { readonly value: FinishGameRule; readonly label: string }[];
+}
+
+export type AuctionSetting = BooleanSetting | ChoiceSetting;
+
+/** The settings, in display order. */
 export const SETTINGS: readonly AuctionSetting[] = [
 	{ code: 'USE_KITTY', desc: 'Use kitty', type: 'boolean' },
-	{ code: 'ALLOW_DISCARD', desc: 'Allow discard when not bid-winner', type: 'boolean' }
+	{ code: 'ALLOW_DISCARD', desc: 'Allow discard when not bid-winner', type: 'boolean' },
+	{
+		code: 'FINISH_RULE',
+		desc: 'Finish Game Rule',
+		type: 'choice',
+		options: [
+			{ value: 'POINTS_120', label: '120 points reached' },
+			{ value: 'FOUR_TURNS', label: '4 turns of the table completed' }
+		]
+	}
 ];
 
-/** Effective value for every setting. */
-export type AuctionSettingValues = Record<AuctionSettingCode, boolean>;
+/** Effective value for every setting (heterogeneous: booleans plus the choice). */
+export interface AuctionSettingValues {
+	USE_KITTY: boolean;
+	ALLOW_DISCARD: boolean;
+	FINISH_RULE: FinishGameRule;
+}
 
 export type AuctionProfileId = 'Wikipedia' | 'Rec Hall' | 'Custom';
 
@@ -37,8 +63,8 @@ export const PROFILE_IDS: readonly AuctionProfileId[] = ['Wikipedia', 'Rec Hall'
 
 /** Read-only preset values for the built-in profiles. */
 export const BUILTIN_PROFILES: Record<'Wikipedia' | 'Rec Hall', AuctionSettingValues> = {
-	Wikipedia: { USE_KITTY: true, ALLOW_DISCARD: false },
-	'Rec Hall': { USE_KITTY: false, ALLOW_DISCARD: true }
+	Wikipedia: { USE_KITTY: true, ALLOW_DISCARD: false, FINISH_RULE: 'POINTS_120' },
+	'Rec Hall': { USE_KITTY: false, ALLOW_DISCARD: true, FINISH_RULE: 'FOUR_TURNS' }
 };
 
 /** Whether a profile's values are user-editable (only "Custom"). */
@@ -104,9 +130,14 @@ export function normalizeAuctionConfig(value: unknown): AuctionConfig {
 function normalizeValues(value: unknown, fallback: AuctionSettingValues): AuctionSettingValues {
 	const result = { ...fallback };
 	if (value && typeof value === 'object') {
+		const obj = value as Record<string, unknown>;
 		for (const s of SETTINGS) {
-			const raw = (value as Record<string, unknown>)[s.code];
-			if (typeof raw === 'boolean') result[s.code] = raw;
+			const raw = obj[s.code];
+			if (s.type === 'boolean') {
+				if (typeof raw === 'boolean') result[s.code] = raw;
+			} else if (s.options.some((o) => o.value === raw)) {
+				result[s.code] = raw as FinishGameRule;
+			}
 		}
 	}
 	return result;
