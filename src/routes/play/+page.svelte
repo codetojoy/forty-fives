@@ -68,6 +68,7 @@
 		game !== null && game.phase.kind === 'robbing' && game.phase.seat === HUMAN && !lastTrick
 	);
 	const trumpColor = $derived(game && isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35');
+	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
 
 	function seatName(seat: number): string {
 		return seat === HUMAN ? 'You' : opponentName;
@@ -431,19 +432,21 @@
 			</section>
 		{/if}
 
-		<section class="game-footer">
-			<label class="toggle">
-				<input type="checkbox" bind:checked={settings.highlightLegal} onchange={persist} />
-				Highlight legal cards
-			</label>
-			<label class="toggle">
-				<input type="checkbox" bind:checked={settings.confirmPlay} onchange={persist} />
-				Confirm before playing
-			</label>
-			<button type="button" class="small-button quit" onclick={quitGame}>
-				{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
-			</button>
-		</section>
+		{#if !gameOver}
+			<section class="game-footer">
+				<label class="toggle">
+					<input type="checkbox" bind:checked={settings.highlightLegal} onchange={persist} />
+					Highlight legal cards
+				</label>
+				<label class="toggle">
+					<input type="checkbox" bind:checked={settings.confirmPlay} onchange={persist} />
+					Confirm before playing
+				</label>
+				<button type="button" class="small-button quit" onclick={quitGame}>
+					{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
+				</button>
+			</section>
+		{/if}
 	{/if}
 </main>
 
