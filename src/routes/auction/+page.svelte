@@ -511,7 +511,6 @@
 		{#if humanToName && !lastTrick}
 			<section class="panel" aria-label="Name trump">
 				<h2>You won the bid — name trump</h2>
-				<p>You'll then take the three-card kitty and discard back down to five.</p>
 				<div class="panel-buttons">
 					{#each SUITS as suit (suit)}
 						<button
@@ -547,10 +546,6 @@
 		{#if humanToDraw && !lastTrick}
 			<section class="panel" aria-label="Exchange cards">
 				<h2>Exchange cards</h2>
-				<p>
-					Tap up to five cards to exchange with the deck, then draw — or stand pat to keep your
-					hand ({discardSel.length} chosen).
-				</p>
 				<div class="panel-buttons">
 					<button type="button" class="big-button" onclick={confirmDraw}>
 						{discardSel.length === 0 ? 'Stand pat' : `Exchange ${discardSel.length}`}
@@ -650,7 +645,7 @@
 	main {
 		max-width: 44rem;
 		margin: 0 auto;
-		padding: 1rem 1rem 3rem;
+		padding: 1rem 1rem 1.5rem;
 	}
 
 	.top-nav {
@@ -783,8 +778,8 @@
 
 	.game-header {
 		text-align: left;
-		margin-bottom: 0.75rem;
-		padding-bottom: 0.5rem;
+		margin-bottom: 0.5rem;
+		padding-bottom: 0.4rem;
 		border-bottom: 2px solid var(--accent);
 	}
 
@@ -1024,8 +1019,8 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 1rem;
-		margin-top: 1.75rem;
-		padding-top: 1rem;
+		margin-top: 0.75rem;
+		padding-top: 0.6rem;
 		border-top: 1px solid var(--rule);
 	}
 
@@ -1091,7 +1086,7 @@
 				'msg    msg    msg'
 				'panels panels panels';
 			column-gap: 1rem;
-			row-gap: 0.75rem;
+			row-gap: 0.5rem;
 			align-items: center;
 		}
 
@@ -1147,7 +1142,7 @@
 		   end of a hand (the section stays mounted but renders nothing then). */
 		.your-hand {
 			grid-area: south;
-			min-height: 13rem;
+			min-height: 12rem;
 		}
 
 		/* The one-at-a-time action panels share a single slot. It sits below the
