@@ -1,0 +1,1 @@
+function e(e=Date.now()>>>0){let t=e>>>0,n=()=>{t=t+1831565813>>>0;let e=t;return e=Math.imul(e^e>>>15,e|1),e^=e+Math.imul(e^e>>>7,e|61),((e^e>>>14)>>>0)/4294967296};return{next:n,int:e=>Math.floor(n()*e),pick:e=>{if(e.length===0)throw Error(`Cannot pick from an empty list`);return e[Math.floor(n()*e.length)]},chance:e=>n()<e}}export{e as t};
