@@ -113,6 +113,9 @@
 					Random each question
 				</button>
 			</div>
+			<p class="reference-link-wrap">
+				<a class="reference-link" href="{base}/trainer/reference">Ranking reference →</a>
+			</p>
 			<p class="scheme-note">
 				Rules: {scheme.name}. Regional variants (PEI, Northern&nbsp;NB, Cape&nbsp;Breton) are coming
 				once validated with local players.
@@ -180,6 +183,7 @@
 
 			<div class="quiz-footer">
 				<button type="button" class="small-button" onclick={changeTrump}>Change trump suit</button>
+				<a class="small-button" href="{base}/trainer/reference">Ranking reference</a>
 				<button type="button" class="small-button" onclick={resetScore}>Reset score</button>
 			</div>
 		</section>
@@ -315,6 +319,32 @@
 		color: var(--muted);
 	}
 
+	.reference-link-wrap {
+		text-align: center;
+		margin: 0 0 1.25rem;
+	}
+
+	.reference-link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 48px;
+		padding: 0 0.5rem;
+		color: var(--accent-deep);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.reference-link:hover,
+	.reference-link:focus-visible {
+		text-decoration: underline;
+	}
+
+	.reference-link:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+		border-radius: 8px;
+	}
+
 	.status-bar {
 		display: flex;
 		flex-wrap: wrap;
@@ -391,6 +421,9 @@
 	}
 
 	.small-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		min-height: 48px;
 		padding: 0.5rem 1rem;
 		font-size: 1rem;
@@ -398,6 +431,7 @@
 		border-radius: 6px;
 		background: transparent;
 		color: var(--ink);
+		text-decoration: none;
 		cursor: pointer;
 	}
 
