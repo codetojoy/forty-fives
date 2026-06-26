@@ -46,6 +46,10 @@
 			</span>
 		</a>
 	</nav>
+
+	<footer class="site-footer">
+		<a class="about-link" href="{base}/about">About</a>
+	</footer>
 </main>
 
 <style>
@@ -132,5 +136,36 @@
 	.mode-desc {
 		font-size: 1.02rem;
 		line-height: 1.4;
+	}
+
+	/* Secondary control: About is not a game mode, so it's a lighter link set apart
+	   from the mode cards by a divider, with a 48px tap target (SPEC §7). */
+	.site-footer {
+		margin-top: 2rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--rule);
+		text-align: center;
+	}
+
+	.about-link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 48px;
+		padding: 0 1rem;
+		color: var(--accent-deep);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.about-link:hover,
+	.about-link:focus-visible {
+		text-decoration: underline;
+	}
+
+	.about-link:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+		border-radius: 8px;
 	}
 </style>

@@ -29,6 +29,22 @@
 		<dd>{commit}</dd>
 	</dl>
 
+	<section class="attribution">
+		<p>
+			Forty-Fives is free and open source, released under the Apache 2.0 license.
+		</p>
+		<p>
+			<a
+				class="repo-link"
+				href="https://github.com/codetojoy/forty-fives"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				View the source on GitHub →
+			</a>
+		</p>
+	</section>
+
 	<p class="note"><a href="{base}/">← Home</a></p>
 </main>
 
@@ -84,10 +100,38 @@
 		word-break: break-all;
 	}
 
-	.note {
+	.attribution {
 		margin-top: 2.5rem;
 		padding-top: 1rem;
 		border-top: 1px solid var(--rule);
+		text-align: center;
+		font-size: 1.05rem;
+		line-height: 1.5;
+	}
+
+	.repo-link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 48px;
+		color: var(--accent);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.repo-link:hover,
+	.repo-link:focus-visible {
+		text-decoration: underline;
+	}
+
+	.repo-link:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+		border-radius: 8px;
+	}
+
+	.note {
+		margin-top: 1.5rem;
 		text-align: center;
 	}
 
