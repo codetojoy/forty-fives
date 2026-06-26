@@ -600,6 +600,11 @@
 					Your hand{humanToDiscard ? ' — tap three to discard' : ''}{humanToDraw
 						? ' — tap to exchange'
 						: ''}
+					{#if game.trumpSuit}
+						<span class="hand-trump" style="color: {trumpColor}">
+							· {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]} trump
+						</span>
+					{/if}
 				</h2>
 				<div class="hand-cards" style="--card-width: clamp(72px, 16vw, 104px)">
 					{#each game.hands[HUMAN_SEAT] as card (cardLabel(card))}
@@ -991,6 +996,13 @@
 		padding-bottom: 0.4rem;
 		border-bottom: 1px solid var(--rule);
 		margin-bottom: 0.75rem;
+	}
+
+	/* Trump reminder folded into the hand heading (TODO-029): keeps "what's trump"
+	   beside the cards you act on, so mobile players needn't scroll to the header.
+	   Colour rides on the suit name + symbol, never alone (SPEC §7). */
+	.hand-trump {
+		white-space: nowrap;
 	}
 
 	.hand-cards {
