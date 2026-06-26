@@ -93,7 +93,9 @@ const GAME_KEY = 'forty-fives.game.v1';
 function gameDefaults(): SavedGame {
 	return {
 		game: null,
-		settings: { highlightLegal: true, confirmPlay: true },
+		// Defaults: highlighting on, confirm-before-play off (TODO-027). These prefs
+		// are now edited on /play/config, not in the game footer.
+		settings: { highlightLegal: true, confirmPlay: false },
 		opponentName: 'Margaret'
 	};
 }

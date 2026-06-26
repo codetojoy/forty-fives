@@ -264,6 +264,9 @@
 			<button type="button" class="big-button start-button" onclick={newGame}>
 				Start a game
 			</button>
+			<p class="config-link-wrap">
+				<a class="config-link" href="{base}/play/config">Configure →</a>
+			</p>
 		</section>
 	{:else}
 		<header class="game-header">
@@ -434,14 +437,6 @@
 
 		{#if !gameOver}
 			<section class="game-footer">
-				<label class="toggle">
-					<input type="checkbox" bind:checked={settings.highlightLegal} onchange={persist} />
-					Highlight legal cards
-				</label>
-				<label class="toggle">
-					<input type="checkbox" bind:checked={settings.confirmPlay} onchange={persist} />
-					Confirm before playing
-				</label>
 				<button type="button" class="small-button quit" onclick={quitGame}>
 					{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
 				</button>
@@ -548,6 +543,32 @@
 	.start-button {
 		width: 100%;
 		margin-top: 1rem;
+	}
+
+	.config-link-wrap {
+		text-align: center;
+		margin: 1rem 0 0;
+	}
+
+	.config-link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 48px;
+		padding: 0 0.5rem;
+		color: var(--accent-deep);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.config-link:hover,
+	.config-link:focus-visible {
+		text-decoration: underline;
+	}
+
+	.config-link:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+		border-radius: 8px;
 	}
 
 	.game-header {
@@ -779,28 +800,6 @@
 		border-top: 1px solid var(--rule);
 	}
 
-	/* 48px tap targets for the toggles too (SPEC §7). */
-	.toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		min-height: 48px;
-		font-size: 1.02rem;
-		cursor: pointer;
-	}
-
-	.toggle input {
-		width: 26px;
-		height: 26px;
-		accent-color: var(--accent);
-		cursor: pointer;
-	}
-
-	.toggle input:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-	}
-
 	.small-button {
 		min-height: 48px;
 		padding: 0.5rem 1rem;
@@ -810,7 +809,6 @@
 		background: transparent;
 		color: var(--ink);
 		cursor: pointer;
-		margin-left: auto;
 	}
 
 	.small-button:hover {
