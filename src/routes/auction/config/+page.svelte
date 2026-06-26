@@ -8,13 +8,29 @@
 		type AuctionProfileId,
 		type AuctionSettingValues
 	} from '$lib/domain/auction-config.js';
-	import { loadAuctionConfig, saveAuctionConfig } from '$lib/ui/persistence.js';
+	import {
+		loadAuctionConfig,
+		saveAuctionConfig,
+		loadAuctionGame,
+		saveAuctionGame,
+		type GameSettings
+	} from '$lib/ui/persistence.js';
 
 	const initial = loadAuctionConfig();
+	// Display & interaction preferences (TODO-026) live in the auction game save
+	// alongside any in-progress game and are independent of the rules profile, but
+	// they share this page's single Save button so the dirty state is unambiguous.
+	const savedGame = loadAuctionGame();
+
 	let profile = $state<AuctionProfileId>(initial.profile);
 	let custom = $state<AuctionSettingValues>({ ...initial.custom });
+	let prefs = $state<GameSettings>({ ...savedGame.settings });
 	// A snapshot of what's in storage, to detect unsaved changes.
-	let saved = $state({ profile: initial.profile, custom: { ...initial.custom } });
+	let saved = $state({
+		profile: initial.profile,
+		custom: { ...initial.custom },
+		prefs: { ...savedGame.settings }
+	});
 
 	/** The values to show: a built-in preset, or the editable Custom values. */
 	const displayed = $derived<AuctionSettingValues>(
@@ -22,7 +38,10 @@
 	);
 
 	const dirty = $derived(
-		profile !== saved.profile || SETTINGS.some((s) => custom[s.code] !== saved.custom[s.code])
+		profile !== saved.profile ||
+			SETTINGS.some((s) => custom[s.code] !== saved.custom[s.code]) ||
+			prefs.highlightLegal !== saved.prefs.highlightLegal ||
+			prefs.confirmPlay !== saved.prefs.confirmPlay
 	);
 
 	function selectProfile(next: AuctionProfileId) {
@@ -50,7 +69,13 @@
 	function save() {
 		const next = { profile, custom: { ...custom } };
 		saveAuctionConfig(next);
-		saved = { profile: next.profile, custom: { ...next.custom } };
+		// Persist the prefs back into the game save, preserving any in-progress game.
+		saveAuctionGame({ ...savedGame, settings: { ...prefs } });
+		saved = {
+			profile: next.profile,
+			custom: { ...next.custom },
+			prefs: { ...prefs }
+		};
 	}
 
 	// Only Custom carries a blurb; the built-in presets are self-explanatory and
@@ -73,8 +98,8 @@
 	<header>
 		<h1>Auction Settings</h1>
 		<p class="subtitle">
-			Pick a rules profile to specify settings below. These take effect the next time you
-			start a New game.
+			Rules settings come from a profile and take effect the next time you start a New game.
+			Display &amp; interaction preferences are always editable. Save to apply.
 		</p>
 	</header>
 
@@ -99,7 +124,7 @@
 		</fieldset>
 
 		<fieldset class="settings">
-			<legend>Settings {isCustom(profile) ? '(editable)' : '(read-only)'}</legend>
+			<legend>Rules settings — set by profile {isCustom(profile) ? '(editable)' : '(read-only)'}</legend>
 			{#each SETTINGS as s (s.code)}
 				<div class="setting" class:stacked={s.type === 'choice'}>
 					<span class="setting-desc">{s.desc}</span>
@@ -147,6 +172,36 @@
 					{/if}
 				</div>
 			{/each}
+		</fieldset>
+
+		<fieldset class="settings prefs">
+			<legend>Display &amp; interaction — always editable</legend>
+			<p class="prefs-note">
+				Personal preferences, independent of the rules profile. Always editable; saved with
+				the button below.
+			</p>
+			<div class="setting">
+				<span class="setting-desc">Highlight legal cards</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="Highlight legal cards"
+						bind:checked={prefs.highlightLegal}
+					/>
+					<span class="toggle-value">{prefs.highlightLegal ? 'On' : 'Off'}</span>
+				</label>
+			</div>
+			<div class="setting">
+				<span class="setting-desc">Confirm before playing</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="Confirm before playing"
+						bind:checked={prefs.confirmPlay}
+					/>
+					<span class="toggle-value">{prefs.confirmPlay ? 'On' : 'Off'}</span>
+				</label>
+			</div>
 		</fieldset>
 
 		<div class="actions">
@@ -273,6 +328,12 @@
 	}
 
 	.profile-blurb {
+		font-size: 0.95rem;
+		color: var(--muted);
+	}
+
+	.prefs-note {
+		margin: 0 0 0.25rem;
 		font-size: 0.95rem;
 		color: var(--muted);
 	}

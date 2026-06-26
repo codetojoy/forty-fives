@@ -149,7 +149,9 @@ function auctionNames(): string[] {
 function auctionDefaults(): SavedAuctionGame {
 	return {
 		game: null,
-		settings: { highlightLegal: true, confirmPlay: true },
+		// Auction defaults: highlighting on, confirm-before-play off (TODO-026).
+		// These prefs are now edited on /auction/config, not in the game footer.
+		settings: { highlightLegal: true, confirmPlay: false },
 		names: auctionNames()
 	};
 }

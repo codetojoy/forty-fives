@@ -387,7 +387,7 @@
 			</p>
 			<button type="button" class="big-button start-button" onclick={newGame}>Start a game</button>
 			<p class="config-link-wrap">
-				<a class="config-link" href="{base}/auction/config">Configure rules →</a>
+				<a class="config-link" href="{base}/auction/config">Configure →</a>
 			</p>
 		</section>
 	{:else}
@@ -625,14 +625,6 @@
 
 		{#if !gameOver}
 			<section class="game-footer">
-				<label class="toggle">
-					<input type="checkbox" bind:checked={settings.highlightLegal} onchange={persist} />
-					Highlight legal cards
-				</label>
-				<label class="toggle">
-					<input type="checkbox" bind:checked={settings.confirmPlay} onchange={persist} />
-					Confirm before playing
-				</label>
 				<button type="button" class="small-button quit" onclick={quitGame}>
 					{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
 				</button>
@@ -1024,27 +1016,6 @@
 		border-top: 1px solid var(--rule);
 	}
 
-	.toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		min-height: 48px;
-		font-size: 1.02rem;
-		cursor: pointer;
-	}
-
-	.toggle input {
-		width: 26px;
-		height: 26px;
-		accent-color: var(--accent);
-		cursor: pointer;
-	}
-
-	.toggle input:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-	}
-
 	.small-button {
 		min-height: 48px;
 		padding: 0.5rem 1rem;
@@ -1054,7 +1025,6 @@
 		background: transparent;
 		color: var(--ink);
 		cursor: pointer;
-		margin-left: auto;
 	}
 
 	.small-button:hover {
