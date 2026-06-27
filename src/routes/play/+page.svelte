@@ -415,7 +415,14 @@
 
 		{#if game.hands[HUMAN].length > 0}
 			<section class="your-hand" aria-label="Your hand">
-				<h2 class="hand-heading">Your hand</h2>
+				<h2 class="hand-heading">
+					Your hand
+					{#if game.trumpSuit}
+						<span class="hand-trump" style="color: {trumpColor}">
+							· {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]} trump
+						</span>
+					{/if}
+				</h2>
 				<div class="hand-cards" style="--card-width: clamp(88px, 18vw, 120px)">
 					{#each game.hands[HUMAN] as card (cardLabel(card))}
 						<PlayingCard
@@ -775,6 +782,14 @@
 		padding-bottom: 0.4rem;
 		border-bottom: 1px solid var(--rule);
 		margin-bottom: 0.75rem;
+	}
+
+	/* Trump reminder folded into the hand heading (TODO-031, from BRAINSTORM-028 #1):
+	   keeps "what's trump" beside the cards you act on, so mobile players needn't
+	   scroll to the header. Colour rides on the suit name + symbol, never alone
+	   (SPEC §7). */
+	.hand-trump {
+		white-space: nowrap;
 	}
 
 	.hand-cards {
