@@ -70,23 +70,29 @@ function powerForSuit(
 	const trumps = hand.filter((c) => isTrump(c, trumpSuit, scheme));
 	const total = scheme.trumpStrengths[trumpSuit].size; // ~14 trumps
 
+	// Per-card trump/length/off-ace weights recalibrated in TODO-032: the previous
+	// values clustered ~62% of hands in the "afford 15 only" band (15 <= power < 20),
+	// so an AI forced to raise over a standing 15 almost always passed. These modest
+	// bumps roughly double the share of hands that can exceed 15 (so AIs contest a 15
+	// far more often) while the unchanged partner/kitty baseline keeps genuinely weak
+	// hands passing and keeps the risky 25/30 bids rare (no overbidding into sets).
 	let expectedTricks = 0;
 	for (const c of trumps) {
 		const strength = trumpStrength(c, trumpSuit, scheme)!;
 		// Position from the top: 1 = highest trump (the 5).
 		const positionFromTop = total - strength + 1;
-		if (positionFromTop <= 3) expectedTricks += 0.95; // 5, J, A♥ — near-certain
-		else if (positionFromTop <= 5) expectedTricks += 0.65; // A / K of trump
-		else expectedTricks += 0.4; // low trumps still pull a trick
+		if (positionFromTop <= 3) expectedTricks += 1.0; // 5, J, A♥ — near-certain
+		else if (positionFromTop <= 5) expectedTricks += 0.8; // A / K of trump
+		else expectedTricks += 0.5; // low trumps still pull a trick
 	}
 	// A long trump holding gives extra control beyond the individual cards.
-	if (trumps.length >= 4) expectedTricks += 0.6 * (trumps.length - 3);
+	if (trumps.length >= 4) expectedTricks += 0.7 * (trumps.length - 3);
 
 	// Off-suit aces sometimes steal a trick.
 	const offAces = hand.filter(
 		(c) => c.rank === 'A' && !isTrump(c, trumpSuit, scheme) && plainStrength(c, scheme) !== null
 	);
-	expectedTricks += 0.35 * offAces.length;
+	expectedTricks += 0.45 * offAces.length;
 
 	// Partnership allowance: the bidder's partner is expected to contribute about
 	// a trick, so a hand is valued on the pair's strength, not the bidder's alone.

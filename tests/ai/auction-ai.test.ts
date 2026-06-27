@@ -31,6 +31,7 @@ import {
 } from '$lib/ai/auction-ai.js';
 import { defaultSettingValues, type AuctionSettingValues } from '$lib/domain/auction-config.js';
 import { handsPerGame } from '$lib/domain/auction-scoring.js';
+import { MIN_BID } from '$lib/domain/bidding.js';
 
 const scheme = STANDARD_SCHEME;
 
@@ -294,5 +295,28 @@ describe('AI opens often enough (regression: it once almost never bid)', () => {
 			}
 		}
 		expect(dealsWithABidder / N).toBeGreaterThan(0.4);
+	});
+});
+
+describe('AI contests a standing 15 (regression: TODO-032)', () => {
+	it('a healthy share of seats will raise over an opponent who bid 15', () => {
+		// Before TODO-032 the power model clustered most hands in the "afford 15 only"
+		// band, so once someone bid 15 the only legal raise (>= 20) was unaffordable and
+		// AIs almost always passed. With highBid pinned at 15, legalBids() yields only
+		// 20/25/30, so a non-null chooseBid here means the seat actively contested the
+		// 15. Pins the recalibrated share well above the old ~0.10 it must not drift to.
+		const N = 300;
+		let seatsThatRaise = 0;
+		for (let seed = 0; seed < N; seed++) {
+			const opened = startAuction(scheme, createRng(seed));
+			const g: AuctionGameState = {
+				...opened,
+				phase: { kind: 'bidding', turn: 1, highBid: MIN_BID, highBidder: 0, passed: [false, false, false, false] }
+			};
+			for (const seat of [1, 2, 3]) {
+				if (chooseBid(g, scheme, seat).bid !== null) seatsThatRaise++;
+			}
+		}
+		expect(seatsThatRaise / (N * 3)).toBeGreaterThan(0.13);
 	});
 });
