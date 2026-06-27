@@ -28,6 +28,7 @@
 	import { teamOf, AUCTION_TARGET, handsPerGame } from '$lib/domain/auction-scoring.js';
 	import { legalBids, type BidValue } from '$lib/domain/bidding.js';
 	import { analyzePlays } from '$lib/domain/rules-engine.js';
+	import { isTrump } from '$lib/domain/trump-scheme.js';
 	import { createRng } from '$lib/domain/rng.js';
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
 	import {
@@ -81,6 +82,16 @@
 	);
 	/** Cards being chosen: exactly 3 for the kitty discard, 0–5 for the draw. */
 	const maxSelect = $derived(humanToDraw ? 5 : 3);
+	/**
+	 * True while the human is drawing and holds no trump (A♥ counts as trump, so a
+	 * hand with it does not qualify). Surfaces the "Exchange All" shortcut — the
+	 * textbook throw-everything-back case (TODO-035).
+	 */
+	const humanHasNoTrump = $derived.by(() => {
+		if (!game || !humanToDraw || game.trumpSuit === null) return false;
+		const trumpSuit = game.trumpSuit;
+		return !game.hands[HUMAN_SEAT].some((c) => isTrump(c, trumpSuit, scheme));
+	});
 	const humanToPlay = $derived(
 		game !== null &&
 			game.phase.kind === 'playing' &&
@@ -294,6 +305,14 @@
 	function confirmDraw() {
 		if (!game || !humanToDraw) return;
 		setGame(drawCards(game, HUMAN_SEAT, discardSel));
+		discardSel = [];
+		message = '';
+		advance();
+	}
+	/** Convenience for a no-trump hand: exchange all five in one tap (TODO-035). */
+	function exchangeAll() {
+		if (!game || !humanToDraw) return;
+		setGame(drawCards(game, HUMAN_SEAT, [...game.hands[HUMAN_SEAT]]));
 		discardSel = [];
 		message = '';
 		advance();
@@ -575,6 +594,9 @@
 					<button type="button" class="big-button" onclick={confirmDraw}>
 						{discardSel.length === 0 ? 'Stand pat' : `Exchange ${discardSel.length}`}
 					</button>
+					{#if humanHasNoTrump}
+						<button type="button" class="big-button" onclick={exchangeAll}>Exchange All</button>
+					{/if}
 				</div>
 			</section>
 		{/if}
