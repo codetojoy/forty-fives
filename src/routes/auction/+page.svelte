@@ -38,7 +38,13 @@
 		chooseCardAuction
 	} from '$lib/ai/auction-ai.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
-	import { loadAuctionGame, saveAuctionGame, loadAuctionConfig } from '$lib/ui/persistence.js';
+	import {
+		loadAuctionGame,
+		saveAuctionGame,
+		loadAuctionConfig,
+		loadAuctionStats,
+		saveAuctionStats
+	} from '$lib/ui/persistence.js';
 	import { resolveConfig } from '$lib/domain/auction-config.js';
 
 	const scheme = STANDARD_SCHEME;
@@ -224,9 +230,27 @@
 		if (after.completedTricks.length > tricksBefore) {
 			const trick = after.completedTricks[after.completedTricks.length - 1];
 			lastTrick = { plays: [...trick.plays], winner: trick.winner };
+			recordTrickAndGame(after, trick.winner);
 		} else {
 			advance();
 		}
+	}
+
+	/**
+	 * Tally stats at the one chokepoint every trick (human or AI) passes through
+	 * (TODO-033). A game can only end on a final-trick playCard, so game-completion
+	 * is detectable here too. Imperative, so it fires exactly once per transition.
+	 */
+	function recordTrickAndGame(after: AuctionGameState, trickWinner: number) {
+		const myTeam = teamOf(HUMAN_SEAT);
+		const stats = loadAuctionStats();
+		stats.tricksTotal += 1;
+		if (teamOf(trickWinner) === myTeam) stats.tricksWonByTeam += 1;
+		if (after.phase.kind === 'hand-over' && after.phase.gameWinner !== null) {
+			stats.gamesTotal += 1;
+			if (after.phase.gameWinner === myTeam) stats.gamesWonByTeam += 1;
+		}
+		saveAuctionStats(stats);
 	}
 
 	function continueAfterTrick() {
@@ -388,6 +412,7 @@
 			<button type="button" class="big-button start-button" onclick={newGame}>Start a game</button>
 			<p class="config-link-wrap">
 				<a class="config-link" href="{base}/auction/config">Configure →</a>
+				<a class="config-link" href="{base}/auction/stats">Stats →</a>
 			</p>
 		</section>
 	{:else}
@@ -748,7 +773,10 @@
 	}
 
 	.config-link-wrap {
-		text-align: center;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem 1.5rem;
 		margin: 1rem 0 0;
 	}
 

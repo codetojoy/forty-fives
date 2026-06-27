@@ -234,3 +234,53 @@ export function saveAuctionConfig(config: AuctionConfig): void {
 		// Storage may be unavailable (private browsing); config just won't persist.
 	}
 }
+
+// --- Auction stats (TODO-033) ------------------------------------------------
+// Lifetime tallies for the human's team, shown on /auction/stats. Local-only,
+// like the trainer stats (SPEC §7 forbids network analytics, not local counts);
+// kept out of AuctionGameState so saved games stay pure game data.
+
+export interface AuctionStats {
+	/** Tricks completed across all games. */
+	tricksTotal: number;
+	/** Of those, tricks won by the human's team. */
+	tricksWonByTeam: number;
+	/** Games played to completion (abandoned games are not counted). */
+	gamesTotal: number;
+	/** Of those, games won by the human's team. */
+	gamesWonByTeam: number;
+}
+
+const AUCTION_STATS_KEY = 'forty-fives.auction-stats.v1';
+
+export function emptyAuctionStats(): AuctionStats {
+	return { tricksTotal: 0, tricksWonByTeam: 0, gamesTotal: 0, gamesWonByTeam: 0 };
+}
+
+export function loadAuctionStats(): AuctionStats {
+	if (!browser) return emptyAuctionStats();
+	try {
+		const raw = localStorage.getItem(AUCTION_STATS_KEY);
+		if (!raw) return emptyAuctionStats();
+		const parsed = JSON.parse(raw) as Partial<AuctionStats>;
+		const d = emptyAuctionStats();
+		// Per-field fallback so a partial or older blob still loads sensibly.
+		return {
+			tricksTotal: isCount(parsed.tricksTotal) ? parsed.tricksTotal : d.tricksTotal,
+			tricksWonByTeam: isCount(parsed.tricksWonByTeam) ? parsed.tricksWonByTeam : d.tricksWonByTeam,
+			gamesTotal: isCount(parsed.gamesTotal) ? parsed.gamesTotal : d.gamesTotal,
+			gamesWonByTeam: isCount(parsed.gamesWonByTeam) ? parsed.gamesWonByTeam : d.gamesWonByTeam
+		};
+	} catch {
+		return emptyAuctionStats();
+	}
+}
+
+export function saveAuctionStats(stats: AuctionStats): void {
+	if (!browser) return;
+	try {
+		localStorage.setItem(AUCTION_STATS_KEY, JSON.stringify(stats));
+	} catch {
+		// Storage may be unavailable (private browsing); stats just won't persist.
+	}
+}
