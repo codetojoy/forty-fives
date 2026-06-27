@@ -26,7 +26,7 @@
 	import { explainTrick } from '$lib/domain/trick.js';
 	import { chooseCard, chooseRob } from '$lib/ai/heuristic.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
-	import { loadGame, saveGame } from '$lib/ui/persistence.js';
+	import { loadGame, saveGame, loadPlayStats, savePlayStats } from '$lib/ui/persistence.js';
 
 	const scheme = STANDARD_SCHEME;
 	const rng = createRng();
@@ -154,9 +154,26 @@
 					scheme
 				)
 			};
+			recordTrickAndGame(after, trick.winner);
 		} else {
 			advance();
 		}
+	}
+
+	/**
+	 * Tally stats at the one chokepoint every trick (human or AI) passes through
+	 * (TODO-034). A game can only end on a final-trick playCard, so game-completion
+	 * is detectable here too. Imperative, so it fires exactly once per transition.
+	 */
+	function recordTrickAndGame(after: GameState, trickWinner: number) {
+		const stats = loadPlayStats();
+		stats.tricksTotal += 1;
+		if (trickWinner === HUMAN) stats.tricksWonByUser += 1;
+		if (after.phase.kind === 'hand-over' && after.phase.gameWinner !== null) {
+			stats.gamesTotal += 1;
+			if (after.phase.gameWinner === HUMAN) stats.gamesWonByUser += 1;
+		}
+		savePlayStats(stats);
 	}
 
 	function continueAfterTrick() {
@@ -266,6 +283,7 @@
 			</button>
 			<p class="config-link-wrap">
 				<a class="config-link" href="{base}/play/config">Configure →</a>
+				<a class="config-link" href="{base}/play/stats">Stats →</a>
 			</p>
 		</section>
 	{:else}
@@ -553,7 +571,10 @@
 	}
 
 	.config-link-wrap {
-		text-align: center;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem 1.5rem;
 		margin: 1rem 0 0;
 	}
 

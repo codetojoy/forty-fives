@@ -284,3 +284,53 @@ export function saveAuctionStats(stats: AuctionStats): void {
 		// Storage may be unavailable (private browsing); stats just won't persist.
 	}
 }
+
+// --- Forty-Fives (1v1) stats (TODO-034) --------------------------------------
+// Lifetime tallies for the human player in the 1v1 game, shown on /play/stats.
+// Parallel to AuctionStats but solo (a player, not a team); kept in its own blob
+// so the two games' stats are independent and saved games stay pure data.
+
+export interface PlayStats {
+	/** Tricks completed across all games. */
+	tricksTotal: number;
+	/** Of those, tricks won by the human. */
+	tricksWonByUser: number;
+	/** Games played to completion (abandoned games are not counted). */
+	gamesTotal: number;
+	/** Of those, games won by the human. */
+	gamesWonByUser: number;
+}
+
+const PLAY_STATS_KEY = 'forty-fives.play-stats.v1';
+
+export function emptyPlayStats(): PlayStats {
+	return { tricksTotal: 0, tricksWonByUser: 0, gamesTotal: 0, gamesWonByUser: 0 };
+}
+
+export function loadPlayStats(): PlayStats {
+	if (!browser) return emptyPlayStats();
+	try {
+		const raw = localStorage.getItem(PLAY_STATS_KEY);
+		if (!raw) return emptyPlayStats();
+		const parsed = JSON.parse(raw) as Partial<PlayStats>;
+		const d = emptyPlayStats();
+		// Per-field fallback so a partial or older blob still loads sensibly.
+		return {
+			tricksTotal: isCount(parsed.tricksTotal) ? parsed.tricksTotal : d.tricksTotal,
+			tricksWonByUser: isCount(parsed.tricksWonByUser) ? parsed.tricksWonByUser : d.tricksWonByUser,
+			gamesTotal: isCount(parsed.gamesTotal) ? parsed.gamesTotal : d.gamesTotal,
+			gamesWonByUser: isCount(parsed.gamesWonByUser) ? parsed.gamesWonByUser : d.gamesWonByUser
+		};
+	} catch {
+		return emptyPlayStats();
+	}
+}
+
+export function savePlayStats(stats: PlayStats): void {
+	if (!browser) return;
+	try {
+		localStorage.setItem(PLAY_STATS_KEY, JSON.stringify(stats));
+	} catch {
+		// Storage may be unavailable (private browsing); stats just won't persist.
+	}
+}
