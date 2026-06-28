@@ -134,9 +134,20 @@ export function saveGame(saved: SavedGame): void {
 
 // --- Auction game persistence (Milestone 3) ----------------------------------
 
+/**
+ * Auction adds one display/interaction preference beyond the shared GameSettings:
+ * a one-tap "Exchange Non-trump" in the draw phase (TODO-037). Kept auction-only
+ * (the 1v1 game has no draw phase), and — like the other prefs here — independent
+ * of the rules profile.
+ */
+export interface AuctionGameSettings extends GameSettings {
+	/** Offer "Exchange Non-trump" with no card selection in the draw phase. */
+	alwaysExchangeNonTrump: boolean;
+}
+
 export interface SavedAuctionGame {
 	game: AuctionGameState | null;
-	settings: GameSettings;
+	settings: AuctionGameSettings;
 	/** Display names per seat; seat 0 (the human) is always "You". */
 	names: string[];
 }
@@ -151,9 +162,10 @@ function auctionNames(): string[] {
 function auctionDefaults(): SavedAuctionGame {
 	return {
 		game: null,
-		// Auction defaults: highlighting on, confirm-before-play off (TODO-026).
-		// These prefs are now edited on /auction/config, not in the game footer.
-		settings: { highlightLegal: true, confirmPlay: false },
+		// Auction defaults: highlighting on, confirm-before-play off (TODO-026),
+		// always-exchange-non-trump off (TODO-037). These prefs are edited on
+		// /auction/config, not in the game footer.
+		settings: { highlightLegal: true, confirmPlay: false, alwaysExchangeNonTrump: false },
 		names: auctionNames()
 	};
 }
@@ -191,7 +203,9 @@ export function loadAuctionGame(): SavedAuctionGame {
 			game: isPlausibleAuctionState(parsed.game) ? withSavedGameDefaults(parsed.game) : null,
 			settings: {
 				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
-				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
+				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay,
+				alwaysExchangeNonTrump:
+					parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump
 			},
 			names
 		};

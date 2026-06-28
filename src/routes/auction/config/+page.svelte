@@ -13,7 +13,7 @@
 		saveAuctionConfig,
 		loadAuctionGame,
 		saveAuctionGame,
-		type GameSettings
+		type AuctionGameSettings
 	} from '$lib/ui/persistence.js';
 
 	const initial = loadAuctionConfig();
@@ -24,7 +24,7 @@
 
 	let profile = $state<AuctionProfileId>(initial.profile);
 	let custom = $state<AuctionSettingValues>({ ...initial.custom });
-	let prefs = $state<GameSettings>({ ...savedGame.settings });
+	let prefs = $state<AuctionGameSettings>({ ...savedGame.settings });
 	// A snapshot of what's in storage, to detect unsaved changes.
 	let saved = $state({
 		profile: initial.profile,
@@ -41,7 +41,8 @@
 		profile !== saved.profile ||
 			SETTINGS.some((s) => custom[s.code] !== saved.custom[s.code]) ||
 			prefs.highlightLegal !== saved.prefs.highlightLegal ||
-			prefs.confirmPlay !== saved.prefs.confirmPlay
+			prefs.confirmPlay !== saved.prefs.confirmPlay ||
+			prefs.alwaysExchangeNonTrump !== saved.prefs.alwaysExchangeNonTrump
 	);
 
 	function selectProfile(next: AuctionProfileId) {
@@ -200,6 +201,17 @@
 						bind:checked={prefs.confirmPlay}
 					/>
 					<span class="toggle-value">{prefs.confirmPlay ? 'On' : 'Off'}</span>
+				</label>
+			</div>
+			<div class="setting">
+				<span class="setting-desc">Always exchange non-trump</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="Always exchange non-trump"
+						bind:checked={prefs.alwaysExchangeNonTrump}
+					/>
+					<span class="toggle-value">{prefs.alwaysExchangeNonTrump ? 'On' : 'Off'}</span>
 				</label>
 			</div>
 		</fieldset>

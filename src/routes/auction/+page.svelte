@@ -82,6 +82,11 @@
 	const humanToDraw = $derived(
 		game?.phase.kind === 'drawing' && currentSeat(game) === HUMAN_SEAT
 	);
+	/**
+	 * When "Always exchange non-trump" is on (TODO-037) the draw is a single tap with
+	 * no card selection, so the hand isn't tappable during the human's draw.
+	 */
+	const drawSelectable = $derived(humanToDraw && !settings.alwaysExchangeNonTrump);
 	/** Cards being chosen: exactly 3 for the kitty discard, 0–5 for the draw. */
 	const maxSelect = $derived(humanToDraw ? 5 : 3);
 	/**
@@ -323,11 +328,24 @@
 		message = '';
 		advance();
 	}
+	/**
+	 * "Always exchange non-trump" (TODO-037): one tap exchanges every non-trump
+	 * card, keeping trumps (A♥ counts as trump, so it's kept). No card selection.
+	 */
+	function exchangeNonTrump() {
+		if (!game || !humanToDraw || game.trumpSuit === null) return;
+		const trumpSuit = game.trumpSuit;
+		const nonTrump = game.hands[HUMAN_SEAT].filter((c) => !isTrump(c, trumpSuit, scheme));
+		setGame(drawCards(game, HUMAN_SEAT, nonTrump));
+		discardSel = [];
+		message = '';
+		advance();
+	}
 
 	function tapCard(card: Card) {
 		if (!game) return;
 		quitArmed = false;
-		if (humanToDiscard || humanToDraw) {
+		if (humanToDiscard || drawSelectable) {
 			toggleDiscard(card);
 			return;
 		}
@@ -386,9 +404,10 @@
 					? 'Choose three cards to discard.'
 					: `${name(game.biddingSeat!)} is taking the kitty…`;
 			case 'drawing':
-				return humanToDraw
+				if (!humanToDraw) return `${name(currentSeat(game)!)} is drawing…`;
+				return drawSelectable
 					? 'Choose cards to exchange (or stand pat).'
-					: `${name(currentSeat(game)!)} is drawing…`;
+					: 'Exchange your non-trump cards, or stand pat.';
 			case 'playing':
 				if (currentSeat(game) !== HUMAN_SEAT) return `${name(currentSeat(game)!)} is thinking…`;
 				if (ledCard(game) === null) return 'Your lead — play any card.';
@@ -619,11 +638,18 @@
 			<section class="panel" aria-label="Exchange cards">
 				<h2>Exchange cards</h2>
 				<div class="panel-buttons">
-					<button type="button" class="big-button" onclick={confirmDraw}>
-						{discardSel.length === 0 ? 'Stand pat' : `Exchange ${discardSel.length}`}
-					</button>
-					{#if humanHasNoTrump}
-						<button type="button" class="big-button" onclick={exchangeAll}>Exchange All</button>
+					{#if settings.alwaysExchangeNonTrump}
+						<button type="button" class="big-button" onclick={confirmDraw}>Stand pat</button>
+						<button type="button" class="big-button" onclick={exchangeNonTrump}>
+							Exchange Non-trump
+						</button>
+					{:else}
+						<button type="button" class="big-button" onclick={confirmDraw}>
+							{discardSel.length === 0 ? 'Stand pat' : `Exchange ${discardSel.length}`}
+						</button>
+						{#if humanHasNoTrump}
+							<button type="button" class="big-button" onclick={exchangeAll}>Exchange All</button>
+						{/if}
 					{/if}
 				</div>
 			</section>
@@ -672,7 +698,7 @@
 		<section class="your-hand" aria-label="Your hand">
 			{#if game.hands[HUMAN_SEAT].length > 0}
 				<h2 class="hand-heading">
-					Your hand{humanToDiscard ? ' — tap three to discard' : ''}{humanToDraw
+					Your hand{humanToDiscard ? ' — tap three to discard' : ''}{drawSelectable
 						? ' — tap to exchange'
 						: ''}
 					{#if game.trumpSuit}
@@ -686,7 +712,7 @@
 						<PlayingCard
 							{card}
 							onpick={() => tapCard(card)}
-							disabled={!humanToPlay && !humanToDiscard && !humanToDraw}
+							disabled={!humanToPlay && !humanToDiscard && !drawSelectable}
 							selected={isSelected(card)}
 							dimmed={isDimmed(card)}
 						/>
