@@ -39,7 +39,7 @@ function formatAtlanticTimestamp(date: Date): string {
 // end up as literals in the static HTML — no runtime/network lookup. Bump the version
 // here manually for now. The commit hash is HEAD at build time, so a later
 // "bump version" commit won't be reflected — that's acceptable per the spec.
-const appVersion = '0.1.35';
+const appVersion = '0.1.36';
 // Displayed as dd-MMM-YYYY HH:mm tz in Atlantic Time (e.g. 13-JUN-2026 15:30 ADT),
 // per TODO-007. America/Halifax gives the correct ADT/AST abbreviation and offset.
 const buildTime = formatAtlanticTimestamp(new Date());

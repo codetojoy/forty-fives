@@ -3,6 +3,7 @@
 	import { base } from '$app/paths';
 	import {
 		cardLabel,
+		parseCardId,
 		sameCard,
 		SUIT_NAMES,
 		SUIT_SYMBOLS,
@@ -39,6 +40,7 @@
 		chooseCardAuction
 	} from '$lib/ai/auction-ai.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
+	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import {
 		loadAuctionGame,
 		saveAuctionGame,
@@ -108,6 +110,10 @@
 	);
 	const trumpColor = $derived(
 		game?.trumpSuit ? (isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35') : '#3d3a35'
+	);
+	/** Current trump suit's full ranking, highest first, for the trump-ranking help (TODO-036). */
+	const trumpRanking = $derived(
+		game?.trumpSuit ? scheme.trumpRankings[game.trumpSuit].map(parseCardId) : []
 	);
 	/** The game is finished once a team has crossed the target and a winner is set. */
 	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
@@ -417,17 +423,22 @@
 			<p class="subtitle">Four players · partners · bid, name trump, take the kitty</p>
 		</header>
 		<section class="intro">
-			<p>
-				You and your partner sit opposite two opponents. Everyone gets five cards and a three-card
-				kitty waits in the middle. Bid 15, 20, 25 or 30 for the right to name trump and take the
-				kitty; make your bid or be set. Tricks are five points each, plus five for the highest
-				trump —
-				{#if nextGameFinishRule === 'FOUR_TURNS'}
-					highest score after 4 turns of the table ({handsPerGame()} hands) wins.
-				{:else}
-					first team to {AUCTION_TARGET} wins.
-				{/if}
-			</p>
+			<div class="tagline">
+				<span>Bid, name trump, take the kitty — and play in partnership.</span>
+				<HelpDisclosure label="How to play Auction Forty-Fives" triggerText="How to play">
+					<p class="help-para">
+						You and your partner sit opposite two opponents. Everyone gets five cards and a
+						three-card kitty waits in the middle. Bid 15, 20, 25 or 30 for the right to name trump
+						and take the kitty; make your bid or be set. Tricks are five points each, plus five for
+						the highest trump —
+						{#if nextGameFinishRule === 'FOUR_TURNS'}
+							highest score after 4 turns of the table ({handsPerGame()} hands) wins.
+						{:else}
+							first team to {AUCTION_TARGET} wins.
+						{/if}
+					</p>
+				</HelpDisclosure>
+			</div>
 			<button type="button" class="big-button start-button" onclick={newGame}>Start a game</button>
 			<p class="config-link-wrap">
 				<a class="config-link" href="{base}/auction/config">Configure →</a>
@@ -443,8 +454,25 @@
 					<span class="target">{finishNote}</span>
 				</span>
 				{#if game.trumpSuit}
-					<span class="trump-badge" style="color: {trumpColor}">
-						Trump: {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]}
+					<span class="trump-wrap">
+						<span class="trump-badge" style="color: {trumpColor}">
+							Trump: {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]}
+						</span>
+						<HelpDisclosure label="Show the trump ranking" align="end">
+							<h2 class="rank-heading" style="color: {trumpColor}">
+								Trump ranking — {SUIT_NAMES[game.trumpSuit]} {SUIT_SYMBOLS[game.trumpSuit]}
+							</h2>
+							<p class="rank-note">
+								Highest to lowest. The 5, Jack and A♥ are the top three trumps in every suit.
+							</p>
+							<ol class="rank-list">
+								{#each trumpRanking as c (cardLabel(c))}
+									<li class="rank-chip" style="color: {isRedSuit(c.suit) ? '#c0262d' : '#3d3a35'}">
+										{cardLabel(c)}
+									</li>
+								{/each}
+							</ol>
+						</HelpDisclosure>
 					</span>
 				{/if}
 			</div>
@@ -758,6 +786,17 @@
 		font-size: 1.1rem;
 	}
 
+	.tagline {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+	}
+
+	.help-para {
+		margin: 0;
+	}
+
 	.big-button {
 		min-height: 60px;
 		padding: 0.75rem 1.25rem;
@@ -849,9 +888,47 @@
 		color: var(--muted);
 	}
 
+	.trump-wrap {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	.trump-badge {
 		font-size: 1.25rem;
 		font-weight: 700;
+	}
+
+	.rank-heading {
+		font-size: 1.1rem;
+		margin: 0 0 0.4rem;
+	}
+
+	.rank-note {
+		margin: 0 0 0.6rem;
+		font-size: 0.95rem;
+		color: var(--muted);
+	}
+
+	.rank-list {
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0;
+		padding: 0;
+	}
+
+	.rank-chip {
+		min-width: 2.5rem;
+		padding: 0.3rem 0.45rem;
+		text-align: center;
+		font-size: 1.05rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		background: var(--bg, #fffdf6);
+		border: 1px solid var(--rule);
+		border-radius: 5px;
 	}
 
 	.hand-info {
