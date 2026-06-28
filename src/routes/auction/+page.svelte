@@ -445,17 +445,19 @@
 			<div class="tagline">
 				<span>Bid, name trump, take the kitty — and play in partnership.</span>
 				<HelpDisclosure label="How to play Auction Forty-Fives" triggerText="How to play">
-					<p class="help-para">
-						You and your partner sit opposite two opponents. Everyone gets five cards and a
-						three-card kitty waits in the middle. Bid 15, 20, 25 or 30 for the right to name trump
-						and take the kitty; make your bid or be set. Tricks are five points each, plus five for
-						the highest trump —
-						{#if nextGameFinishRule === 'FOUR_TURNS'}
-							highest score after 4 turns of the table ({handsPerGame()} hands) wins.
-						{:else}
-							first team to {AUCTION_TARGET} wins.
-						{/if}
-					</p>
+					<ul class="help-list">
+						<li>You and your partner sit opposite two opponents.</li>
+						<li>Everyone gets five cards and a three-card kitty waits in the middle.</li>
+						<li>Bid 15, 20, 25 or 30 for the right to name trump and take the kitty; make your bid or be set.</li>
+						<li>
+							Tricks are five points each, plus five for the highest trump —
+							{#if nextGameFinishRule === 'FOUR_TURNS'}
+								highest score after 4 turns of the table ({handsPerGame()} hands) wins.
+							{:else}
+								first team to {AUCTION_TARGET} wins.
+							{/if}
+						</li>
+					</ul>
 				</HelpDisclosure>
 			</div>
 			<button type="button" class="big-button start-button" onclick={newGame}>Start a game</button>
@@ -819,8 +821,17 @@
 		gap: 0.5rem 0.75rem;
 	}
 
-	.help-para {
+	.help-list {
 		margin: 0;
+		padding-left: 1.2rem;
+	}
+
+	.help-list li {
+		margin-bottom: 0.5rem;
+	}
+
+	.help-list li:last-child {
+		margin-bottom: 0;
 	}
 
 	.big-button {
@@ -926,7 +937,9 @@
 	}
 
 	.rank-heading {
-		font-size: 1.1rem;
+		font-family: var(--serif);
+		font-weight: 600;
+		font-size: 1.15rem;
 		margin: 0 0 0.4rem;
 	}
 
