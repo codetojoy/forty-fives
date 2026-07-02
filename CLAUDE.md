@@ -70,6 +70,6 @@ SPEC §10's proposed structure is mapped onto SvelteKit: `src/domain/` → `src/
 
 - Accessibility is a hard requirement, not polish (SPEC §7): ≥48px tap targets (prefer 56+), large high-contrast card faces, no swipe-only gestures, respect OS font scaling.
 - Privacy first: no accounts, no analytics, no network calls beyond loading the site. State persists only to `localStorage`.
-- License is Apache 2.0. Any new visual asset must be CC0/MIT/Apache-compatible and recorded in `ASSETS.md` with its provenance (currently all assets are project-original, including the programmatically drawn SVG cards).
+- License is Apache 2.0. Any new visual asset must be CC0/MIT/Apache-compatible and recorded in `ASSETS.md` with its provenance (third-party today: the two font families, SIL OFL, and the six CC0 avatar SVGs; everything else is project-original, including the programmatically drawn SVG cards).
 - Game state should be immutable; prefer pure functions over classes in domain code.
 - Three Milestone 1 rules calls await real-player validation (SPEC §6 acceptance testing): robbing is *optional* for the entitled player; a hand with no trump played awards no highest-trump bonus (totals 25, not 30); if both players cross 45 in the same hand the higher total wins and an exact tie plays another hand. If testers report differently, those become scheme data, not code branches.

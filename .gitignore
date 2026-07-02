@@ -24,3 +24,6 @@ vite.config.ts.timestamp-*
 
 # Local-only styling reference for TODO-003 (do not commit)
 doc/Example.pdf
+
+# Personal local scripts / session notes (do not commit)
+my_*

@@ -1,8 +1,8 @@
 # Asset provenance
 
 Per SPEC §9, every visual asset in this repository is listed here with its origin and
-license. The only third-party assets are the two bundled font families (SIL OFL,
-Apache-compatible); everything else is original to this project.
+license. The third-party assets are the two bundled font families (SIL OFL) and the six
+avatar SVGs (CC0) — both Apache-compatible; everything else is original to this project.
 
 | Asset | Origin | License |
 |---|---|---|
@@ -41,9 +41,10 @@ Pablo Stanley), Node 26, with every option pinned (`accessoriesProbability: 100`
 
 The file numbering preserves the candidate-sheet numbers from the TODO-038 curation pass
 (16 generated, 6 kept). Three are wired to the Auction AI seats (Stewart `peep-02`,
-Margaret `peep-01`, Bernadette `peep-16`, fixed by seat index); `peep-04/05/06` are
-reserves for the `/play` opponent or a future human spot. Avatars are decorative:
-`alt=""` + `aria-hidden`, with the visible seat name and role as the real identifiers.
+Margaret `peep-01`, Bernadette `peep-16`, fixed by seat index); the `/play` opponent
+reuses the same persona faces by name (TODO-039), and `peep-04/05/06` are reserves for
+a future human spot or new personas. Avatars are decorative: `alt=""` + `aria-hidden`,
+with the visible seat name and role as the real identifiers.
 
 ## Note on the card deck
 

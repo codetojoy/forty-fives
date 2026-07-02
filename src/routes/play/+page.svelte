@@ -27,12 +27,16 @@
 	import { chooseCard, chooseRob } from '$lib/ai/heuristic.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import { loadGame, saveGame, loadPlayStats, savePlayStats } from '$lib/ui/persistence.js';
+	import avatarMargaret from '$lib/assets/avatars/peep-01.svg';
+	import avatarStewart from '$lib/assets/avatars/peep-02.svg';
 
 	const scheme = STANDARD_SCHEME;
 	const rng = createRng();
 	const HUMAN = 0;
 	const AI = 1;
 	const AI_NAMES = ['Margaret', 'Stewart'];
+	/* Same persona, same face as the Auction seats (TODO-039). */
+	const AVATARS: Record<string, string> = { Margaret: avatarMargaret, Stewart: avatarStewart };
 	const AI_DELAY_MS = 800;
 
 	const saved = loadGame();
@@ -306,6 +310,10 @@
 
 		<section class="opponent" aria-label="{opponentName}'s side">
 			<div class="opponent-row">
+				{#if AVATARS[opponentName]}
+					<!-- Decorative — the visible name is the identifier (SPEC §8). -->
+					<img class="opponent-avatar" src={AVATARS[opponentName]} alt="" aria-hidden="true" width="44" height="44" />
+				{/if}
 				<span class="opponent-name">{opponentName}</span>
 				<div class="opponent-cards" style="--card-width: 52px">
 					{#each game.hands[AI] as _, i (i)}
@@ -645,6 +653,15 @@
 		display: flex;
 		align-items: center;
 		gap: 0.9rem;
+	}
+
+	.opponent-avatar {
+		flex: none;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: 1px solid var(--rule);
+		background: var(--bg);
 	}
 
 	.opponent-name {
