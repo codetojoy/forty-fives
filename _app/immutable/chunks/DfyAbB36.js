@@ -1,0 +1,1 @@
+var e=``+new URL(`../assets/peep-01.CCBp_1xj.svg`,import.meta.url).href,t=``+new URL(`../assets/peep-02.DvXfLjrX.svg`,import.meta.url).href;export{e as n,t};
