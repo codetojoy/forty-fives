@@ -41,6 +41,9 @@
 	} from '$lib/ai/auction-ai.js';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
+	import avatarMargaret from '$lib/assets/avatars/peep-01.svg';
+	import avatarStewart from '$lib/assets/avatars/peep-02.svg';
+	import avatarBernadette from '$lib/assets/avatars/peep-16.svg';
 	import {
 		loadAuctionGame,
 		saveAuctionGame,
@@ -53,6 +56,14 @@
 	const scheme = STANDARD_SCHEME;
 	const rng = createRng();
 	const AI_DELAY_MS = 750;
+
+	/* Fixed per-seat avatars (TODO-038), keyed by seat index — not by name, so
+	   a future rename can't change a face mid-game. */
+	const AVATARS: Record<number, string> = {
+		1: avatarStewart,
+		2: avatarMargaret,
+		3: avatarBernadette
+	};
 
 	const saved = loadAuctionGame();
 	let game = $state<AuctionGameState | null>(saved.game);
@@ -519,10 +530,17 @@
 					class:west={seat === 3}
 					class:active={!lastTrick && actor(game) === seat}
 				>
-					<span class="seat-name">{name(seat)}</span>
-					<span class="seat-role" class:partner={teamOf(seat) === teamOf(HUMAN_SEAT)}>
-						{role(seat)}
-					</span>
+					<div class="seat-header">
+						<!-- Decorative — the visible name + role are the identifiers, so it is
+						     hidden from assistive tech like the facedown cards (SPEC §8). -->
+						<img class="seat-avatar" src={AVATARS[seat]} alt="" aria-hidden="true" width="44" height="44" />
+						<div class="seat-id">
+							<span class="seat-name">{name(seat)}</span>
+							<span class="seat-role" class:partner={teamOf(seat) === teamOf(HUMAN_SEAT)}>
+								{role(seat)}
+							</span>
+						</div>
+					</div>
 					<div class="seat-cards" style="--card-width: 34px" aria-hidden="true">
 						{#each game.hands[seat] as _, i (i)}
 							<PlayingCard facedown />
@@ -997,6 +1015,30 @@
 	.seat.active {
 		border-color: var(--accent);
 		box-shadow: 0 0 0 2px var(--accent);
+	}
+
+	.seat-header {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+	}
+
+	/* Sized so the header row matches the old stacked name/role height and the
+	   TODO-015 seat reservation (9.5rem, wide layout) is unchanged. */
+	.seat-avatar {
+		flex: none;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: 1px solid var(--rule);
+		background: var(--bg);
+	}
+
+	.seat-id {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		min-width: 0;
 	}
 
 	.seat-name {
