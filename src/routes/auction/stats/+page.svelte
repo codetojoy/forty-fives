@@ -69,8 +69,13 @@
 	</section>
 
 	<div class="actions">
-		<button type="button" class="big-button" onclick={resetStats}>
-			{resetArmed ? 'Tap again to reset' : 'Reset stats'}
+		<button
+			type="button"
+			class="big-button"
+			onclick={resetStats}
+			aria-label={resetArmed ? 'Tap again to reset your statistics' : undefined}
+		>
+			{resetArmed ? 'Tap again' : 'Reset stats'}
 		</button>
 	</div>
 </main>

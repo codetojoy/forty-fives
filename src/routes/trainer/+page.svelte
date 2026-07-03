@@ -110,7 +110,7 @@
 				{/each}
 				<button type="button" class="big-button suit-button random" onclick={() => start('random')}>
 					<span class="suit-symbol">?</span>
-					Random each question
+					Random
 				</button>
 			</div>
 			<p class="reference-link-wrap">
@@ -176,13 +176,13 @@
 						<p class="explanation">{question.explanation}</p>
 					</div>
 					<button type="button" class="big-button next-button" onclick={nextQuestion}>
-						Next question
+						Next
 					</button>
 				{/if}
 			</div>
 
 			<div class="quiz-footer">
-				<button type="button" class="small-button" onclick={changeTrump}>Change trump suit</button>
+				<button type="button" class="small-button" onclick={changeTrump}>Change trump</button>
 				<a class="small-button" href="{base}/trainer/reference">Ranking reference</a>
 				<button type="button" class="small-button" onclick={resetScore}>Reset score</button>
 			</div>

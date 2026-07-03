@@ -283,7 +283,7 @@
 				trump in play. Renege rules are enforced, with explanations when a play isn't allowed.
 			</p>
 			<button type="button" class="big-button start-button" onclick={newGame}>
-				Start a game
+				Start
 			</button>
 			<p class="config-link-wrap">
 				<a class="config-link" href="{base}/play/config">Configure →</a>
@@ -357,7 +357,7 @@
 					<p class="explanation">{lastTrick.explanation}</p>
 				</div>
 				<button type="button" class="big-button" onclick={continueAfterTrick}>
-					{game.phase.kind === 'hand-over' ? 'See the hand score' : 'Next trick'}
+					{game.phase.kind === 'hand-over' ? 'See score' : 'Next trick'}
 				</button>
 			{/if}
 		</section>
@@ -434,7 +434,7 @@
 					</p>
 					<button type="button" class="big-button" onclick={newGame}>New game</button>
 				{:else}
-					<button type="button" class="big-button" onclick={dealNext}>Deal the next hand</button>
+					<button type="button" class="big-button" onclick={dealNext}>Deal</button>
 				{/if}
 			</section>
 		{/if}
@@ -470,8 +470,13 @@
 
 		{#if !gameOver}
 			<section class="game-footer">
-				<button type="button" class="small-button quit" onclick={quitGame}>
-					{quitArmed ? 'Tap again to abandon the game' : 'Abandon game'}
+				<button
+					type="button"
+					class="small-button quit"
+					onclick={quitGame}
+					aria-label={quitArmed ? 'Tap again to abandon the game' : undefined}
+				>
+					{quitArmed ? 'Tap again' : 'Abandon game'}
 				</button>
 			</section>
 		{/if}
