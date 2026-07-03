@@ -3,16 +3,24 @@
 A free, open-source app for playing **Forty-Fives**, the trick-taking card game with deep
 roots in Atlantic Canada. See [doc/SPEC.md](doc/SPEC.md) for the full project plan.
 
-**Current status: Phase A / Milestone 1 — 1v1 Forty-Fives vs. an AI opponent.** The app is
-an installable, offline-capable PWA with two modes:
+**Current status: Phase A / Milestones 0, 1, and 3.** The app is an installable,
+offline-capable PWA with three modes:
 
-- **Play Forty-Fives** — full hand-by-hand play against a heuristic AI ("Margaret" or
-  "Stewart"): deal, turn-up trump, robbing, five tricks, renege rules enforced, 5 points a
-  trick plus 5 for the highest trump in play, first to 45. Legal cards can be highlighted,
-  misclicks are guarded by a tap-twice confirm (both toggleable), and every trick comes
-  with an explanation of why it was won.
+- **Play Forty-Fives** (Milestone 1) — full 1v1 hand-by-hand play against a heuristic AI
+  ("Margaret" or "Stewart"): deal, turn-up trump, robbing, five tricks, renege rules
+  enforced, 5 points a trick plus 5 for the highest trump in play, first to 45. Legal
+  cards can be highlighted, misclicks are guarded by a tap-twice confirm (both
+  toggleable), and every trick comes with an explanation of why it was won.
+- **Play Auction** (Milestone 3) — Auction Forty-Fives for four: you and an AI partner
+  against two AI opponents, with bidding (15/20/25/30), a three-card kitty, and
+  make-or-set scoring to 120. Regional rule calls (kitty on/off, post-trump card
+  exchange, how the game finishes) are configurable.
 - **Ranking Trainer** (Milestone 0) — pick a trump suit, look at two cards from a trick,
   and tap the one that wins. Every answer explains *why* ("the A♥ is always trump…").
+
+Each game mode has its own **Configure** page (rule and UI options, saved locally) and a
+**Stats** page. Everything persists only to `localStorage` — no accounts, no analytics,
+no network calls.
 
 ## Running the app locally
 
@@ -72,7 +80,7 @@ The structure follows SPEC §10, mapped onto SvelteKit conventions:
 | `src/domain/` | `src/lib/domain/` — pure game logic, **zero UI dependencies** |
 | `src/ai/` | `src/lib/ai/` — the computer opponent (also UI-free) |
 | `src/assets/trump-schemes/` | `src/lib/assets/trump-schemes/` — rule variants as JSON data |
-| `src/ui/` | `src/lib/ui/` + `src/routes/` — Svelte components (`/`, `/trainer`, `/play`) |
+| `src/ui/` | `src/lib/ui/` + `src/routes/` — Svelte components (`/`, `/trainer`, `/play`, `/auction`) |
 | `tests/` | `tests/domain/` + `tests/ai/` — exhaustive rules and AI tests |
 
 Key domain modules:
@@ -84,11 +92,15 @@ Key domain modules:
 - `rules-engine.ts` — which cards are legal to play right now (follow-suit + renege rules)
 - `game-state.ts` — immutable 1v1 game state: deal → robbing → 5 tricks → tally → next hand
 - `scoring.ts` — trick points, the highest-trump bonus, and the race to 45
+- `auction-game-state.ts`, `bidding.ts`, `auction-scoring.ts` — the 4-player partnership
+  game: bidding, the kitty, make/set scoring to 120
 - `trainer.ts` — quiz question generation, weighted toward the hard cases
 - `schemes.ts` — registry of bundled variants (currently `standard.json` only; regional
   variants are added as data files once validated with real players — no code changes)
-- `ai/heuristic.ts` — the opponent: wins tricks cheaply, dumps weak cards, saves the
+- `ai/heuristic.ts` — the 1v1 opponent: wins tricks cheaply, dumps weak cards, saves the
   renegable trumps for late tricks
+- `ai/auction-ai.ts` — the partnership-aware auction players: bidding, naming trump,
+  discarding, and card play
 
 ## License
 

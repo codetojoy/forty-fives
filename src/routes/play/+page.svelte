@@ -3,6 +3,7 @@
 	import { base } from '$app/paths';
 	import {
 		cardLabel,
+		parseCardId,
 		sameCard,
 		SUIT_NAMES,
 		SUIT_SYMBOLS,
@@ -25,6 +26,7 @@
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
 	import { explainTrick } from '$lib/domain/trick.js';
 	import { chooseCard, chooseRob } from '$lib/ai/heuristic.js';
+	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import { loadGame, saveGame, loadPlayStats, savePlayStats } from '$lib/ui/persistence.js';
 	import avatarMargaret from '$lib/assets/avatars/peep-01.svg';
@@ -72,6 +74,8 @@
 		game !== null && game.phase.kind === 'robbing' && game.phase.seat === HUMAN && !lastTrick
 	);
 	const trumpColor = $derived(game && isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35');
+	/** Current trump suit's full ranking, highest first, for the trump-ranking help (TODO-041). */
+	const trumpRanking = $derived(game ? scheme.trumpRankings[game.trumpSuit].map(parseCardId) : []);
 	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
 
 	function seatName(seat: number): string {
@@ -298,8 +302,25 @@
 					You {game.scores[HUMAN]} · {opponentName} {game.scores[AI]}
 					<span class="target">(first to {scheme.scoring.gameTarget})</span>
 				</span>
-				<span class="trump-badge" style="color: {trumpColor}">
-					Trump: {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]}
+				<span class="trump-wrap">
+					<span class="trump-badge" style="color: {trumpColor}">
+						Trump: {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]}
+					</span>
+					<HelpDisclosure label="Show the trump ranking" align="end">
+						<h2 class="rank-heading" style="color: {trumpColor}">
+							Trump ranking — {SUIT_NAMES[game.trumpSuit]} {SUIT_SYMBOLS[game.trumpSuit]}
+						</h2>
+						<p class="rank-note">
+							Highest to lowest. The 5, Jack and A♥ are the top three trumps in every suit.
+						</p>
+						<ol class="rank-list">
+							{#each trumpRanking as c (cardLabel(c))}
+								<li class="rank-chip" style="color: {isRedSuit(c.suit) ? '#c0262d' : '#3d3a35'}">
+									{cardLabel(c)}
+								</li>
+							{/each}
+						</ol>
+					</HelpDisclosure>
 				</span>
 			</div>
 			<div class="hand-info">
@@ -638,9 +659,49 @@
 		color: var(--muted);
 	}
 
+	.trump-wrap {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
 	.trump-badge {
 		font-size: 1.25rem;
 		font-weight: 700;
+	}
+
+	.rank-heading {
+		font-family: var(--serif);
+		font-weight: 600;
+		font-size: 1.15rem;
+		margin: 0 0 0.4rem;
+	}
+
+	.rank-note {
+		margin: 0 0 0.6rem;
+		font-size: 0.95rem;
+		color: var(--muted);
+	}
+
+	.rank-list {
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0;
+		padding: 0;
+	}
+
+	.rank-chip {
+		min-width: 2.5rem;
+		padding: 0.3rem 0.45rem;
+		text-align: center;
+		font-size: 1.05rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		background: var(--bg, #fffdf6);
+		border: 1px solid var(--rule);
+		border-radius: 5px;
 	}
 
 	.hand-info {

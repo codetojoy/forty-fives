@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import pkg from './package.json' with { type: 'json' };
 
 // Base path for subpath hosting (e.g. GitHub Pages project site). Defaults to ''
 // so `npm run dev` and root deploys serve from '/'; set BASE_PATH=/forty-fives
@@ -36,10 +37,11 @@ function formatAtlanticTimestamp(date: Date): string {
 
 // Build-time metadata baked into the prerendered /about page (TODO-006). Captured
 // at config-eval time and injected via `define` (textual replacement), so the values
-// end up as literals in the static HTML — no runtime/network lookup. Bump the version
-// here manually for now. The commit hash is HEAD at build time, so a later
-// "bump version" commit won't be reflected — that's acceptable per the spec.
-const appVersion = '0.2.40';
+// end up as literals in the static HTML — no runtime/network lookup. The version is
+// read from package.json (TODO-041) — bump it there. The commit hash is HEAD at build
+// time, so a later "bump version" commit won't be reflected — that's acceptable per
+// the spec.
+const appVersion = pkg.version;
 // Displayed as dd-MMM-YYYY HH:mm tz in Atlantic Time (e.g. 13-JUN-2026 15:30 ADT),
 // per TODO-007. America/Halifax gives the correct ADT/AST abbreviation and offset.
 const buildTime = formatAtlanticTimestamp(new Date());
