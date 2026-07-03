@@ -14,18 +14,23 @@ import {
 } from '$lib/domain/auction-config.js';
 
 describe('auction config — settings registry', () => {
-	it('defines the two boolean settings plus the two choice settings', () => {
+	it('defines the three boolean settings plus the two choice settings', () => {
 		expect(SETTINGS.map((s) => s.code)).toEqual([
 			'USE_KITTY',
 			'ALLOW_DISCARD',
+			'ALLOW_HOLD',
 			'FINISH_RULE',
 			'FIRST_LEAD'
 		]);
 		expect(SETTINGS.find((s) => s.code === 'USE_KITTY')?.type).toBe('boolean');
 		expect(SETTINGS.find((s) => s.code === 'ALLOW_DISCARD')?.type).toBe('boolean');
+		expect(SETTINGS.find((s) => s.code === 'ALLOW_HOLD')?.type).toBe('boolean');
 		expect(SETTINGS.find((s) => s.code === 'USE_KITTY')?.desc).toBe('Use kitty');
 		expect(SETTINGS.find((s) => s.code === 'ALLOW_DISCARD')?.desc).toBe(
 			'Allow discard when not bid-winner'
+		);
+		expect(SETTINGS.find((s) => s.code === 'ALLOW_HOLD')?.desc).toBe(
+			'Allow dealer to hold the bid'
 		);
 	});
 
@@ -55,19 +60,21 @@ describe('auction config — settings registry', () => {
 });
 
 describe('auction config — built-in profiles', () => {
-	it('Wikipedia uses the kitty, forbids extra discard, finishes at 120, eldest leads', () => {
+	it('Wikipedia uses the kitty, forbids extra discard, allows hold, 120, eldest leads', () => {
 		expect(BUILTIN_PROFILES.Wikipedia).toEqual({
 			USE_KITTY: true,
 			ALLOW_DISCARD: false,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		});
 	});
 
-	it('Rec Hall drops the kitty, allows discard, four turns, left-of-bidder leads', () => {
+	it('Rec Hall drops the kitty, allows discard and hold, four turns, left-of-bidder leads', () => {
 		expect(BUILTIN_PROFILES['Rec Hall']).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: true,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'FOUR_TURNS',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -96,6 +103,7 @@ describe('auction config — defaults', () => {
 		expect(defaultSettingValues()).toEqual({
 			USE_KITTY: true,
 			ALLOW_DISCARD: false,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		});
@@ -115,6 +123,7 @@ describe('auction config — resolveConfig', () => {
 			custom: {
 				USE_KITTY: true,
 				ALLOW_DISCARD: false,
+				ALLOW_HOLD: false,
 				FINISH_RULE: 'POINTS_120',
 				FIRST_LEAD: 'ELDEST'
 			}
@@ -122,6 +131,7 @@ describe('auction config — resolveConfig', () => {
 		expect(resolveConfig(config)).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: true,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'FOUR_TURNS',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -133,6 +143,7 @@ describe('auction config — resolveConfig', () => {
 			custom: {
 				USE_KITTY: false,
 				ALLOW_DISCARD: false,
+				ALLOW_HOLD: false,
 				FINISH_RULE: 'FOUR_TURNS',
 				FIRST_LEAD: 'LEFT_OF_BIDDER'
 			}
@@ -140,6 +151,7 @@ describe('auction config — resolveConfig', () => {
 		expect(resolveConfig(config)).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: false,
+			ALLOW_HOLD: false,
 			FINISH_RULE: 'FOUR_TURNS',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -161,6 +173,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 			custom: {
 				USE_KITTY: false,
 				ALLOW_DISCARD: true,
+				ALLOW_HOLD: false,
 				FINISH_RULE: 'FOUR_TURNS',
 				FIRST_LEAD: 'LEFT_OF_BIDDER'
 			}
@@ -185,19 +198,34 @@ describe('auction config — normalizeAuctionConfig', () => {
 		expect(out.custom).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: false,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		});
 	});
 
+	it('fills ALLOW_HOLD for configs stored before TODO-042', () => {
+		const out = normalizeAuctionConfig({
+			profile: 'Custom',
+			custom: {
+				USE_KITTY: false,
+				ALLOW_DISCARD: true,
+				FINISH_RULE: 'FOUR_TURNS',
+				FIRST_LEAD: 'LEFT_OF_BIDDER'
+			}
+		});
+		expect(out.custom.ALLOW_HOLD).toBe(true);
+	});
+
 	it('ignores non-boolean and unknown setting values', () => {
 		const out = normalizeAuctionConfig({
 			profile: 'Custom',
-			custom: { USE_KITTY: 'yes', ALLOW_DISCARD: true, BOGUS: 1 }
+			custom: { USE_KITTY: 'yes', ALLOW_DISCARD: true, ALLOW_HOLD: 'sure', BOGUS: 1 }
 		});
 		expect(out.custom).toEqual({
 			USE_KITTY: true,
 			ALLOW_DISCARD: true,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		});

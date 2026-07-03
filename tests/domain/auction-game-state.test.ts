@@ -24,18 +24,21 @@ const scheme = STANDARD_SCHEME;
 const NO_KITTY: AuctionSettingValues = {
 	USE_KITTY: false,
 	ALLOW_DISCARD: false,
+	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
 const KITTY_DRAW: AuctionSettingValues = {
 	USE_KITTY: true,
 	ALLOW_DISCARD: true,
+	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
 const NOKITTY_DRAW: AuctionSettingValues = {
 	USE_KITTY: false,
 	ALLOW_DISCARD: true,
+	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -322,12 +325,14 @@ describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 	const ELDEST_CFG: AuctionSettingValues = {
 		USE_KITTY: false,
 		ALLOW_DISCARD: false,
+		ALLOW_HOLD: true,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'ELDEST'
 	};
 	const LEFT_CFG: AuctionSettingValues = {
 		USE_KITTY: false,
 		ALLOW_DISCARD: false,
+		ALLOW_HOLD: true,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	};
@@ -384,6 +389,7 @@ describe('FOUR_TURNS finish rule (TODO-018)', () => {
 	const FOUR_TURNS_CFG: AuctionSettingValues = {
 		USE_KITTY: true,
 		ALLOW_DISCARD: false,
+		ALLOW_HOLD: true,
 		FINISH_RULE: 'FOUR_TURNS',
 		FIRST_LEAD: 'ELDEST'
 	};

@@ -16,6 +16,7 @@
 		startAuction,
 		placeBid,
 		passBid,
+		holdBid,
 		nameTrump,
 		discardKitty,
 		drawCards,
@@ -124,6 +125,16 @@
 	const myLegalBids = $derived(
 		game?.phase.kind === 'bidding' && humanToBid ? legalBids(game.phase.highBid) : []
 	);
+	/** The dealer's hold (ALLOW_HOLD, TODO-042): only ever offered to the human. */
+	const canHold = $derived(
+		game !== null &&
+			game.phase.kind === 'bidding' &&
+			humanToBid &&
+			game.config.ALLOW_HOLD === true &&
+			game.dealer === HUMAN_SEAT &&
+			game.phase.highBid !== null &&
+			game.phase.highBidder !== HUMAN_SEAT
+	);
 	const trumpColor = $derived(
 		game?.trumpSuit ? (isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35') : '#3d3a35'
 	);
@@ -140,6 +151,7 @@
 	 * the next New game will use.
 	 */
 	const nextGameFinishRule = resolveConfig(loadAuctionConfig()).FINISH_RULE;
+	const nextGameAllowHold = resolveConfig(loadAuctionConfig()).ALLOW_HOLD;
 	const finishRule = $derived(game?.config.FINISH_RULE ?? nextGameFinishRule);
 	/** Short parenthetical shown beside the score. */
 	const finishNote = $derived(
@@ -207,11 +219,15 @@
 				const seat = currentSeat(g)!;
 				if (seat === HUMAN_SEAT) return;
 				const d = chooseBid(g, scheme, seat);
+				// A held bid (TODO-042) puts this seat to a raise-or-concede decision.
+				const held = g.phase.heldBy != null;
 				if (d.bid === null) {
-					message = `${name(seat)} passed.`;
+					message = held
+						? `${name(seat)} concedes — you take the bid at ${g.phase.highBid}.`
+						: `${name(seat)} passed.`;
 					setGame(passBid(g, seat));
 				} else {
-					message = `${name(seat)} bid ${d.bid}.`;
+					message = held ? `${name(seat)} raises to ${d.bid}.` : `${name(seat)} bid ${d.bid}.`;
 					setGame(placeBid(g, seat, d.bid));
 				}
 				advance();
@@ -304,6 +320,13 @@
 		if (!game) return;
 		message = '';
 		setGame(passBid(game, HUMAN_SEAT));
+		advance();
+	}
+	function humanHold() {
+		if (!game || game.phase.kind !== 'bidding') return;
+		const bidder = game.phase.highBidder!;
+		message = `You hold ${name(bidder)}'s ${game.phase.highBid} — ${name(bidder)} must raise or concede.`;
+		setGame(holdBid(game, HUMAN_SEAT));
 		advance();
 	}
 	function humanName(suit: Suit) {
@@ -460,6 +483,9 @@
 						<li>You and your partner sit opposite two opponents.</li>
 						<li>Everyone gets five cards and a three-card kitty waits in the middle.</li>
 						<li>Bid 15, 20, 25 or 30 for the right to name trump and take the kitty; make your bid or be set.</li>
+						{#if nextGameAllowHold}
+							<li>As dealer you may <em>hold</em> the standing bid — match it without raising; the bidder must then raise or concede.</li>
+						{/if}
 						<li>
 							Tricks are five points each, plus five for the highest trump —
 							{#if nextGameFinishRule === 'FOUR_TURNS'}
@@ -606,6 +632,10 @@
 				<p>
 					{#if game.phase.kind === 'bidding' && game.phase.highBid}
 						Standing bid: {game.phase.highBid} by {name(game.phase.highBidder!)}.
+						{#if canHold}
+							As dealer you may hold — take the bid at {game.phase.highBid} unless
+							{name(game.phase.highBidder!)} raises.
+						{/if}
 					{:else}
 						No one has bid yet.
 					{/if}
@@ -614,6 +644,9 @@
 					{#each myLegalBids as b (b)}
 						<button type="button" class="big-button" onclick={() => humanBid(b)}>Bid {b}</button>
 					{/each}
+					{#if canHold}
+						<button type="button" class="big-button" onclick={humanHold}>Hold</button>
+					{/if}
 					<button type="button" class="big-button" onclick={humanPass}>Pass</button>
 				</div>
 			</section>

@@ -9,7 +9,8 @@
  *
  * Hand flow:
  *   deal 5 each + 3-card kitty
- *     → bidding (15/20/25/30, ascending; dealer stuck at 15 if all pass)
+ *     → bidding (15/20/25/30, ascending; dealer stuck at 15 if all pass;
+ *       dealer may hold the standing bid — ALLOW_HOLD, TODO-042)
  *     → the winner names trump and takes the kitty
  *     → the winner discards back down to 5
  *     → 5 tricks
@@ -56,6 +57,11 @@ export type AuctionPhase =
 			readonly highBidder: number | null;
 			/** Seats that have passed and are out of the auction. */
 			readonly passed: readonly boolean[];
+			/**
+			 * The dealer, when the standing bid is currently *held* rather than
+			 * bid (ALLOW_HOLD, TODO-042); null otherwise. Cleared by any raise.
+			 */
+			readonly heldBy: number | null;
 	  }
 	| { readonly kind: 'naming-trump' }
 	| { readonly kind: 'discarding' }
@@ -134,7 +140,8 @@ function dealHand(
 			turn: (dealer + 1) % AUCTION_SEATS, // eldest hand (dealer's left) bids first
 			highBid: null,
 			highBidder: null,
-			passed: Array.from({ length: AUCTION_SEATS }, () => false)
+			passed: Array.from({ length: AUCTION_SEATS }, () => false),
+			heldBy: null
 		}
 	};
 }
@@ -195,9 +202,41 @@ export function placeBid(state: AuctionGameState, seat: number, bid: BidValue): 
 	const raised: Extract<AuctionPhase, { kind: 'bidding' }> = {
 		...phase,
 		highBid: bid,
-		highBidder: seat
+		highBidder: seat,
+		heldBy: null // a raise ends any held state (TODO-042)
 	};
 	return advanceBidding(state, raised, seat);
+}
+
+/**
+ * The dealer's hold (ALLOW_HOLD, TODO-042): match the standing bid without
+ * raising. Modeled as taking over the high bid at the same value, with every
+ * other seat out — the auction becomes a duel where the displaced bidder must
+ * raise (placeBid) or concede (passBid, which resolves the auction to the
+ * holder at the held value). The dealer may hold again after a raise.
+ */
+export function holdBid(state: AuctionGameState, seat: number): AuctionGameState {
+	const phase = requireBidding(state);
+	if (!state.config.ALLOW_HOLD) {
+		throw new Error("Holding the bid is not allowed under this game's rules");
+	}
+	if (seat !== state.dealer) throw new Error('Only the dealer may hold the bid');
+	if (seat !== phase.turn) throw new Error(`It is not seat ${seat}'s turn to bid`);
+	if (phase.highBid === null || phase.highBidder === null) {
+		throw new Error('There is no standing bid to hold');
+	}
+	if (phase.highBidder === seat) throw new Error('You cannot hold your own bid');
+	const bidder = phase.highBidder;
+	return {
+		...state,
+		phase: {
+			...phase,
+			highBidder: seat,
+			heldBy: seat,
+			passed: phase.passed.map((p, s) => (s === seat || s === bidder ? p : true)),
+			turn: bidder
+		}
+	};
 }
 
 /** Pass. The seat is out of the auction for the rest of this hand. */

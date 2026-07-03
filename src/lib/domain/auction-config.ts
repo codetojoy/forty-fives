@@ -5,9 +5,9 @@
  *
  * The resolved values are snapshotted into a game at startAuction and read by
  * the pure transitions, so every setting now shapes play: USE_KITTY (TODO-011),
- * ALLOW_DISCARD (TODO-012), FIRST_LEAD (TODO-017), and FINISH_RULE (TODO-016
- * setting, wired into game-end in TODO-018). All remain rule calls awaiting
- * real-player validation (SPEC §6).
+ * ALLOW_DISCARD (TODO-012), ALLOW_HOLD (TODO-042), FIRST_LEAD (TODO-017), and
+ * FINISH_RULE (TODO-016 setting, wired into game-end in TODO-018). All remain
+ * rule calls awaiting real-player validation (SPEC §6).
  *
  * A *setting* is one atomic, named value — either a boolean or a choice from a
  * fixed set (the "Finish Game Rule" added in TODO-016). A *profile* is a named
@@ -15,7 +15,12 @@
  * "Custom", whose values the user chooses.
  */
 
-export type AuctionSettingCode = 'USE_KITTY' | 'ALLOW_DISCARD' | 'FINISH_RULE' | 'FIRST_LEAD';
+export type AuctionSettingCode =
+	| 'USE_KITTY'
+	| 'ALLOW_DISCARD'
+	| 'ALLOW_HOLD'
+	| 'FINISH_RULE'
+	| 'FIRST_LEAD';
 
 /**
  * When the game ends (TODO-016, wired into play in TODO-018). `POINTS_120` ends
@@ -32,7 +37,7 @@ export type FinishGameRule = 'POINTS_120' | 'FOUR_TURNS';
 export type FirstLeadRule = 'ELDEST' | 'LEFT_OF_BIDDER';
 
 interface BooleanSetting {
-	readonly code: 'USE_KITTY' | 'ALLOW_DISCARD';
+	readonly code: 'USE_KITTY' | 'ALLOW_DISCARD' | 'ALLOW_HOLD';
 	readonly desc: string;
 	readonly type: 'boolean';
 }
@@ -53,6 +58,7 @@ export type AuctionSetting =
 export const SETTINGS: readonly AuctionSetting[] = [
 	{ code: 'USE_KITTY', desc: 'Use kitty', type: 'boolean' },
 	{ code: 'ALLOW_DISCARD', desc: 'Allow discard when not bid-winner', type: 'boolean' },
+	{ code: 'ALLOW_HOLD', desc: 'Allow dealer to hold the bid', type: 'boolean' },
 	{
 		code: 'FINISH_RULE',
 		desc: 'Finish Game Rule',
@@ -77,6 +83,7 @@ export const SETTINGS: readonly AuctionSetting[] = [
 export interface AuctionSettingValues {
 	USE_KITTY: boolean;
 	ALLOW_DISCARD: boolean;
+	ALLOW_HOLD: boolean;
 	FINISH_RULE: FinishGameRule;
 	FIRST_LEAD: FirstLeadRule;
 }
@@ -91,12 +98,14 @@ export const BUILTIN_PROFILES: Record<'Wikipedia' | 'Rec Hall', AuctionSettingVa
 	Wikipedia: {
 		USE_KITTY: true,
 		ALLOW_DISCARD: false,
+		ALLOW_HOLD: true,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'ELDEST'
 	},
 	'Rec Hall': {
 		USE_KITTY: false,
 		ALLOW_DISCARD: true,
+		ALLOW_HOLD: true,
 		FINISH_RULE: 'FOUR_TURNS',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	}

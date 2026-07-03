@@ -54,7 +54,7 @@
 		profile = next;
 	}
 
-	function toggle(code: 'USE_KITTY' | 'ALLOW_DISCARD') {
+	function toggle(code: 'USE_KITTY' | 'ALLOW_DISCARD' | 'ALLOW_HOLD') {
 		if (!isCustom(profile)) return;
 		custom = { ...custom, [code]: !custom[code] };
 	}

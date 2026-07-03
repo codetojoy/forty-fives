@@ -13,6 +13,7 @@ import {
 	startAuction,
 	placeBid,
 	passBid,
+	holdBid,
 	nameTrump,
 	discardKitty,
 	drawCards,
@@ -72,6 +73,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		config: {
 			USE_KITTY: true,
 			ALLOW_DISCARD: false,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		}
@@ -81,6 +83,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		config: {
 			USE_KITTY: false,
 			ALLOW_DISCARD: false,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		}
@@ -90,6 +93,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		config: {
 			USE_KITTY: true,
 			ALLOW_DISCARD: true,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		}
@@ -99,6 +103,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		config: {
 			USE_KITTY: false,
 			ALLOW_DISCARD: true,
+			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		}
@@ -131,6 +136,7 @@ describe('all-AI self-play terminates under FOUR_TURNS', () => {
 	const config: AuctionSettingValues = {
 		USE_KITTY: true,
 		ALLOW_DISCARD: false,
+		ALLOW_HOLD: true,
 		FINISH_RULE: 'FOUR_TURNS',
 		FIRST_LEAD: 'ELDEST'
 	};
@@ -204,7 +210,7 @@ describe('chooseBid', () => {
 			currentTrick: [],
 			completedTricks: [],
 			scores: [0, 0],
-			phase: { kind: 'bidding', turn: 1, highBid: null, highBidder: null, passed: [false, false, false, false] }
+			phase: { kind: 'bidding', turn: 1, highBid: null, highBidder: null, passed: [false, false, false, false], heldBy: null }
 		};
 	}
 
@@ -229,6 +235,27 @@ describe('chooseBid', () => {
 		];
 		expect(chooseBid(biddingState(strong), scheme, 1).bid).not.toBeNull();
 	});
+
+	it('raises or concedes legally when the dealer holds (TODO-042)', () => {
+		for (let seed = 1; seed <= 20; seed++) {
+			let g = startAuction(scheme, createRng(seed), 0);
+			g = placeBid(g, 1, 15);
+			g = passBid(g, 2);
+			g = passBid(g, 3);
+			g = holdBid(g, 0);
+			const d = chooseBid(g, scheme, 1);
+			// Whatever it decides must go through the real transition legally.
+			g = d.bid === null ? passBid(g, 1) : placeBid(g, 1, d.bid);
+			if (d.bid === null) {
+				// Conceded: the holder takes the bid at the held value.
+				expect(g.phase.kind).toBe('naming-trump');
+				expect(g.biddingSeat).toBe(0);
+				expect(g.bid).toBe(15);
+			} else {
+				expect(d.bid).toBeGreaterThan(15);
+			}
+		}
+	});
 });
 
 describe('chooseDraw', () => {
@@ -238,6 +265,7 @@ describe('chooseDraw', () => {
 			config: {
 				USE_KITTY: false,
 				ALLOW_DISCARD: true,
+				ALLOW_HOLD: true,
 				FINISH_RULE: 'POINTS_120',
 				FIRST_LEAD: 'ELDEST'
 			},
@@ -311,7 +339,7 @@ describe('AI contests a standing 15 (regression: TODO-032)', () => {
 			const opened = startAuction(scheme, createRng(seed));
 			const g: AuctionGameState = {
 				...opened,
-				phase: { kind: 'bidding', turn: 1, highBid: MIN_BID, highBidder: 0, passed: [false, false, false, false] }
+				phase: { kind: 'bidding', turn: 1, highBid: MIN_BID, highBidder: 0, passed: [false, false, false, false], heldBy: null }
 			};
 			for (const seat of [1, 2, 3]) {
 				if (chooseBid(g, scheme, seat).bid !== null) seatsThatRaise++;
