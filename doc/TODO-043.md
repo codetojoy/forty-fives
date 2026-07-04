@@ -1,8 +1,8 @@
 
 ### TODO-043
 
-Three quick wins, identified by a project scan (2026-07-04). **Status: planned, not yet
-implemented.**
+Three quick wins, identified by a project scan (2026-07-04). **Status: complete** —
+item 1 was handled out-of-band; items 2 and 3 implemented 2026-07-04.
 
 1. NOTE: NOW COMPLETE. **Ship the stranded TODO-042 test file.** `tests/domain/auction-hold.test.ts` is
    still untracked even though commit `9ac7d01` shipped the hold feature — the 13
@@ -32,3 +32,30 @@ interacts with the Milestone 1 rule call about both players crossing 45 in the s
 hand, and per SPEC §13 needs its tests written first — so it deserves its own TODO.
 
 * bump version to 0.2.43 (in `package.json`, per TODO-041)
+
+### Implementation notes (items 2 & 3, done)
+
+* **Item 2** — `/play`'s intro paragraph became a one-line tagline ("Turn up trump,
+  win tricks — race to 45.") plus a "How to play" `HelpDisclosure` with five bullets
+  (five cards each; turn-up suit is trump, with robbing; 5 points a trick + 5 for
+  highest trump; reneges enforced with explanations; first to 45), mirroring
+  `/auction`'s structure and reusing its `.tagline`/`.help-list` styles. The
+  matching `doc/TODO-misc.md` item is ticked.
+* **Item 3** — new `src/lib/ui/TrumpRankingHelp.svelte` owns the trump badge + the
+  ranking HelpDisclosure and their styles; it takes `trumpSuit`, `scheme`, and
+  `align`, deriving the color and ranking internally. Both game pages now render
+  `<TrumpRankingHelp trumpSuit={game.trumpSuit} {scheme} align="end" />` and lost
+  the duplicated markup, the `trumpRanking` derived, the `parseCardId` import, and
+  the ~44-line `trump-wrap`/`rank-*` CSS block each. Pure refactor — no domain or
+  test changes.
+
+Version bumped 0.2.42 → 0.2.43. Verified: `npm run check` clean, 425/425 tests,
+production build succeeds with 0.2.43 in `/about`.
+
+### Files committed
+
+* `src/lib/ui/TrumpRankingHelp.svelte` (new shared component)
+* `src/routes/play/+page.svelte` (intro tagline + How-to-play; TrumpRankingHelp)
+* `src/routes/auction/+page.svelte` (TrumpRankingHelp)
+* `package.json` (version 0.2.42 → 0.2.43)
+* `doc/TODO-misc.md` (pop-over item ticked), `doc/TODO-043.md` (this file)
