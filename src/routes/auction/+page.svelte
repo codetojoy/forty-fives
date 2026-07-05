@@ -40,6 +40,7 @@
 		chooseCardAuction
 	} from '$lib/ai/auction-ai.js';
 	import ArmedButton from '$lib/ui/ArmedButton.svelte';
+	import BackLink from '$lib/ui/BackLink.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import TrumpRankingHelp from '$lib/ui/TrumpRankingHelp.svelte';
@@ -457,9 +458,7 @@
 </svelte:head>
 
 <main>
-	<nav class="top-nav">
-		<a class="home-link" href="{base}/">← Home</a>
-	</nav>
+	<BackLink href="{base}/" label="Home" />
 
 	{#if game === null}
 		<header>
@@ -772,32 +771,6 @@
 		max-width: 44rem;
 		margin: 0 auto;
 		padding: 1rem 1rem 1.5rem;
-	}
-
-	.top-nav {
-		margin-bottom: 0.5rem;
-	}
-
-	.home-link {
-		display: inline-flex;
-		align-items: center;
-		min-height: 48px;
-		padding: 0 0.5rem;
-		color: var(--accent-deep);
-		font-size: 1.05rem;
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	.home-link:hover,
-	.home-link:focus-visible {
-		text-decoration: underline;
-	}
-
-	.home-link:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-		border-radius: 8px;
 	}
 
 	header {

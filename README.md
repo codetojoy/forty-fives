@@ -14,7 +14,8 @@ offline-capable PWA with three modes:
 - **Play Auction** (Milestone 3) — Auction Forty-Fives for four: you and an AI partner
   against two AI opponents, with bidding (15/20/25/30), a three-card kitty, and
   make-or-set scoring to 120. Regional rule calls (kitty on/off, post-trump card
-  exchange, how the game finishes) are configurable.
+  exchange, the dealer's option to hold the bid, who leads the first trick, how the
+  game finishes) are configurable.
 - **Ranking Trainer** (Milestone 0) — pick a trump suit, look at two cards from a trick,
   and tap the one that wins. Every answer explains *why* ("the A♥ is always trump…").
 

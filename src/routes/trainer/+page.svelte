@@ -5,6 +5,7 @@
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
 	import { generateQuestion, type Question } from '$lib/domain/trainer.js';
 	import type { TrickWinner } from '$lib/domain/trick.js';
+	import BackLink from '$lib/ui/BackLink.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import {
 		emptyStats,
@@ -86,9 +87,7 @@
 </svelte:head>
 
 <main>
-	<nav class="top-nav">
-		<a class="home-link" href="{base}/">← Home</a>
-	</nav>
+	<BackLink href="{base}/" label="Home" />
 	<header>
 		<h1>Forty-Fives Ranking Trainer</h1>
 		<p class="subtitle">Learn which card wins — the Maritime way.</p>
@@ -195,32 +194,6 @@
 		max-width: 40rem;
 		margin: 0 auto;
 		padding: 1.25rem 1rem 3rem;
-	}
-
-	.top-nav {
-		margin-bottom: 0.5rem;
-	}
-
-	.home-link {
-		display: inline-flex;
-		align-items: center;
-		min-height: 48px;
-		padding: 0 0.5rem;
-		color: var(--accent-deep);
-		font-size: 1.05rem;
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	.home-link:hover,
-	.home-link:focus-visible {
-		text-decoration: underline;
-	}
-
-	.home-link:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-		border-radius: 8px;
 	}
 
 	header {

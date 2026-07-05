@@ -9,6 +9,7 @@
 		type Suit
 	} from '$lib/domain/cards.js';
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
+	import BackLink from '$lib/ui/BackLink.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 
 	const scheme = STANDARD_SCHEME;
@@ -32,9 +33,7 @@
 </svelte:head>
 
 <main>
-	<nav class="top-nav">
-		<a class="home-link" href="{base}/trainer">← Back to Trainer</a>
-	</nav>
+	<BackLink href="{base}/trainer" label="Back to Trainer" />
 	<header>
 		<h1>Ranking Reference</h1>
 		<p class="subtitle">The order of the cards, at a glance.</p>
@@ -94,32 +93,6 @@
 		max-width: 48rem;
 		margin: 0 auto;
 		padding: 1.25rem 1rem 3rem;
-	}
-
-	.top-nav {
-		margin-bottom: 0.5rem;
-	}
-
-	.home-link {
-		display: inline-flex;
-		align-items: center;
-		min-height: 48px;
-		padding: 0 0.5rem;
-		color: var(--accent-deep);
-		font-size: 1.05rem;
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	.home-link:hover,
-	.home-link:focus-visible {
-		text-decoration: underline;
-	}
-
-	.home-link:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-		border-radius: 8px;
 	}
 
 	header {

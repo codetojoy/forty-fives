@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import BackLink from '$lib/ui/BackLink.svelte';
 	import { loadGame, saveGame, type GameSettings } from '$lib/ui/persistence.js';
 
 	// Forty-Fives (1v1) has no rules profiles — only the display & interaction
@@ -27,9 +28,7 @@
 </svelte:head>
 
 <main>
-	<nav class="top-nav">
-		<a class="home-link" href="{base}/play">← Back to Play</a>
-	</nav>
+	<BackLink href="{base}/play" label="Back to Play" />
 
 	<header>
 		<h1>Play Settings</h1>
@@ -83,32 +82,6 @@
 		max-width: 40rem;
 		margin: 0 auto;
 		padding: 1rem 1rem 3rem;
-	}
-
-	.top-nav {
-		margin-bottom: 0.5rem;
-	}
-
-	.home-link {
-		display: inline-flex;
-		align-items: center;
-		min-height: 48px;
-		padding: 0 0.5rem;
-		color: var(--accent-deep);
-		font-size: 1.05rem;
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	.home-link:hover,
-	.home-link:focus-visible {
-		text-decoration: underline;
-	}
-
-	.home-link:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-		border-radius: 8px;
 	}
 
 	header {
