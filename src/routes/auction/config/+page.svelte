@@ -43,7 +43,8 @@
 			SETTINGS.some((s) => custom[s.code] !== saved.custom[s.code]) ||
 			prefs.highlightLegal !== saved.prefs.highlightLegal ||
 			prefs.confirmPlay !== saved.prefs.confirmPlay ||
-			prefs.alwaysExchangeNonTrump !== saved.prefs.alwaysExchangeNonTrump
+			prefs.alwaysExchangeNonTrump !== saved.prefs.alwaysExchangeNonTrump ||
+			prefs.hidePlayers !== saved.prefs.hidePlayers
 	);
 
 	function selectProfile(next: AuctionProfileId) {
@@ -211,6 +212,17 @@
 						bind:checked={prefs.alwaysExchangeNonTrump}
 					/>
 					<span class="toggle-value">{prefs.alwaysExchangeNonTrump ? 'On' : 'Off'}</span>
+				</label>
+			</div>
+			<div class="setting">
+				<span class="setting-desc">Hide other players</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="Hide other players"
+						bind:checked={prefs.hidePlayers}
+					/>
+					<span class="toggle-value">{prefs.hidePlayers ? 'On' : 'Off'}</span>
 				</label>
 			</div>
 		</fieldset>

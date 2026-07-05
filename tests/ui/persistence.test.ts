@@ -75,7 +75,12 @@ const inProgress = startAuction(scheme, createRng(2), 0);
 function envelope(game: AuctionGameState | null, finishedAt: number | null): SavedAuctionGame {
 	return {
 		game,
-		settings: { highlightLegal: true, confirmPlay: false, alwaysExchangeNonTrump: false },
+		settings: {
+			highlightLegal: true,
+			confirmPlay: false,
+			alwaysExchangeNonTrump: false,
+			hidePlayers: false
+		},
 		names: ['You', 'Stewart', 'Margaret', 'Bernadette'],
 		finishedAt
 	};

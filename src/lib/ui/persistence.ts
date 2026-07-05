@@ -184,6 +184,12 @@ export function expireFinishedAuctionGame(saved: SavedAuctionGame, now: number):
 export interface AuctionGameSettings extends GameSettings {
 	/** Offer "Exchange Non-trump" with no card selection in the draw phase. */
 	alwaysExchangeNonTrump: boolean;
+	/**
+	 * Hide the other players' seat panels to declutter the table on small screens
+	 * (TODO-048). A display preference like the others here — independent of the
+	 * rules profile, so switching profiles never touches it.
+	 */
+	hidePlayers: boolean;
 }
 
 export interface SavedAuctionGame {
@@ -206,9 +212,14 @@ function auctionDefaults(): SavedAuctionGame {
 	return {
 		game: null,
 		// Auction defaults: highlighting on, confirm-before-play off (TODO-026),
-		// always-exchange-non-trump off (TODO-037). These prefs are edited on
-		// /auction/config, not in the game footer.
-		settings: { highlightLegal: true, confirmPlay: false, alwaysExchangeNonTrump: false },
+		// always-exchange-non-trump off (TODO-037), hide-players off (TODO-048).
+		// These prefs are edited on /auction/config, not in the game footer.
+		settings: {
+			highlightLegal: true,
+			confirmPlay: false,
+			alwaysExchangeNonTrump: false,
+			hidePlayers: false
+		},
 		names: auctionNames(),
 		finishedAt: null
 	};
@@ -250,7 +261,8 @@ export function loadAuctionGame(): SavedAuctionGame {
 					highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
 					confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay,
 					alwaysExchangeNonTrump:
-						parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump
+						parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump,
+					hidePlayers: parsed.settings?.hidePlayers ?? d.settings.hidePlayers
 				},
 				names,
 				finishedAt: Number.isFinite(parsed.finishedAt) ? (parsed.finishedAt as number) : null

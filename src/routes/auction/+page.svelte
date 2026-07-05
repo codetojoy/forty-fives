@@ -426,6 +426,15 @@
 		return 'waiting';
 	}
 
+	/**
+	 * Compact one-line bid board for the other three seats, shown only while
+	 * players are hidden (TODO-048) so hiding the seat panels doesn't lose the
+	 * at-a-glance bidding status. Seat order matches the hidden panels ([2, 1, 3]).
+	 */
+	const bidSummary = $derived(
+		[2, 1, 3].map((seat) => `${name(seat)}: ${bidStatus(seat)}`).join(' · ')
+	);
+
 	const turnPrompt = $derived.by(() => {
 		if (!game || lastTrick) return '';
 		switch (game.phase.kind) {
@@ -523,9 +532,14 @@
 				{/if}
 				· {name(game.dealer)} dealt
 			</div>
+			{#if settings.hidePlayers && game.phase.kind === 'bidding'}
+				<!-- Stand-in for the hidden seat panels' per-seat bid status (TODO-048). -->
+				<div class="bid-summary" aria-label="Bidding status">{bidSummary}</div>
+			{/if}
 		</header>
 
-		<div class="table-layout">
+		<div class="table-layout" class:players-hidden={settings.hidePlayers}>
+			{#if !settings.hidePlayers}
 			<section class="seats" aria-label="The other players">
 			{#each [2, 1, 3] as seat (seat)}
 				<div
@@ -557,6 +571,7 @@
 				</div>
 			{/each}
 		</section>
+			{/if}
 
 		<section class="trick-area" aria-label="Current trick">
 			{#if shownPlays.length === 0}
@@ -939,6 +954,15 @@
 		margin-top: 0.2rem;
 	}
 
+	/* Compact bid board that replaces the hidden seat panels during bidding
+	   (TODO-048). Wraps freely; readable on the narrowest phones. */
+	.bid-summary {
+		margin-top: 0.35rem;
+		font-size: 0.98rem;
+		font-weight: 700;
+		color: var(--accent-deep);
+	}
+
 	.seats {
 		display: flex;
 		flex-wrap: wrap;
@@ -1202,6 +1226,18 @@
 			column-gap: 1rem;
 			row-gap: 0.5rem;
 			align-items: center;
+		}
+
+		/* Players hidden (TODO-048): collapse to a single full-width column so the
+		   trick area centers without the empty north row or the 7rem side gutters
+		   the seat template would otherwise reserve — no awkward blank space. */
+		.table-layout.players-hidden {
+			grid-template-columns: 1fr;
+			grid-template-areas:
+				'center'
+				'south'
+				'msg'
+				'panels';
 		}
 
 		/* Let the three seat panels become direct grid items of .table-layout so
