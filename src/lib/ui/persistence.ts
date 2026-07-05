@@ -6,7 +6,7 @@
 
 import { browser } from '$app/environment';
 import type { Suit } from '$lib/domain/cards.js';
-import { isPlausibleGameState, type GameState } from '$lib/domain/game-state.js';
+import { isPlausibleGameState, isGameOver, type GameState } from '$lib/domain/game-state.js';
 import {
 	isPlausibleAuctionState,
 	isAuctionGameOver,
@@ -87,6 +87,8 @@ export interface SavedGame {
 	game: GameState | null;
 	settings: GameSettings;
 	opponentName: string;
+	/** When the saved game reached game over (epoch ms; TODO-047), else null. */
+	finishedAt: number | null;
 }
 
 const GAME_KEY = 'forty-fives.game.v1';
@@ -97,7 +99,8 @@ function gameDefaults(): SavedGame {
 		// Defaults: highlighting on, confirm-before-play off (TODO-027). These prefs
 		// are now edited on /play/config, not in the game footer.
 		settings: { highlightLegal: true, confirmPlay: false },
-		opponentName: 'Margaret'
+		opponentName: 'Margaret',
+		finishedAt: null
 	};
 }
 
@@ -108,17 +111,21 @@ export function loadGame(): SavedGame {
 		if (!raw) return gameDefaults();
 		const parsed = JSON.parse(raw) as SavedGame;
 		const d = gameDefaults();
-		return {
-			game: isPlausibleGameState(parsed.game) ? parsed.game : null,
-			settings: {
-				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
-				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
+		return expireFinishedGame(
+			{
+				game: isPlausibleGameState(parsed.game) ? parsed.game : null,
+				settings: {
+					highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
+					confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
+				},
+				opponentName:
+					typeof parsed.opponentName === 'string' && parsed.opponentName
+						? parsed.opponentName
+						: d.opponentName,
+				finishedAt: Number.isFinite(parsed.finishedAt) ? (parsed.finishedAt as number) : null
 			},
-			opponentName:
-				typeof parsed.opponentName === 'string' && parsed.opponentName
-					? parsed.opponentName
-					: d.opponentName
-		};
+			Date.now()
+		);
 	} catch {
 		return gameDefaults();
 	}
@@ -131,6 +138,39 @@ export function saveGame(saved: SavedGame): void {
 	} catch {
 		// Storage may be unavailable; the game still works, it just won't resume.
 	}
+}
+
+// --- Finished-game expiry (TODO-046/047) --------------------------------------
+
+/** How long a finished game's final screen survives a return visit. */
+export const FINISHED_GAME_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * Drop a finished game once it has sat for more than FINISHED_GAME_TTL_MS, so
+ * returning to its page starts fresh instead of showing a stale final screen.
+ * A finished game with no stamp predates the stamp and is treated as stale; an
+ * in-progress game is never dropped, whatever its age. Pure so tests can drive
+ * the clock — the loaders pass Date.now(). One generic core so the two games'
+ * policies cannot drift.
+ */
+function expireFinished<G, S extends { game: G | null; finishedAt: number | null }>(
+	saved: S,
+	isOver: (game: G) => boolean,
+	now: number
+): S {
+	if (saved.game === null || !isOver(saved.game)) return saved;
+	if (saved.finishedAt !== null && now - saved.finishedAt <= FINISHED_GAME_TTL_MS) return saved;
+	return { ...saved, game: null, finishedAt: null };
+}
+
+/** The 1v1 game's expiry (TODO-047), applied by loadGame. */
+export function expireFinishedGame(saved: SavedGame, now: number): SavedGame {
+	return expireFinished(saved, isGameOver, now);
+}
+
+/** The auction game's expiry (TODO-046), applied by loadAuctionGame. */
+export function expireFinishedAuctionGame(saved: SavedAuctionGame, now: number): SavedAuctionGame {
+	return expireFinished(saved, isAuctionGameOver, now);
 }
 
 // --- Auction game persistence (Milestone 3) ----------------------------------
@@ -172,22 +212,6 @@ function auctionDefaults(): SavedAuctionGame {
 		names: auctionNames(),
 		finishedAt: null
 	};
-}
-
-/** How long a finished game's final screen survives a return visit (TODO-046). */
-export const FINISHED_GAME_TTL_MS = 60 * 60 * 1000;
-
-/**
- * Drop a finished game once it has sat for more than FINISHED_GAME_TTL_MS, so
- * returning to /auction starts fresh instead of showing a stale final screen
- * (TODO-046). A finished game with no stamp predates the stamp and is treated
- * as stale; an in-progress game is never dropped, whatever its age. Pure so
- * tests can drive the clock — loadAuctionGame passes Date.now().
- */
-export function expireFinishedAuctionGame(saved: SavedAuctionGame, now: number): SavedAuctionGame {
-	if (saved.game === null || !isAuctionGameOver(saved.game)) return saved;
-	if (saved.finishedAt !== null && now - saved.finishedAt <= FINISHED_GAME_TTL_MS) return saved;
-	return { ...saved, game: null, finishedAt: null };
 }
 
 /**

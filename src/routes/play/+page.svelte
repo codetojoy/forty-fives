@@ -12,6 +12,7 @@
 	import {
 		currentSeat,
 		declineRob,
+		isGameOver,
 		ledCard,
 		nextHand,
 		playCard,
@@ -44,6 +45,9 @@
 	let game = $state<GameState | null>(saved.game);
 	let settings = $state(saved.settings);
 	let opponentName = $state(saved.opponentName);
+	// When the saved game reached game over (TODO-047); stamped in persist() and
+	// used by loadGame to expire the final screen an hour after this moment.
+	let finishedAt = saved.finishedAt;
 
 	let selected = $state<Card | null>(null);
 	let robPicking = $state(false);
@@ -73,17 +77,21 @@
 		game !== null && game.phase.kind === 'robbing' && game.phase.seat === HUMAN && !lastTrick
 	);
 	const trumpColor = $derived(game && isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35');
-	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
+	const gameOver = $derived(game !== null && isGameOver(game));
 
 	function seatName(seat: number): string {
 		return seat === HUMAN ? 'You' : opponentName;
 	}
 
 	function persist() {
+		// Stamp the moment the saved game is over — kept once set, cleared whenever
+		// the save holds no finished game — so the expiry clock starts at game over.
+		finishedAt = game !== null && isGameOver(game) ? (finishedAt ?? Date.now()) : null;
 		saveGame({
 			game: game ? ($state.snapshot(game) as GameState) : null,
 			settings: $state.snapshot(settings),
-			opponentName
+			opponentName,
+			finishedAt
 		});
 	}
 

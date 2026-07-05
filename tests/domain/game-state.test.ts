@@ -4,6 +4,7 @@ import {
 	analyzeCurrent,
 	currentSeat,
 	declineRob,
+	isGameOver,
 	isPlausibleGameState,
 	ledCard,
 	nextHand,
@@ -194,6 +195,30 @@ describe('hands and the game', () => {
 			expect(state.scores[winner]).toBeGreaterThan(state.scores[(winner + 1) % SEATS]);
 			expect(() => nextHand(state, scheme, rng)).toThrow(/over/);
 		}
+	});
+});
+
+describe('isGameOver (TODO-047)', () => {
+	it('is false for a game that has just started', () => {
+		expect(isGameOver(startGame(scheme, createRng(31), 0))).toBe(false);
+	});
+
+	it('is false at hand-over while nobody has reached 45', () => {
+		const state = autoplayHand(startGame(scheme, createRng(32), 0));
+		// One hand scores at most 30, so the first hand can never decide the game.
+		expect(state.phase.kind).toBe('hand-over');
+		expect(isGameOver(state)).toBe(false);
+	});
+
+	it('is true once a game winner is decided', () => {
+		const rng = createRng(33);
+		let state = autoplayHand(startGame(scheme, rng, 0));
+		let guard = 0;
+		while (!isGameOver(state)) {
+			state = autoplayHand(nextHand(state, scheme, rng));
+			if (++guard > 60) throw new Error('game did not terminate');
+		}
+		expect(state.phase.kind === 'hand-over' && state.phase.gameWinner !== null).toBe(true);
 	});
 });
 
