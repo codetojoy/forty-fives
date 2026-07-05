@@ -35,7 +35,7 @@ The service worker and PWA install flow only work in the production build (`buil
 
 ### Trump schemes are data, not code
 
-Regional rule variants live in `src/lib/assets/trump-schemes/*.json` (currently only `standard.json`, the Wikipedia baseline). Each file fully defines the ranking tables: `trumpRankings` (per trump suit, highest first, with A♥ spliced in) and `plainRankings` (per non-trump suit), plus renege and scoring fields that are carried but unused until Milestone 1. **Never write `if (variant === ...)` branches in game logic** — adding a variant means adding a JSON file and registering it in `schemes.ts`, nothing else. `loadTrumpScheme()` validates exhaustively at load time so a typo in a scheme file throws instead of silently mis-ranking cards; keep that property when extending the format. Do not invent regional variant data — per SPEC §6, real players' feedback is the spec for variants.
+Regional rule variants live in `src/lib/assets/trump-schemes/*.json` (currently only `standard.json`, the Wikipedia baseline). Each file fully defines the ranking tables: `trumpRankings` (per trump suit, highest first, with A♥ spliced in) and `plainRankings` (per non-trump suit), plus the renege and scoring fields the rules engine and scoring read (`legalPlays`/`analyzePlays`, `scoreHand`, `gameWinner`). **Never write `if (variant === ...)` branches in game logic** — adding a variant means adding a JSON file and registering it in `schemes.ts`, nothing else. `loadTrumpScheme()` validates exhaustively at load time so a typo in a scheme file throws instead of silently mis-ranking cards; keep that property when extending the format. Do not invent regional variant data — per SPEC §6, real players' feedback is the spec for variants.
 
 ### Domain module map
 
@@ -64,7 +64,7 @@ The AI (`tests/ai/heuristic.test.ts`) is tested by property: it plays hundreds o
 
 ### Layout mapping
 
-SPEC §10's proposed structure is mapped onto SvelteKit: `src/domain/` → `src/lib/domain/`, `src/ai/` → `src/lib/ai/`, `src/ui/` → `src/lib/ui/` + `src/routes/` (`/` mode chooser, `/trainer`, `/play`), scheme JSON under `src/lib/assets/`. Tests live in `tests/domain/` and `tests/ai/` (the `tests/**` include is wired into `vite.config.ts`). Svelte 5 **runes mode** is forced project-wide in `vite.config.ts`. The service worker precaches `prerendered` routes — keep that import in sync if routes are added.
+SPEC §10's proposed structure is mapped onto SvelteKit: `src/domain/` → `src/lib/domain/`, `src/ai/` → `src/lib/ai/`, `src/ui/` → `src/lib/ui/` + `src/routes/` (`/` mode chooser; `/trainer` + `/trainer/reference`; `/play` and `/auction`, each with `config` and `stats` subpages; `/about`), scheme JSON under `src/lib/assets/`. Tests live in `tests/domain/` and `tests/ai/` (the `tests/**` include is wired into `vite.config.ts`). Svelte 5 **runes mode** is forced project-wide in `vite.config.ts`. The service worker precaches `prerendered` routes — keep that import in sync if routes are added.
 
 ## Constraints worth remembering
 

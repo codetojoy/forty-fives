@@ -39,12 +39,11 @@
 		chooseDraw,
 		chooseCardAuction
 	} from '$lib/ai/auction-ai.js';
+	import ArmedButton from '$lib/ui/ArmedButton.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import TrumpRankingHelp from '$lib/ui/TrumpRankingHelp.svelte';
-	import avatarMargaret from '$lib/assets/avatars/peep-01.svg';
-	import avatarStewart from '$lib/assets/avatars/peep-02.svg';
-	import avatarBernadette from '$lib/assets/avatars/peep-16.svg';
+	import { PERSONA_AVATARS } from '$lib/ui/personas.js';
 	import {
 		loadAuctionGame,
 		saveAuctionGame,
@@ -59,11 +58,12 @@
 	const AI_DELAY_MS = 750;
 
 	/* Fixed per-seat avatars (TODO-038), keyed by seat index — not by name, so
-	   a future rename can't change a face mid-game. */
+	   a future rename can't change a face mid-game. Faces come from the shared
+	   persona table (TODO-044). */
 	const AVATARS: Record<number, string> = {
-		1: avatarStewart,
-		2: avatarMargaret,
-		3: avatarBernadette
+		1: PERSONA_AVATARS.Stewart,
+		2: PERSONA_AVATARS.Margaret,
+		3: PERSONA_AVATARS.Bernadette
 	};
 
 	const saved = loadAuctionGame();
@@ -73,7 +73,7 @@
 
 	let selected = $state<Card | null>(null);
 	let discardSel = $state<Card[]>([]);
-	let quitArmed = $state(false);
+	let quitButton = $state<ArmedButton>();
 	let message = $state('');
 	let lastTrick = $state<{ plays: { seat: number; card: Card }[]; winner: number } | null>(null);
 	let aiTimer: ReturnType<typeof setTimeout> | undefined;
@@ -170,7 +170,7 @@
 	function newGame() {
 		selected = null;
 		discardSel = [];
-		quitArmed = false;
+		quitButton?.disarm();
 		lastTrick = null;
 		message = '';
 		// Snapshot the current rules config into the new game (TODO-011); a game in
@@ -181,12 +181,7 @@
 	}
 
 	function quitGame() {
-		if (!quitArmed) {
-			quitArmed = true;
-			return;
-		}
 		clearTimeout(aiTimer);
-		quitArmed = false;
 		lastTrick = null;
 		message = '';
 		setGame(null);
@@ -374,7 +369,7 @@
 
 	function tapCard(card: Card) {
 		if (!game) return;
-		quitArmed = false;
+		quitButton?.disarm();
 		if (humanToDiscard || drawSelectable) {
 			toggleDiscard(card);
 			return;
@@ -761,14 +756,12 @@
 
 		{#if !gameOver}
 			<section class="game-footer">
-				<button
-					type="button"
-					class="small-button quit"
-					onclick={quitGame}
-					aria-label={quitArmed ? 'Tap again to abandon the game' : undefined}
-				>
-					{quitArmed ? 'Tap again' : 'Abandon game'}
-				</button>
+				<ArmedButton
+					bind:this={quitButton}
+					label="Abandon game"
+					armedLabel="Tap again to abandon the game"
+					onconfirm={quitGame}
+				/>
 			</section>
 		{/if}
 	{/if}
@@ -1206,26 +1199,6 @@
 		border-top: 1px solid var(--rule);
 	}
 
-	.small-button {
-		min-height: 48px;
-		padding: 0.5rem 1rem;
-		font-size: 1rem;
-		border: 1px solid var(--muted);
-		border-radius: 6px;
-		background: transparent;
-		color: var(--ink);
-		cursor: pointer;
-	}
-
-	.small-button:hover {
-		border-color: var(--accent);
-		color: var(--accent-deep);
-	}
-
-	.small-button:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-	}
 
 	/* Larger than mobile: seat the four players around the central trick area —
 	   user at south, partner at north, opponents at east/west (TODO-014). This is

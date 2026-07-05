@@ -25,20 +25,18 @@
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
 	import { explainTrick } from '$lib/domain/trick.js';
 	import { chooseCard, chooseRob } from '$lib/ai/heuristic.js';
+	import ArmedButton from '$lib/ui/ArmedButton.svelte';
 	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import TrumpRankingHelp from '$lib/ui/TrumpRankingHelp.svelte';
+	import { PERSONA_AVATARS } from '$lib/ui/personas.js';
 	import { loadGame, saveGame, loadPlayStats, savePlayStats } from '$lib/ui/persistence.js';
-	import avatarMargaret from '$lib/assets/avatars/peep-01.svg';
-	import avatarStewart from '$lib/assets/avatars/peep-02.svg';
 
 	const scheme = STANDARD_SCHEME;
 	const rng = createRng();
 	const HUMAN = 0;
 	const AI = 1;
 	const AI_NAMES = ['Margaret', 'Stewart'];
-	/* Same persona, same face as the Auction seats (TODO-039). */
-	const AVATARS: Record<string, string> = { Margaret: avatarMargaret, Stewart: avatarStewart };
 	const AI_DELAY_MS = 800;
 
 	const saved = loadGame();
@@ -48,7 +46,7 @@
 
 	let selected = $state<Card | null>(null);
 	let robPicking = $state(false);
-	let quitArmed = $state(false);
+	let quitButton = $state<ArmedButton>();
 	let message = $state('');
 	let lastTrick = $state<{ trick: CompletedTrick; explanation: string } | null>(null);
 	let aiTimer: ReturnType<typeof setTimeout> | undefined;
@@ -97,7 +95,7 @@
 		opponentName = rng.pick(AI_NAMES);
 		selected = null;
 		robPicking = false;
-		quitArmed = false;
+		quitButton?.disarm();
 		lastTrick = null;
 		message = '';
 		setGame(startGame(scheme, rng));
@@ -105,12 +103,7 @@
 	}
 
 	function quitGame() {
-		if (!quitArmed) {
-			quitArmed = true;
-			return;
-		}
 		clearTimeout(aiTimer);
-		quitArmed = false;
 		lastTrick = null;
 		message = '';
 		setGame(null);
@@ -190,7 +183,7 @@
 
 	function tapCard(card: Card) {
 		if (!game) return;
-		quitArmed = false;
+		quitButton?.disarm();
 		if (robPicking) {
 			const turnUpLabel = cardLabel(game.turnUp);
 			setGame(rob(game, card));
@@ -320,9 +313,9 @@
 
 		<section class="opponent" aria-label="{opponentName}'s side">
 			<div class="opponent-row">
-				{#if AVATARS[opponentName]}
+				{#if PERSONA_AVATARS[opponentName]}
 					<!-- Decorative — the visible name is the identifier (SPEC §8). -->
-					<img class="opponent-avatar" src={AVATARS[opponentName]} alt="" aria-hidden="true" width="44" height="44" />
+					<img class="opponent-avatar" src={PERSONA_AVATARS[opponentName]} alt="" aria-hidden="true" width="44" height="44" />
 				{/if}
 				<span class="opponent-name">{opponentName}</span>
 				<div class="opponent-cards" style="--card-width: 52px">
@@ -480,14 +473,12 @@
 
 		{#if !gameOver}
 			<section class="game-footer">
-				<button
-					type="button"
-					class="small-button quit"
-					onclick={quitGame}
-					aria-label={quitArmed ? 'Tap again to abandon the game' : undefined}
-				>
-					{quitArmed ? 'Tap again' : 'Abandon game'}
-				</button>
+				<ArmedButton
+					bind:this={quitButton}
+					label="Abandon game"
+					armedLabel="Tap again to abandon the game"
+					onconfirm={quitGame}
+				/>
 			</section>
 		{/if}
 	{/if}
@@ -883,24 +874,4 @@
 		border-top: 1px solid var(--rule);
 	}
 
-	.small-button {
-		min-height: 48px;
-		padding: 0.5rem 1rem;
-		font-size: 1rem;
-		border: 1px solid var(--muted);
-		border-radius: 6px;
-		background: transparent;
-		color: var(--ink);
-		cursor: pointer;
-	}
-
-	.small-button:hover {
-		border-color: var(--accent);
-		color: var(--accent-deep);
-	}
-
-	.small-button:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-	}
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import ArmedButton from '$lib/ui/ArmedButton.svelte';
 	import {
 		loadAuctionStats,
 		saveAuctionStats,
@@ -14,16 +15,9 @@
 		return total === 0 ? '—' : `${Math.round((100 * part) / total)}%`;
 	}
 
-	let resetArmed = $state(false);
-
 	function resetStats() {
-		if (!resetArmed) {
-			resetArmed = true;
-			return;
-		}
 		stats = emptyAuctionStats();
 		saveAuctionStats(stats);
-		resetArmed = false;
 	}
 </script>
 
@@ -69,14 +63,12 @@
 	</section>
 
 	<div class="actions">
-		<button
-			type="button"
-			class="big-button"
-			onclick={resetStats}
-			aria-label={resetArmed ? 'Tap again to reset your statistics' : undefined}
-		>
-			{resetArmed ? 'Tap again' : 'Reset stats'}
-		</button>
+		<ArmedButton
+			variant="big"
+			label="Reset stats"
+			armedLabel="Tap again to reset your statistics"
+			onconfirm={resetStats}
+		/>
 	</div>
 </main>
 
@@ -200,25 +192,4 @@
 		gap: 1rem;
 	}
 
-	.big-button {
-		min-height: 56px;
-		padding: 0.75rem 2rem;
-		font-size: 1.2rem;
-		font-weight: 700;
-		border: 1px solid var(--rule);
-		border-radius: 6px;
-		background: var(--panel);
-		color: var(--ink);
-		cursor: pointer;
-		box-shadow: 0 1px 3px rgba(61, 58, 53, 0.08);
-	}
-
-	.big-button:hover {
-		border-color: var(--accent);
-	}
-
-	.big-button:focus-visible {
-		outline: 4px solid var(--focus);
-		outline-offset: 2px;
-	}
 </style>
