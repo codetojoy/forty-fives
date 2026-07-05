@@ -14,6 +14,7 @@ import {
 	currentSeat,
 	trickLeader,
 	analyzeCurrent,
+	isAuctionGameOver,
 	AUCTION_SEATS,
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
@@ -420,6 +421,32 @@ describe('FOUR_TURNS finish rule (TODO-018)', () => {
 		const winner = g.phase.kind === 'hand-over' ? g.phase.gameWinner! : -1;
 		// The winner is the leading team (no points target; score alone decides).
 		expect(g.scores[winner]).toBeGreaterThan(g.scores[1 - winner]);
+	});
+});
+
+describe('isAuctionGameOver (TODO-046)', () => {
+	it('is false for a game that has just started', () => {
+		expect(isAuctionGameOver(startAuction(scheme, createRng(21), 0))).toBe(false);
+	});
+
+	it('is false at hand-over while no team has won', () => {
+		const rng = createRng(22);
+		const g = playOneHand(startAuction(scheme, rng, 0), rng);
+		// One hand scores at most 30, so the first hand can never decide the game.
+		expect(g.phase.kind).toBe('hand-over');
+		expect(isAuctionGameOver(g)).toBe(false);
+	});
+
+	it('is true once a game winner is decided', () => {
+		const rng = createRng(23);
+		let g = startAuction(scheme, rng, 0);
+		let guard = 0;
+		while (!isAuctionGameOver(g)) {
+			if (g.phase.kind === 'hand-over') g = nextHand(g, scheme, rng);
+			else g = playOneHand(g, rng);
+			if (++guard > 2000) throw new Error('game did not terminate');
+		}
+		expect(g.phase.kind === 'hand-over' && g.phase.gameWinner !== null).toBe(true);
 	});
 });
 

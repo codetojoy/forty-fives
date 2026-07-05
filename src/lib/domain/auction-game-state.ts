@@ -504,6 +504,15 @@ export function playCard(
 	};
 }
 
+/**
+ * True once a hand has ended with the game decided (a winning team set) — no
+ * further transitions apply. The UI shows its game-over screen from this, and
+ * the persistence layer uses it to expire stale finished saves (TODO-046).
+ */
+export function isAuctionGameOver(state: AuctionGameState): boolean {
+	return state.phase.kind === 'hand-over' && state.phase.gameWinner !== null;
+}
+
 /** Deal the next hand (dealer rotates). Only valid when the game continues. */
 export function nextHand(
 	state: AuctionGameState,

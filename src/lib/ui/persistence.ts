@@ -9,6 +9,7 @@ import type { Suit } from '$lib/domain/cards.js';
 import { isPlausibleGameState, type GameState } from '$lib/domain/game-state.js';
 import {
 	isPlausibleAuctionState,
+	isAuctionGameOver,
 	AUCTION_SEATS,
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
@@ -150,6 +151,8 @@ export interface SavedAuctionGame {
 	settings: AuctionGameSettings;
 	/** Display names per seat; seat 0 (the human) is always "You". */
 	names: string[];
+	/** When the saved game reached game over (epoch ms; TODO-046), else null. */
+	finishedAt: number | null;
 }
 
 const AUCTION_KEY = 'forty-fives.auction.v1';
@@ -166,8 +169,25 @@ function auctionDefaults(): SavedAuctionGame {
 		// always-exchange-non-trump off (TODO-037). These prefs are edited on
 		// /auction/config, not in the game footer.
 		settings: { highlightLegal: true, confirmPlay: false, alwaysExchangeNonTrump: false },
-		names: auctionNames()
+		names: auctionNames(),
+		finishedAt: null
 	};
+}
+
+/** How long a finished game's final screen survives a return visit (TODO-046). */
+export const FINISHED_GAME_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * Drop a finished game once it has sat for more than FINISHED_GAME_TTL_MS, so
+ * returning to /auction starts fresh instead of showing a stale final screen
+ * (TODO-046). A finished game with no stamp predates the stamp and is treated
+ * as stale; an in-progress game is never dropped, whatever its age. Pure so
+ * tests can drive the clock — loadAuctionGame passes Date.now().
+ */
+export function expireFinishedAuctionGame(saved: SavedAuctionGame, now: number): SavedAuctionGame {
+	if (saved.game === null || !isAuctionGameOver(saved.game)) return saved;
+	if (saved.finishedAt !== null && now - saved.finishedAt <= FINISHED_GAME_TTL_MS) return saved;
+	return { ...saved, game: null, finishedAt: null };
 }
 
 /**
@@ -199,16 +219,20 @@ export function loadAuctionGame(): SavedAuctionGame {
 			parsed.names.every((n) => typeof n === 'string' && n)
 				? parsed.names
 				: d.names;
-		return {
-			game: isPlausibleAuctionState(parsed.game) ? withSavedGameDefaults(parsed.game) : null,
-			settings: {
-				highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
-				confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay,
-				alwaysExchangeNonTrump:
-					parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump
+		return expireFinishedAuctionGame(
+			{
+				game: isPlausibleAuctionState(parsed.game) ? withSavedGameDefaults(parsed.game) : null,
+				settings: {
+					highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
+					confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay,
+					alwaysExchangeNonTrump:
+						parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump
+				},
+				names,
+				finishedAt: Number.isFinite(parsed.finishedAt) ? (parsed.finishedAt as number) : null
 			},
-			names
-		};
+			Date.now()
+		);
 	} catch {
 		return auctionDefaults();
 	}

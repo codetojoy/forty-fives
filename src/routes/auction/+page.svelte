@@ -23,6 +23,7 @@
 		nextHand,
 		currentSeat,
 		ledCard,
+		isAuctionGameOver,
 		HUMAN_SEAT,
 		type AuctionGameState
 	} from '$lib/domain/auction-game-state.js';
@@ -71,6 +72,9 @@
 	let game = $state<AuctionGameState | null>(saved.game);
 	let settings = $state(saved.settings);
 	let names = $state(saved.names);
+	// When the saved game reached game over (TODO-046); stamped in persist() and
+	// used by loadAuctionGame to expire the final screen an hour after this moment.
+	let finishedAt = saved.finishedAt;
 
 	let selected = $state<Card | null>(null);
 	let discardSel = $state<Card[]>([]);
@@ -140,7 +144,7 @@
 		game?.trumpSuit ? (isRedSuit(game.trumpSuit) ? '#c0262d' : '#3d3a35') : '#3d3a35'
 	);
 	/** The game is finished once a team has crossed the target and a winner is set. */
-	const gameOver = $derived(game?.phase.kind === 'hand-over' && game.phase.gameWinner !== null);
+	const gameOver = $derived(game !== null && isAuctionGameOver(game));
 
 	/**
 	 * How the active game finishes (TODO-018). For the in-progress game we read
@@ -156,10 +160,14 @@
 	);
 
 	function persist() {
+		// Stamp the moment the saved game is over — kept once set, cleared whenever
+		// the save holds no finished game — so the expiry clock starts at game over.
+		finishedAt = game !== null && isAuctionGameOver(game) ? (finishedAt ?? Date.now()) : null;
 		saveAuctionGame({
 			game: game ? ($state.snapshot(game) as AuctionGameState) : null,
 			settings: $state.snapshot(settings),
-			names: $state.snapshot(names)
+			names: $state.snapshot(names),
+			finishedAt
 		});
 	}
 
