@@ -638,7 +638,7 @@
 					{#each myLegalBids as b (b)}
 						<button
 							type="button"
-							class="big-button"
+							class="big-button bid-button"
 							aria-label={`Bid ${b}`}
 							onclick={() => humanBid(b)}
 						>
@@ -1132,7 +1132,19 @@
 	.panel-buttons {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.75rem;
+		/* Slightly tighter than the page default so the bid row (four numbers plus
+		   Pass) fits one line on a narrow phone — see .bid-button (TODO-050). */
+		gap: 0.6rem;
+	}
+
+	/* Numeric bid buttons are just 15/20/25/30 (TODO-049), so they need far less
+	   width than the default .big-button padding gives. A fixed min-width keeps the
+	   tap target comfortably over the 48px floor (SPEC §7) while letting the common
+	   bid row sit on one line instead of wrapping raggedly (TODO-050). */
+	.bid-button {
+		min-width: 52px;
+		padding-left: 0.5rem;
+		padding-right: 0.5rem;
 	}
 
 	.hand-score {
