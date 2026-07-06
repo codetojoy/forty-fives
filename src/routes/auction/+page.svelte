@@ -636,7 +636,14 @@
 				</p>
 				<div class="panel-buttons">
 					{#each myLegalBids as b (b)}
-						<button type="button" class="big-button" onclick={() => humanBid(b)}>Bid {b}</button>
+						<button
+							type="button"
+							class="big-button"
+							aria-label={`Bid ${b}`}
+							onclick={() => humanBid(b)}
+						>
+							{b}
+						</button>
 					{/each}
 					{#if canHold}
 						<button type="button" class="big-button" onclick={humanHold}>Hold</button>
