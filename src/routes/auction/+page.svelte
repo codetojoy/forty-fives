@@ -741,7 +741,12 @@
 							? '🎉 Your team wins the game!'
 							: 'The opponents win the game.'}
 					</p>
-					<button type="button" class="big-button" onclick={newGame}>New game</button>
+					<div class="panel-buttons">
+						<button type="button" class="big-button" onclick={newGame}>New game</button>
+						<!-- Return to the intro (Config/Stats links live there) without starting a
+						     game (TODO-051). quitGame just sets game=null; nothing is lost once over. -->
+						<button type="button" class="big-button" onclick={quitGame}>Auction Home</button>
+					</div>
 				{:else}
 					<button type="button" class="big-button" onclick={dealNext}>Deal</button>
 				{/if}
