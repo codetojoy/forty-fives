@@ -30,8 +30,8 @@
 </script>
 
 <span class="trump-wrap">
-	<span class="trump-badge" style="color: {trumpColor}">
-		Trump: {SUIT_SYMBOLS[trumpSuit]} {SUIT_NAMES[trumpSuit]}
+	<span class="trump-badge" style="color: {trumpColor}" aria-label={`Trump: ${SUIT_NAMES[trumpSuit]}`}>
+		Trump: {SUIT_SYMBOLS[trumpSuit]}
 	</span>
 	<HelpDisclosure label="Show the trump ranking" {align}>
 		<h2 class="rank-heading" style="color: {trumpColor}">

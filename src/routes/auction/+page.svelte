@@ -774,8 +774,8 @@
 						? ' — tap to exchange'
 						: ''}
 					{#if game.trumpSuit}
-						<span class="hand-trump" style="color: {trumpColor}">
-							· {SUIT_SYMBOLS[game.trumpSuit]} {SUIT_NAMES[game.trumpSuit]} trump
+						<span class="hand-trump" style="color: {trumpColor}" aria-label={`${SUIT_NAMES[game.trumpSuit]} trump`}>
+							· {SUIT_SYMBOLS[game.trumpSuit]}
 						</span>
 					{/if}
 				</h2>

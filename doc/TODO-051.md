@@ -1,5 +1,5 @@
 
-### TODO-051
+### TODO-051 [COMPLETE]
 
 In Auction Forty-Fives, when a game is complete, we display "New Game" button". 
 

@@ -1,5 +1,5 @@
 
-### TODO-052
+### TODO-052 [COMPLETE]
 
 In Auction Forty-Fives, allow a new config setting for "Hand Order".
 

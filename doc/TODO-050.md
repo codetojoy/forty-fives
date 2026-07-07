@@ -1,5 +1,5 @@
 
-### TODO-050
+### TODO-050 [COMPLETE]
 
 Follow-on to TODO-049. On mobile (e.g. iPhone SE 2020, ~343px of content width)
 the bid panel's buttons still wrap raggedly onto a second line. This is *not*
