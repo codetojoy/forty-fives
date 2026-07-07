@@ -79,7 +79,8 @@ function envelope(game: AuctionGameState | null, finishedAt: number | null): Sav
 			highlightLegal: true,
 			confirmPlay: false,
 			alwaysExchangeNonTrump: false,
-			hidePlayers: false
+			hidePlayers: false,
+			handOrder: 'none'
 		},
 		names: ['You', 'Stewart', 'Margaret', 'Bernadette'],
 		finishedAt

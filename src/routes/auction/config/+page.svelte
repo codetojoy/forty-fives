@@ -44,7 +44,8 @@
 			prefs.highlightLegal !== saved.prefs.highlightLegal ||
 			prefs.confirmPlay !== saved.prefs.confirmPlay ||
 			prefs.alwaysExchangeNonTrump !== saved.prefs.alwaysExchangeNonTrump ||
-			prefs.hidePlayers !== saved.prefs.hidePlayers
+			prefs.hidePlayers !== saved.prefs.hidePlayers ||
+			prefs.handOrder !== saved.prefs.handOrder
 	);
 
 	function selectProfile(next: AuctionProfileId) {
@@ -223,6 +224,20 @@
 						bind:checked={prefs.hidePlayers}
 					/>
 					<span class="toggle-value">{prefs.hidePlayers ? 'On' : 'Off'}</span>
+				</label>
+			</div>
+			<div class="setting">
+				<span class="setting-desc">Sort hand strongest first</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="Sort hand strongest first"
+						bind:checked={
+							() => prefs.handOrder === 'strongest-first',
+							(v) => (prefs.handOrder = v ? 'strongest-first' : 'none')
+						}
+					/>
+					<span class="toggle-value">{prefs.handOrder === 'strongest-first' ? 'On' : 'Off'}</span>
 				</label>
 			</div>
 		</fieldset>

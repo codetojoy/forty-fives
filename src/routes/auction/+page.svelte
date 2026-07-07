@@ -31,6 +31,7 @@
 	import { legalBids, type BidValue } from '$lib/domain/bidding.js';
 	import { analyzePlays } from '$lib/domain/rules-engine.js';
 	import { isTrump } from '$lib/domain/trump-scheme.js';
+	import { sortHandStrongestFirst } from '$lib/ui/hand-order.js';
 	import { createRng } from '$lib/domain/rng.js';
 	import { STANDARD_SCHEME } from '$lib/domain/schemes.js';
 	import {
@@ -145,6 +146,18 @@
 	);
 	/** The game is finished once a team has crossed the target and a winner is set. */
 	const gameOver = $derived(game !== null && isAuctionGameOver(game));
+
+	/**
+	 * The human's hand as displayed (TODO-052). With the "strongest first" pref on
+	 * we sort a *copy* strongest-to-weakest, but only once trump exists — strength
+	 * is meaningless before then. Purely presentational: play/selection is
+	 * card-based, so reordering never reaches the domain or AI.
+	 */
+	const displayHand = $derived(
+		game && settings.handOrder === 'strongest-first' && game.trumpSuit
+			? sortHandStrongestFirst(game.hands[HUMAN_SEAT], game.trumpSuit, scheme)
+			: (game?.hands[HUMAN_SEAT] ?? [])
+	);
 
 	/**
 	 * How the active game finishes (TODO-018). For the in-progress game we read
@@ -767,7 +780,7 @@
 					{/if}
 				</h2>
 				<div class="hand-cards" style="--card-width: clamp(72px, 16vw, 104px)">
-					{#each game.hands[HUMAN_SEAT] as card (cardLabel(card))}
+					{#each displayHand as card (cardLabel(card))}
 						<PlayingCard
 							{card}
 							onpick={() => tapCard(card)}

@@ -190,6 +190,14 @@ export interface AuctionGameSettings extends GameSettings {
 	 * rules profile, so switching profiles never touches it.
 	 */
 	hidePlayers: boolean;
+	/**
+	 * How to order the human's hand when rendering (TODO-052). `'none'` keeps the
+	 * dealt order; `'strongest-first'` sorts trump first (by the game's trump
+	 * ranking) then non-trump by suit (alphabetical) and in-suit strength. A
+	 * display preference — independent of the rules profile — and it only takes
+	 * effect once a trump suit exists (strength is meaningless before then).
+	 */
+	handOrder: 'none' | 'strongest-first';
 }
 
 export interface SavedAuctionGame {
@@ -218,7 +226,8 @@ function auctionDefaults(): SavedAuctionGame {
 			highlightLegal: true,
 			confirmPlay: false,
 			alwaysExchangeNonTrump: false,
-			hidePlayers: false
+			hidePlayers: false,
+			handOrder: 'none'
 		},
 		names: auctionNames(),
 		finishedAt: null
@@ -262,7 +271,8 @@ export function loadAuctionGame(): SavedAuctionGame {
 					confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay,
 					alwaysExchangeNonTrump:
 						parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump,
-					hidePlayers: parsed.settings?.hidePlayers ?? d.settings.hidePlayers
+					hidePlayers: parsed.settings?.hidePlayers ?? d.settings.hidePlayers,
+					handOrder: parsed.settings?.handOrder ?? d.settings.handOrder
 				},
 				names,
 				finishedAt: Number.isFinite(parsed.finishedAt) ? (parsed.finishedAt as number) : null
