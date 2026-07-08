@@ -17,6 +17,16 @@
 	</header>
 
 	<nav class="modes" aria-label="Choose a mode">
+		<a class="mode" href="{base}/trainer">
+			<span class="mode-icon" aria-hidden="true">🎓</span>
+			<span class="mode-text">
+				<span class="mode-title">Learn Ranking</span>
+				<span class="mode-desc">
+					Practice the tricky trump rankings, two cards at a time, with an explanation for every
+					answer.
+				</span>
+			</span>
+		</a>
 		<a class="mode" href="{base}/play">
 			<span class="mode-icon" aria-hidden="true">🂠</span>
 			<span class="mode-text">
@@ -32,16 +42,6 @@
 				<span class="mode-title">Play Auction</span>
 				<span class="mode-desc">
 					Auction Forty-Fives for four: you and a partner against two opponents.
-				</span>
-			</span>
-		</a>
-		<a class="mode" href="{base}/trainer">
-			<span class="mode-icon" aria-hidden="true">🎓</span>
-			<span class="mode-text">
-				<span class="mode-title">Learn Ranking</span>
-				<span class="mode-desc">
-					Practice the tricky trump rankings, two cards at a time, with an explanation for every
-					answer.
 				</span>
 			</span>
 		</a>
