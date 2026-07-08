@@ -47,7 +47,7 @@ export interface AuctionDeal {
 /**
  * Auction Forty-Fives deal: five cards to each player and no turn-up — the
  * winning bidder names trump. With `useKitty` (the default) a three-card kitty
- * is dealt for the bid winner; without it (the kitty-less "Rec Hall" variant,
+ * is dealt for the bid winner; without it (the kitty-less "Rec Hall PEI" variant,
  * TODO-011) no kitty is dealt and those cards stay in the stock. Cards are dealt
  * in the traditional order (three to each player, then the kitty if any, then
  * two to each), though a uniform shuffle makes the order cosmetic.

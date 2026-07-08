@@ -237,8 +237,10 @@ describe('chooseBid', () => {
 	});
 
 	it('raises or concedes legally when the dealer holds (TODO-042)', () => {
+		// ALLOW_HOLD is off in the default profile, so name it explicitly here.
+		const holdOn: AuctionSettingValues = { ...defaultSettingValues(), ALLOW_HOLD: true };
 		for (let seed = 1; seed <= 20; seed++) {
-			let g = startAuction(scheme, createRng(seed), 0);
+			let g = startAuction(scheme, createRng(seed), 0, holdOn);
 			g = placeBid(g, 1, 15);
 			g = passBid(g, 2);
 			g = passBid(g, 3);

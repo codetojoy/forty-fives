@@ -54,12 +54,22 @@ describe('auction config — settings registry', () => {
 		]);
 	});
 
-	it('lists the three profiles in display order', () => {
-		expect(PROFILE_IDS).toEqual(['Wikipedia', 'Rec Hall', 'Custom']);
+	it('lists the four profiles in display order (default first)', () => {
+		expect(PROFILE_IDS).toEqual(['Common PEI', 'Wikipedia', 'Rec Hall PEI', 'Custom']);
 	});
 });
 
 describe('auction config — built-in profiles', () => {
+	it('Common PEI uses the kitty and the discard, no hold, 120, left-of-bidder leads', () => {
+		expect(BUILTIN_PROFILES['Common PEI']).toEqual({
+			USE_KITTY: true,
+			ALLOW_DISCARD: true,
+			ALLOW_HOLD: false,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
+		});
+	});
+
 	it('Wikipedia uses the kitty, forbids extra discard, allows hold, 120, eldest leads', () => {
 		expect(BUILTIN_PROFILES.Wikipedia).toEqual({
 			USE_KITTY: true,
@@ -70,8 +80,8 @@ describe('auction config — built-in profiles', () => {
 		});
 	});
 
-	it('Rec Hall drops the kitty, allows discard and hold, four turns, left-of-bidder leads', () => {
-		expect(BUILTIN_PROFILES['Rec Hall']).toEqual({
+	it('Rec Hall PEI drops the kitty, allows discard and hold, four turns, left-of-bidder leads', () => {
+		expect(BUILTIN_PROFILES['Rec Hall PEI']).toEqual({
 			USE_KITTY: false,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
@@ -82,30 +92,31 @@ describe('auction config — built-in profiles', () => {
 
 	it('isCustom recognises only Custom', () => {
 		expect(isCustom('Custom')).toBe(true);
+		expect(isCustom('Common PEI')).toBe(false);
 		expect(isCustom('Wikipedia')).toBe(false);
-		expect(isCustom('Rec Hall')).toBe(false);
+		expect(isCustom('Rec Hall PEI')).toBe(false);
 	});
 });
 
 describe('auction config — defaults', () => {
-	it('defaults to Wikipedia (matches current game behaviour)', () => {
-		expect(DEFAULT_PROFILE).toBe('Wikipedia');
+	it('defaults to Common PEI (the intended house rules)', () => {
+		expect(DEFAULT_PROFILE).toBe('Common PEI');
 		const d = defaultAuctionConfig();
-		expect(d.profile).toBe('Wikipedia');
-		expect(d.custom).toEqual(BUILTIN_PROFILES.Wikipedia);
+		expect(d.profile).toBe('Common PEI');
+		expect(d.custom).toEqual(BUILTIN_PROFILES['Common PEI']);
 	});
 
-	it('Custom seeds from Wikipedia values', () => {
-		expect(defaultCustomValues()).toEqual(BUILTIN_PROFILES.Wikipedia);
+	it('Custom seeds from Common PEI values', () => {
+		expect(defaultCustomValues()).toEqual(BUILTIN_PROFILES['Common PEI']);
 	});
 
-	it('defaultSettingValues resolves to current play (kitty on)', () => {
+	it('defaultSettingValues resolves to the default profile (kitty on, discard on)', () => {
 		expect(defaultSettingValues()).toEqual({
 			USE_KITTY: true,
-			ALLOW_DISCARD: false,
-			ALLOW_HOLD: true,
+			ALLOW_DISCARD: true,
+			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
-			FIRST_LEAD: 'ELDEST'
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
@@ -119,7 +130,7 @@ describe('auction config — defaults', () => {
 describe('auction config — resolveConfig', () => {
 	it('resolves built-in profiles to their presets, ignoring stored custom', () => {
 		const config: AuctionConfig = {
-			profile: 'Rec Hall',
+			profile: 'Rec Hall PEI',
 			custom: {
 				USE_KITTY: true,
 				ALLOW_DISCARD: false,
@@ -188,23 +199,26 @@ describe('auction config — normalizeAuctionConfig', () => {
 		expect(normalizeAuctionConfig(undefined)).toEqual(d);
 	});
 
-	it('defaults an unknown profile to Wikipedia', () => {
-		const out = normalizeAuctionConfig({ profile: 'Bogus', custom: BUILTIN_PROFILES.Wikipedia });
-		expect(out.profile).toBe('Wikipedia');
+	it('defaults an unknown profile to Common PEI', () => {
+		const out = normalizeAuctionConfig({
+			profile: 'Bogus',
+			custom: BUILTIN_PROFILES['Common PEI']
+		});
+		expect(out.profile).toBe('Common PEI');
 	});
 
 	it('fills missing custom settings from defaults', () => {
 		const out = normalizeAuctionConfig({ profile: 'Custom', custom: { USE_KITTY: false } });
 		expect(out.custom).toEqual({
 			USE_KITTY: false,
-			ALLOW_DISCARD: false,
-			ALLOW_HOLD: true,
+			ALLOW_DISCARD: true,
+			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
-			FIRST_LEAD: 'ELDEST'
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
-	it('fills ALLOW_HOLD for configs stored before TODO-042', () => {
+	it('fills ALLOW_HOLD from the default for configs stored before TODO-042', () => {
 		const out = normalizeAuctionConfig({
 			profile: 'Custom',
 			custom: {
@@ -214,7 +228,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 				FIRST_LEAD: 'LEFT_OF_BIDDER'
 			}
 		});
-		expect(out.custom.ALLOW_HOLD).toBe(true);
+		expect(out.custom.ALLOW_HOLD).toBe(false);
 	});
 
 	it('ignores non-boolean and unknown setting values', () => {
@@ -225,9 +239,9 @@ describe('auction config — normalizeAuctionConfig', () => {
 		expect(out.custom).toEqual({
 			USE_KITTY: true,
 			ALLOW_DISCARD: true,
-			ALLOW_HOLD: true,
+			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
-			FIRST_LEAD: 'ELDEST'
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 		expect('BOGUS' in out.custom).toBe(false);
 	});
@@ -257,7 +271,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 			profile: 'Custom',
 			custom: { USE_KITTY: true, ALLOW_DISCARD: false, FIRST_LEAD: 'SOMEONE' }
 		});
-		expect(rejected.custom.FIRST_LEAD).toBe('ELDEST');
+		expect(rejected.custom.FIRST_LEAD).toBe('LEFT_OF_BIDDER');
 	});
 
 	it('defaults custom entirely when it is missing', () => {

@@ -18,8 +18,8 @@
 			a: 'Each game mode has a "How to play" panel on its page, and the Learn Ranking trainer teaches the card rankings.'
 		},
 		{
-			q: 'In Configure for Auction, what is Wikipedia vs Rec Hall?',
-			a: 'They set different configuration values based on the style of play. For example, Wikipedia uses a kitty, where typical Rec Hall games (on PEI) do not.'
+			q: 'In Configure for Auction, what are the rules profiles (Common PEI, Wikipedia, Rec Hall PEI)?',
+			a: 'Each profile is a set of configuration values for a style of play. Common PEI is the default and matches how the game is most often played on PEI. Wikipedia follows the Wikipedia baseline. Rec Hall PEI is a faster kitty-less game. You can also choose Custom and set each value yourself.'
 		},
 		{
 			q: 'In Configure for Auction, what is "Always exchange non-trump"?',

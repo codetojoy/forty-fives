@@ -88,13 +88,28 @@ export interface AuctionSettingValues {
 	FIRST_LEAD: FirstLeadRule;
 }
 
-export type AuctionProfileId = 'Wikipedia' | 'Rec Hall' | 'Custom';
+export type AuctionProfileId = 'Common PEI' | 'Wikipedia' | 'Rec Hall PEI' | 'Custom';
 
-/** The selectable profiles, in display order. */
-export const PROFILE_IDS: readonly AuctionProfileId[] = ['Wikipedia', 'Rec Hall', 'Custom'];
+/** The selectable profiles, in display order (default first). */
+export const PROFILE_IDS: readonly AuctionProfileId[] = [
+	'Common PEI',
+	'Wikipedia',
+	'Rec Hall PEI',
+	'Custom'
+];
 
 /** Read-only preset values for the built-in profiles. */
-export const BUILTIN_PROFILES: Record<'Wikipedia' | 'Rec Hall', AuctionSettingValues> = {
+export const BUILTIN_PROFILES: Record<
+	'Common PEI' | 'Wikipedia' | 'Rec Hall PEI',
+	AuctionSettingValues
+> = {
+	'Common PEI': {
+		USE_KITTY: true,
+		ALLOW_DISCARD: true,
+		ALLOW_HOLD: false,
+		FINISH_RULE: 'POINTS_120',
+		FIRST_LEAD: 'LEFT_OF_BIDDER'
+	},
 	Wikipedia: {
 		USE_KITTY: true,
 		ALLOW_DISCARD: false,
@@ -102,7 +117,7 @@ export const BUILTIN_PROFILES: Record<'Wikipedia' | 'Rec Hall', AuctionSettingVa
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'ELDEST'
 	},
-	'Rec Hall': {
+	'Rec Hall PEI': {
 		USE_KITTY: false,
 		ALLOW_DISCARD: true,
 		ALLOW_HOLD: true,
@@ -117,15 +132,15 @@ export function isCustom(profile: AuctionProfileId): profile is 'Custom' {
 }
 
 /**
- * Default to "Wikipedia": its values (kitty on, no extra discard) match the
- * behaviour the auction game currently implements, so the inert config never
- * misrepresents how the game actually plays today.
+ * Default to "Common PEI" (TODO-058): the profile that matches how the game is
+ * most commonly played on PEI — kitty on, with the non-bid-winner discard — so
+ * new players start on the intended house rules rather than the Wikipedia baseline.
  */
-export const DEFAULT_PROFILE: AuctionProfileId = 'Wikipedia';
+export const DEFAULT_PROFILE: AuctionProfileId = 'Common PEI';
 
 /** The values "Custom" starts from before the user edits anything. */
 export function defaultCustomValues(): AuctionSettingValues {
-	return { ...BUILTIN_PROFILES.Wikipedia };
+	return { ...BUILTIN_PROFILES['Common PEI'] };
 }
 
 /** The persisted shape: the selected profile plus the user's Custom values. */
@@ -139,9 +154,9 @@ export function defaultAuctionConfig(): AuctionConfig {
 }
 
 /**
- * The resolved setting values used when none are supplied — matches the game's
- * current play (kitty on, no extra discard). Used as the fallback for games
- * started or saved before the config was wired in (TODO-011).
+ * The resolved setting values used when none are supplied — the default profile's
+ * values ("Common PEI": kitty on, non-bid-winner discard on). Used as the fallback
+ * for games started or saved before the config was wired in (TODO-011).
  */
 export function defaultSettingValues(): AuctionSettingValues {
 	return resolveConfig(defaultAuctionConfig());

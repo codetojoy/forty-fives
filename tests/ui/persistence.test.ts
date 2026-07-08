@@ -41,6 +41,17 @@ import {
 
 const scheme = STANDARD_SCHEME;
 
+// Kitty on, no extra discard: playOneHand below drives kitty → discard → play with
+// no drawing phase, so it needs a profile without the discard (the default profile
+// "Common PEI" now enables it).
+const KITTY_NO_DRAW = {
+	USE_KITTY: true,
+	ALLOW_DISCARD: false,
+	ALLOW_HOLD: true,
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
+} as const;
+
 function playOneHand(g: AuctionGameState, rng: ReturnType<typeof createRng>): AuctionGameState {
 	// Simple auction: eldest bids 15, the rest pass (as in the domain tests).
 	g = placeBid(g, currentSeat(g)!, 15);
@@ -59,7 +70,7 @@ function playOneHand(g: AuctionGameState, rng: ReturnType<typeof createRng>): Au
 /** A real completed game, driven through the domain transitions. */
 function finishedGame(): AuctionGameState {
 	const rng = createRng(1);
-	let g = startAuction(scheme, rng, 0);
+	let g = startAuction(scheme, rng, 0, KITTY_NO_DRAW);
 	let guard = 0;
 	while (!isAuctionGameOver(g)) {
 		if (g.phase.kind === 'hand-over') g = nextHand(g, scheme, rng);

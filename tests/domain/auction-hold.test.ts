@@ -29,6 +29,16 @@ const HOLD_OFF: AuctionSettingValues = {
 	FIRST_LEAD: 'ELDEST'
 };
 
+// These tests exercise the hold feature, so they run with ALLOW_HOLD on explicitly
+// rather than relying on the default profile (the default "Common PEI" has it off).
+const HOLD_ON: AuctionSettingValues = {
+	USE_KITTY: true,
+	ALLOW_DISCARD: false,
+	ALLOW_HOLD: true,
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
+};
+
 function biddingPhase(g: AuctionGameState): Extract<AuctionPhase, { kind: 'bidding' }> {
 	if (g.phase.kind !== 'bidding') throw new Error(`expected bidding, got ${g.phase.kind}`);
 	return g.phase;
@@ -36,7 +46,7 @@ function biddingPhase(g: AuctionGameState): Extract<AuctionPhase, { kind: 'biddi
 
 /** Dealer 0; seat 1 bids `bid`, seats 2 and 3 pass — leaving the dealer to speak. */
 function reachDealerTurn(seed: number, bid: BidValue = 20): AuctionGameState {
-	let g = startAuction(scheme, createRng(seed), 0);
+	let g = startAuction(scheme, createRng(seed), 0, HOLD_ON);
 	g = placeBid(g, 1, bid);
 	g = passBid(g, 2);
 	g = passBid(g, 3);
@@ -53,7 +63,7 @@ describe('the dealer hold — legality (ALLOW_HOLD, TODO-042)', () => {
 	});
 
 	it('rejects a hold when there is no standing bid', () => {
-		let g = startAuction(scheme, createRng(2), 0);
+		let g = startAuction(scheme, createRng(2), 0, HOLD_ON);
 		g = passBid(g, 1);
 		g = passBid(g, 2);
 		g = passBid(g, 3);
@@ -62,14 +72,14 @@ describe('the dealer hold — legality (ALLOW_HOLD, TODO-042)', () => {
 	});
 
 	it('rejects a hold by a seat that is not the dealer', () => {
-		let g = startAuction(scheme, createRng(3), 0);
+		let g = startAuction(scheme, createRng(3), 0, HOLD_ON);
 		g = placeBid(g, 1, 15);
 		expect(biddingPhase(g).turn).toBe(2);
 		expect(() => holdBid(g, 2)).toThrow();
 	});
 
 	it('rejects a hold out of turn', () => {
-		let g = startAuction(scheme, createRng(4), 0);
+		let g = startAuction(scheme, createRng(4), 0, HOLD_ON);
 		g = placeBid(g, 1, 15);
 		expect(() => holdBid(g, 0)).toThrow(); // seat 2 to speak, not the dealer
 	});
@@ -93,7 +103,7 @@ describe('the dealer hold — legality (ALLOW_HOLD, TODO-042)', () => {
 describe('the dealer hold — the duel (ALLOW_HOLD, TODO-042)', () => {
 	it('sends the decision back to the displaced bidder, with everyone else out', () => {
 		// Seat 2 outbids seat 1, seat 3 passes, the dealer holds seat 2's 20.
-		let g = startAuction(scheme, createRng(10), 0);
+		let g = startAuction(scheme, createRng(10), 0, HOLD_ON);
 		g = placeBid(g, 1, 15);
 		g = placeBid(g, 2, 20);
 		g = passBid(g, 3);
@@ -158,7 +168,7 @@ describe('the dealer hold — the duel (ALLOW_HOLD, TODO-042)', () => {
 
 	it('holding works against the partner seat too', () => {
 		// Dealer 3: eldest is 0 … partner of dealer 3 is seat 1.
-		let g = startAuction(scheme, createRng(16), 3);
+		let g = startAuction(scheme, createRng(16), 3, HOLD_ON);
 		g = passBid(g, 0);
 		g = placeBid(g, 1, 20); // dealer's partner takes the lead
 		g = passBid(g, 2);

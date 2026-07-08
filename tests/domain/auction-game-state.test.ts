@@ -43,6 +43,16 @@ const NOKITTY_DRAW: AuctionSettingValues = {
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
+// Kitty on, no extra discard: the winner discards the kitty straight into play,
+// with no drawing phase. Used by the tests below that assume that flow (the
+// default profile "Common PEI" now enables the discard, which adds a draw phase).
+const KITTY_NO_DRAW: AuctionSettingValues = {
+	USE_KITTY: true,
+	ALLOW_DISCARD: false,
+	ALLOW_HOLD: true,
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
+};
 
 /** All card ids across hands + stock, to assert nothing is duplicated or lost. */
 function liveCardIds(g: AuctionGameState): string[] {
@@ -98,7 +108,7 @@ describe('bidding', () => {
 
 describe('naming trump + kitty', () => {
 	function reachNaming(seed: number): AuctionGameState {
-		let g = startAuction(scheme, createRng(seed), 0);
+		let g = startAuction(scheme, createRng(seed), 0, KITTY_NO_DRAW);
 		g = placeBid(g, 1, 15);
 		g = passBid(g, 2);
 		g = passBid(g, 3);
@@ -304,7 +314,7 @@ describe('optional draw (TODO-012)', () => {
 describe('playing a hand', () => {
 	it('plays five four-card tricks, tallies, and advances dealer on the next hand', () => {
 		const rng = createRng(99);
-		let g = startAuction(scheme, rng, 0);
+		let g = startAuction(scheme, rng, 0, KITTY_NO_DRAW);
 		g = playOneHand(g, rng);
 
 		expect(g.phase.kind).toBe('hand-over');
@@ -431,7 +441,7 @@ describe('isAuctionGameOver (TODO-046)', () => {
 
 	it('is false at hand-over while no team has won', () => {
 		const rng = createRng(22);
-		const g = playOneHand(startAuction(scheme, rng, 0), rng);
+		const g = playOneHand(startAuction(scheme, rng, 0, KITTY_NO_DRAW), rng);
 		// One hand scores at most 30, so the first hand can never decide the game.
 		expect(g.phase.kind).toBe('hand-over');
 		expect(isAuctionGameOver(g)).toBe(false);
@@ -439,7 +449,7 @@ describe('isAuctionGameOver (TODO-046)', () => {
 
 	it('is true once a game winner is decided', () => {
 		const rng = createRng(23);
-		let g = startAuction(scheme, rng, 0);
+		let g = startAuction(scheme, rng, 0, KITTY_NO_DRAW);
 		let guard = 0;
 		while (!isAuctionGameOver(g)) {
 			if (g.phase.kind === 'hand-over') g = nextHand(g, scheme, rng);
@@ -454,7 +464,7 @@ describe('full games terminate with a team reaching 120', () => {
 	for (const seed of [1, 2, 3, 4, 5]) {
 		it(`seed ${seed}`, () => {
 			const rng = createRng(seed);
-			let g = startAuction(scheme, rng, 0);
+			let g = startAuction(scheme, rng, 0, KITTY_NO_DRAW);
 			let guard = 0;
 			while (!(g.phase.kind === 'hand-over' && g.phase.gameWinner !== null)) {
 				if (g.phase.kind === 'hand-over') g = nextHand(g, scheme, rng);
