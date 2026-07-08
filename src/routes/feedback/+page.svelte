@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 
-	// Placeholder Feedback page (TODO-054). Privacy-first (SPEC §3): no in-app
-	// form (that would be a network call / data collection). Feedback leaves the
-	// app via mailto: or GitHub issues. Final copy comes in a follow-up.
+	// Privacy-first (SPEC §3): no in-app form (that would be a network call / data
+	// collection). Feedback leaves the app via mailto: or GitHub issues.
 	const email = 'codetojoy@gmail.com';
 	const issuesUrl = 'https://github.com/codetojoy/forty-fives/issues';
 </script>
@@ -19,10 +18,19 @@
 		<p class="subtitle">Tell us what you think</p>
 	</header>
 
-	<p class="placeholder-note">
-		Found a bug, or have a suggestion? We'd love to hear from you. This page is a
-		placeholder — the wording will be filled in soon — but these links already
-		work:
+	<p class="lead">
+		This app is made by a fellow player, and your notes genuinely shape it. Found
+		a bug, have a suggestion, or just want to say hello? We'd love to hear from
+		you.
+	</p>
+	<p class="lead">
+		Most of all: <strong>if your table plays Forty-Fives differently</strong> —
+		different trumps, a different kitty, its own scoring — please tell us how, and
+		what part of the Maritimes you're from. Getting the regional rules right is
+		the whole point, and we'll do our best to work your version in.
+	</p>
+	<p class="lead">
+		No account, no sign-up, nothing tracked — just reach out:
 	</p>
 
 	<div class="channels">
@@ -72,10 +80,10 @@
 		color: var(--muted);
 	}
 
-	.placeholder-note {
+	.lead {
 		font-size: 1.05rem;
 		line-height: 1.5;
-		color: var(--muted);
+		margin: 0 0 1rem;
 	}
 
 	.channels {
