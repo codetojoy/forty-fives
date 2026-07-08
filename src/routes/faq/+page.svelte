@@ -1,16 +1,41 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 
-	// Placeholder Q&A for now (TODO-054). Real entries land in a follow-up; this
-	// proves routing, prerendering, and the home-footer link.
-	const faqs = [
+	// An answer is either plain text, or a sequence of segments where a segment is
+	// either a run of text or an in-app link (TODO-056). This keeps most answers as
+	// simple strings while letting one embed a link to the Feedback page without
+	// resorting to {@html}.
+	type LinkSegment = { href: string; text: string };
+	type Answer = string | Array<string | LinkSegment>;
+
+	const faqs: Array<{ q: string; a: Answer }> = [
 		{
 			q: 'What is Forty-Fives?',
-			a: 'A Maritime Canadian trick-taking card game with unusual, region-specific trump rankings. More detail coming soon.'
+			a: 'A Maritime Canadian trick-taking card game with unusual, region-specific trump rankings.'
 		},
 		{
 			q: 'How do I play?',
-			a: 'Each game mode has a "How to play" panel on its page, and the Learn Ranking trainer teaches the card rankings. Fuller answers coming soon.'
+			a: 'Each game mode has a "How to play" panel on its page, and the Learn Ranking trainer teaches the card rankings.'
+		},
+		{
+			q: 'In Configure for Auction, what is Wikipedia vs Rec Hall?',
+			a: 'They set different configuration values based on the style of play. For example, Wikipedia uses a kitty, where typical Rec Hall games (on PEI) do not.'
+		},
+		{
+			q: 'In Configure for Auction, what is "Always exchange non-trump"?',
+			a: 'When enabled, this provides a button for convenient discard of all non-trump cards, so you don’t have to select each one.'
+		},
+		{
+			q: 'In Configure for Auction, what is "Hide other players"?',
+			a: 'When enabled, this removes the rendering of computer players, which is cleaner on mobile devices.'
+		},
+		{
+			q: 'We play Auction differently than this game.',
+			a: [
+				'We are listening! Please let us know the differences and where you are located. See ',
+				{ href: `${base}/feedback`, text: 'the Feedback page' },
+				'. We will try and incorporate the changes.'
+			]
 		}
 	];
 </script>
@@ -26,14 +51,18 @@
 		<p class="subtitle">Frequently asked questions</p>
 	</header>
 
-	<p class="placeholder-note">
-		More questions and answers are on the way. For now, a couple to get started:
-	</p>
-
 	<dl class="faqs">
 		{#each faqs as item (item.q)}
 			<dt>{item.q}</dt>
-			<dd>{item.a}</dd>
+			<dd>
+				{#if typeof item.a === 'string'}
+					{item.a}
+				{:else}
+					{#each item.a as seg}
+						{#if typeof seg === 'string'}{seg}{:else}<a href={seg.href}>{seg.text}</a>{/if}
+					{/each}
+				{/if}
+			</dd>
 		{/each}
 	</dl>
 
@@ -70,12 +99,6 @@
 		color: var(--muted);
 	}
 
-	.placeholder-note {
-		font-size: 1.05rem;
-		line-height: 1.5;
-		color: var(--muted);
-	}
-
 	.faqs {
 		margin: 1.5rem 0 0;
 	}
@@ -91,6 +114,11 @@
 		margin: 0.4rem 0 0;
 		font-size: 1.05rem;
 		line-height: 1.5;
+	}
+
+	dd a {
+		color: var(--accent);
+		font-weight: 600;
 	}
 
 	.note {
