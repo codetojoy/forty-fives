@@ -47,9 +47,11 @@
 		</a>
 	</nav>
 
-	<footer class="site-footer">
+	<nav class="site-footer" aria-label="More">
+		<a class="about-link" href="{base}/faq">FAQ</a>
 		<a class="about-link" href="{base}/about">About</a>
-	</footer>
+		<a class="about-link" href="{base}/feedback">Feedback</a>
+	</nav>
 </main>
 
 <style>
@@ -138,13 +140,26 @@
 		line-height: 1.4;
 	}
 
-	/* Secondary control: About is not a game mode, so it's a lighter link set apart
-	   from the mode cards by a divider, with a 48px tap target (SPEC §7). */
+	/* Secondary links (FAQ / About / Feedback): these are meta pages, not game
+	   modes, so they're lighter and set apart from the mode cards by a divider,
+	   each a 48px tap target (SPEC §7). Mobile-first: stacked vertically so the
+	   three don't crowd on a phone (TODO-054); a row once there's room. */
 	.site-footer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
 		margin-top: 2rem;
 		padding-top: 1.25rem;
 		border-top: 1px solid var(--rule);
-		text-align: center;
+	}
+
+	@media (min-width: 30rem) {
+		.site-footer {
+			flex-direction: row;
+			justify-content: center;
+			gap: 1.5rem;
+		}
 	}
 
 	.about-link {
