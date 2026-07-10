@@ -14,9 +14,10 @@ import {
 } from '$lib/domain/auction-config.js';
 
 describe('auction config — settings registry', () => {
-	it('defines the three boolean settings plus the two choice settings', () => {
+	it('defines the three boolean settings, the integer setting, plus the two choice settings', () => {
 		expect(SETTINGS.map((s) => s.code)).toEqual([
 			'USE_KITTY',
+			'NUM_KITTY',
 			'ALLOW_DISCARD',
 			'ALLOW_HOLD',
 			'FINISH_RULE',
@@ -32,6 +33,14 @@ describe('auction config — settings registry', () => {
 		expect(SETTINGS.find((s) => s.code === 'ALLOW_HOLD')?.desc).toBe(
 			'Allow dealer to hold the bid'
 		);
+	});
+
+	it('models the kitty size as a bounded integer (TODO-059)', () => {
+		const s = SETTINGS.find((s) => s.code === 'NUM_KITTY');
+		expect(s?.type).toBe('integer');
+		expect(s?.desc).toBe('Num cards in kitty');
+		expect(s?.type === 'integer' ? s.min : null).toBe(1);
+		expect(s?.type === 'integer' ? s.max : null).toBe(5);
 	});
 
 	it('models the Finish Game Rule as a two-option choice (TODO-016)', () => {
@@ -54,15 +63,22 @@ describe('auction config — settings registry', () => {
 		]);
 	});
 
-	it('lists the four profiles in display order (default first)', () => {
-		expect(PROFILE_IDS).toEqual(['Common PEI', 'Wikipedia', 'Rec Hall PEI', 'Custom']);
+	it('lists the profiles in display order (default first)', () => {
+		expect(PROFILE_IDS).toEqual([
+			'Common PEI',
+			'Wikipedia',
+			'Rec Hall PEI',
+			'Tignish PEI',
+			'Custom'
+		]);
 	});
 });
 
 describe('auction config — built-in profiles', () => {
-	it('Common PEI uses the kitty and the discard, no hold, 120, left-of-bidder leads', () => {
+	it('Common PEI uses a 3-card kitty and the discard, no hold, 120, left-of-bidder leads', () => {
 		expect(BUILTIN_PROFILES['Common PEI']).toEqual({
 			USE_KITTY: true,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
@@ -70,9 +86,10 @@ describe('auction config — built-in profiles', () => {
 		});
 	});
 
-	it('Wikipedia uses the kitty, forbids extra discard, allows hold, 120, eldest leads', () => {
+	it('Wikipedia uses a 3-card kitty, forbids extra discard, allows hold, 120, eldest leads', () => {
 		expect(BUILTIN_PROFILES.Wikipedia).toEqual({
 			USE_KITTY: true,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
@@ -83,9 +100,21 @@ describe('auction config — built-in profiles', () => {
 	it('Rec Hall PEI drops the kitty, allows discard and hold, four turns, left-of-bidder leads', () => {
 		expect(BUILTIN_PROFILES['Rec Hall PEI']).toEqual({
 			USE_KITTY: false,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
 			FINISH_RULE: 'FOUR_TURNS',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
+		});
+	});
+
+	it('Tignish PEI matches Common PEI but deals a 5-card kitty (TODO-059)', () => {
+		expect(BUILTIN_PROFILES['Tignish PEI']).toEqual({
+			USE_KITTY: true,
+			NUM_KITTY: 5,
+			ALLOW_DISCARD: true,
+			ALLOW_HOLD: false,
+			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
@@ -95,6 +124,7 @@ describe('auction config — built-in profiles', () => {
 		expect(isCustom('Common PEI')).toBe(false);
 		expect(isCustom('Wikipedia')).toBe(false);
 		expect(isCustom('Rec Hall PEI')).toBe(false);
+		expect(isCustom('Tignish PEI')).toBe(false);
 	});
 });
 
@@ -110,9 +140,10 @@ describe('auction config — defaults', () => {
 		expect(defaultCustomValues()).toEqual(BUILTIN_PROFILES['Common PEI']);
 	});
 
-	it('defaultSettingValues resolves to the default profile (kitty on, discard on)', () => {
+	it('defaultSettingValues resolves to the default profile (kitty on, 3 cards, discard on)', () => {
 		expect(defaultSettingValues()).toEqual({
 			USE_KITTY: true,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
@@ -133,6 +164,7 @@ describe('auction config — resolveConfig', () => {
 			profile: 'Rec Hall PEI',
 			custom: {
 				USE_KITTY: true,
+				NUM_KITTY: 4,
 				ALLOW_DISCARD: false,
 				ALLOW_HOLD: false,
 				FINISH_RULE: 'POINTS_120',
@@ -141,6 +173,7 @@ describe('auction config — resolveConfig', () => {
 		};
 		expect(resolveConfig(config)).toEqual({
 			USE_KITTY: false,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
 			FINISH_RULE: 'FOUR_TURNS',
@@ -153,6 +186,7 @@ describe('auction config — resolveConfig', () => {
 			profile: 'Custom',
 			custom: {
 				USE_KITTY: false,
+				NUM_KITTY: 2,
 				ALLOW_DISCARD: false,
 				ALLOW_HOLD: false,
 				FINISH_RULE: 'FOUR_TURNS',
@@ -161,6 +195,7 @@ describe('auction config — resolveConfig', () => {
 		};
 		expect(resolveConfig(config)).toEqual({
 			USE_KITTY: false,
+			NUM_KITTY: 2,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: false,
 			FINISH_RULE: 'FOUR_TURNS',
@@ -183,6 +218,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 			profile: 'Custom',
 			custom: {
 				USE_KITTY: false,
+				NUM_KITTY: 3,
 				ALLOW_DISCARD: true,
 				ALLOW_HOLD: false,
 				FINISH_RULE: 'FOUR_TURNS',
@@ -211,6 +247,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 		const out = normalizeAuctionConfig({ profile: 'Custom', custom: { USE_KITTY: false } });
 		expect(out.custom).toEqual({
 			USE_KITTY: false,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
@@ -238,12 +275,27 @@ describe('auction config — normalizeAuctionConfig', () => {
 		});
 		expect(out.custom).toEqual({
 			USE_KITTY: true,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 		expect('BOGUS' in out.custom).toBe(false);
+	});
+
+	it('keeps a valid kitty size and rejects out-of-range or non-integer values (TODO-059)', () => {
+		const kept = normalizeAuctionConfig({
+			profile: 'Custom',
+			custom: { NUM_KITTY: 5 }
+		});
+		expect(kept.custom.NUM_KITTY).toBe(5);
+
+		// Below min, above max, and non-integers all fall back to the default (3).
+		expect(normalizeAuctionConfig({ profile: 'Custom', custom: { NUM_KITTY: 0 } }).custom.NUM_KITTY).toBe(3);
+		expect(normalizeAuctionConfig({ profile: 'Custom', custom: { NUM_KITTY: 6 } }).custom.NUM_KITTY).toBe(3);
+		expect(normalizeAuctionConfig({ profile: 'Custom', custom: { NUM_KITTY: 2.5 } }).custom.NUM_KITTY).toBe(3);
+		expect(normalizeAuctionConfig({ profile: 'Custom', custom: { NUM_KITTY: '3' } }).custom.NUM_KITTY).toBe(3);
 	});
 
 	it('keeps a valid finish-rule choice and rejects a bogus one', () => {

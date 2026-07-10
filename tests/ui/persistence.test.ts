@@ -46,6 +46,7 @@ const scheme = STANDARD_SCHEME;
 // "Common PEI" now enables it).
 const KITTY_NO_DRAW = {
 	USE_KITTY: true,
+	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',

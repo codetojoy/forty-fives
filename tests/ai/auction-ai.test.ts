@@ -72,6 +72,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		label: 'kitty, no draw',
 		config: {
 			USE_KITTY: true,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
@@ -82,6 +83,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		label: 'no kitty, no draw',
 		config: {
 			USE_KITTY: false,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
@@ -92,6 +94,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		label: 'kitty + draw, left-of-bidder lead',
 		config: {
 			USE_KITTY: true,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
 			FINISH_RULE: 'POINTS_120',
@@ -102,8 +105,20 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 		label: 'no kitty + draw, left-of-bidder lead',
 		config: {
 			USE_KITTY: false,
+			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'LEFT_OF_BIDDER'
+		}
+	},
+	{
+		label: 'five-card kitty, no draw (Tignish PEI, TODO-059)',
+		config: {
+			USE_KITTY: true,
+			NUM_KITTY: 5,
+			ALLOW_DISCARD: false,
+			ALLOW_HOLD: false,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		}
@@ -135,6 +150,7 @@ for (const { label, config } of SELF_PLAY_CONFIGS) {
 describe('all-AI self-play terminates under FOUR_TURNS', () => {
 	const config: AuctionSettingValues = {
 		USE_KITTY: true,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
 		FINISH_RULE: 'FOUR_TURNS',
@@ -266,6 +282,7 @@ describe('chooseDraw', () => {
 			schemeId: scheme.id,
 			config: {
 				USE_KITTY: false,
+				NUM_KITTY: 3,
 				ALLOW_DISCARD: true,
 				ALLOW_HOLD: true,
 				FINISH_RULE: 'POINTS_120',

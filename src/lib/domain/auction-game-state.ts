@@ -1,14 +1,14 @@
 /**
  * Game state for Auction Forty-Fives (Milestone 3) — a distinct game from the
  * 1v1 Forty-Fives in game-state.ts. Four seats, two partnerships ({0,2} vs
- * {1,3}), bidding, a three-card kitty, and scoring to 120.
+ * {1,3}), bidding, a kitty (three cards by default), and scoring to 120.
  *
  * Immutable: every transition returns a new state (SPEC §13). The state is
  * plain JSON-able data carrying the scheme *id* only; transitions take the
  * loaded scheme as a parameter, so a saved game survives in localStorage.
  *
  * Hand flow:
- *   deal 5 each + 3-card kitty
+ *   deal 5 each + kitty (three cards by default, NUM_KITTY — TODO-059)
  *     → bidding (15/20/25/30, ascending; dealer stuck at 15 if all pass;
  *       dealer may hold the standing bid — ALLOW_HOLD, TODO-042)
  *     → the winner names trump and takes the kitty
@@ -45,8 +45,6 @@ export const AUCTION_SEATS = 4;
 export const HUMAN_SEAT = 0;
 /** Tricks per hand. */
 const TRICKS_PER_HAND = 5;
-/** Cards the kitty adds, which the winner must then discard. */
-const KITTY_SIZE = 3;
 
 export type AuctionPhase =
 	| {
@@ -120,7 +118,11 @@ function dealHand(
 	handNumber: number,
 	config: AuctionSettingValues
 ): AuctionGameState {
-	const { hands, kitty, stock } = dealAuction(rng, AUCTION_SEATS, config.USE_KITTY);
+	const { hands, kitty, stock } = dealAuction(
+		rng,
+		AUCTION_SEATS,
+		config.USE_KITTY ? config.NUM_KITTY : 0
+	);
 	return {
 		schemeId: scheme.id,
 		config,
@@ -285,8 +287,9 @@ export function discardKitty(
 ): AuctionGameState {
 	if (state.phase.kind !== 'discarding') throw new Error('There is nothing to discard right now');
 	if (seat !== state.biddingSeat) throw new Error('Only the winning bidder discards the kitty');
-	if (discards.length !== KITTY_SIZE) {
-		throw new Error(`Must discard exactly ${KITTY_SIZE} cards`);
+	const kittySize = state.config.NUM_KITTY;
+	if (discards.length !== kittySize) {
+		throw new Error(`Must discard exactly ${kittySize} cards`);
 	}
 	const hand = state.hands[seat];
 	for (const d of discards) {

@@ -23,6 +23,7 @@ const scheme = STANDARD_SCHEME;
 
 const HOLD_OFF: AuctionSettingValues = {
 	USE_KITTY: true,
+	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: false,
 	FINISH_RULE: 'POINTS_120',
@@ -33,6 +34,7 @@ const HOLD_OFF: AuctionSettingValues = {
 // rather than relying on the default profile (the default "Common PEI" has it off).
 const HOLD_ON: AuctionSettingValues = {
 	USE_KITTY: true,
+	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',

@@ -24,6 +24,7 @@ import { handsPerGame } from '$lib/domain/auction-scoring.js';
 const scheme = STANDARD_SCHEME;
 const NO_KITTY: AuctionSettingValues = {
 	USE_KITTY: false,
+	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
@@ -31,6 +32,7 @@ const NO_KITTY: AuctionSettingValues = {
 };
 const KITTY_DRAW: AuctionSettingValues = {
 	USE_KITTY: true,
+	NUM_KITTY: 3,
 	ALLOW_DISCARD: true,
 	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
@@ -38,6 +40,7 @@ const KITTY_DRAW: AuctionSettingValues = {
 };
 const NOKITTY_DRAW: AuctionSettingValues = {
 	USE_KITTY: false,
+	NUM_KITTY: 3,
 	ALLOW_DISCARD: true,
 	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
@@ -48,6 +51,16 @@ const NOKITTY_DRAW: AuctionSettingValues = {
 // default profile "Common PEI" now enables the discard, which adds a draw phase).
 const KITTY_NO_DRAW: AuctionSettingValues = {
 	USE_KITTY: true,
+	NUM_KITTY: 3,
+	ALLOW_DISCARD: false,
+	ALLOW_HOLD: true,
+	FINISH_RULE: 'POINTS_120',
+	FIRST_LEAD: 'ELDEST'
+};
+// A five-card kitty (Tignish PEI, TODO-059) with no drawing phase.
+const BIG_KITTY: AuctionSettingValues = {
+	USE_KITTY: true,
+	NUM_KITTY: 5,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
 	FINISH_RULE: 'POINTS_120',
@@ -142,6 +155,26 @@ describe('naming trump + kitty', () => {
 		const g = reachNaming(8);
 		const notBidder = (g.biddingSeat! + 1) % AUCTION_SEATS;
 		expect(() => nameTrump(g, notBidder, 'clubs')).toThrow();
+	});
+
+	it('with a five-card kitty the winner takes ten then discards five (Tignish PEI, TODO-059)', () => {
+		let g = startAuction(scheme, createRng(6), 0, BIG_KITTY);
+		g = placeBid(g, 1, 15);
+		g = passBid(g, 2);
+		g = passBid(g, 3);
+		g = passBid(g, 0);
+		const bidder = g.biddingSeat!;
+		expect(g.kitty).toHaveLength(5);
+		g = nameTrump(g, bidder, 'hearts');
+		expect(g.kitty).toHaveLength(0);
+		expect(g.hands[bidder]).toHaveLength(10);
+		expect(g.phase.kind).toBe('discarding');
+
+		// Must discard exactly five (not three) with this kitty size.
+		expect(() => discardKitty(g, bidder, g.hands[bidder].slice(0, 3))).toThrow();
+		g = discardKitty(g, bidder, g.hands[bidder].slice(0, 5));
+		expect(g.hands[bidder]).toHaveLength(5);
+		expect(g.phase.kind).toBe('playing');
 	});
 });
 
@@ -335,6 +368,7 @@ describe('playing a hand', () => {
 describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 	const ELDEST_CFG: AuctionSettingValues = {
 		USE_KITTY: false,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
 		FINISH_RULE: 'POINTS_120',
@@ -342,6 +376,7 @@ describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 	};
 	const LEFT_CFG: AuctionSettingValues = {
 		USE_KITTY: false,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
 		FINISH_RULE: 'POINTS_120',
@@ -399,6 +434,7 @@ describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 describe('FOUR_TURNS finish rule (TODO-018)', () => {
 	const FOUR_TURNS_CFG: AuctionSettingValues = {
 		USE_KITTY: true,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
 		FINISH_RULE: 'FOUR_TURNS',

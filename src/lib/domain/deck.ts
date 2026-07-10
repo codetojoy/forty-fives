@@ -38,7 +38,7 @@ export function deal(rng: Rng, players: number, handSize = 5): Deal {
 export interface AuctionDeal {
 	/** One 5-card hand per player. */
 	hands: Card[][];
-	/** Three face-down cards the winning bidder takes after naming trump. */
+	/** Face-down cards the winning bidder takes after naming trump (empty if none). */
 	kitty: Card[];
 	/** The undealt remainder, face down and out of play. */
 	stock: Card[];
@@ -46,19 +46,19 @@ export interface AuctionDeal {
 
 /**
  * Auction Forty-Fives deal: five cards to each player and no turn-up — the
- * winning bidder names trump. With `useKitty` (the default) a three-card kitty
- * is dealt for the bid winner; without it (the kitty-less "Rec Hall PEI" variant,
- * TODO-011) no kitty is dealt and those cards stay in the stock. Cards are dealt
+ * winning bidder names trump. `kittySize` (default 3, TODO-059) is how many
+ * face-down cards are dealt for the bid winner; 0 means the kitty-less "Rec Hall
+ * PEI" variant (TODO-011), where those cards stay in the stock. Cards are dealt
  * in the traditional order (three to each player, then the kitty if any, then
  * two to each), though a uniform shuffle makes the order cosmetic.
  */
-export function dealAuction(rng: Rng, players = 4, useKitty = true): AuctionDeal {
+export function dealAuction(rng: Rng, players = 4, kittySize = 3): AuctionDeal {
 	const deck = shuffledDeck(rng);
 	const hands: Card[][] = Array.from({ length: players }, () => []);
 
 	let i = 0;
 	for (let p = 0; p < players; p++) for (let n = 0; n < 3; n++) hands[p].push(deck[i++]);
-	const kitty = useKitty ? deck.slice(i, i + 3) : [];
+	const kitty = deck.slice(i, i + kittySize);
 	i += kitty.length;
 	for (let p = 0; p < players; p++) for (let n = 0; n < 2; n++) hands[p].push(deck[i++]);
 

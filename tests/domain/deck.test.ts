@@ -48,12 +48,22 @@ describe('dealAuction', () => {
 		expect(a.kitty.map(cardId).join()).toBe(b.kitty.map(cardId).join());
 	});
 
-	it('deals no kitty when useKitty is false (5 each, 32-card stock)', () => {
-		const { hands, kitty, stock } = dealAuction(createRng(42), 4, false);
+	it('deals no kitty when kittySize is 0 (5 each, 32-card stock)', () => {
+		const { hands, kitty, stock } = dealAuction(createRng(42), 4, 0);
 		expect(hands).toHaveLength(4);
 		for (const h of hands) expect(h).toHaveLength(5);
 		expect(kitty).toHaveLength(0);
 		expect(stock).toHaveLength(32);
+		const all = [...hands.flat(), ...kitty, ...stock].map(cardId);
+		expect(new Set(all).size).toBe(52);
+	});
+
+	it('deals a 5-card kitty when kittySize is 5 (Tignish PEI, 27-card stock) (TODO-059)', () => {
+		const { hands, kitty, stock } = dealAuction(createRng(42), 4, 5);
+		expect(hands).toHaveLength(4);
+		for (const h of hands) expect(h).toHaveLength(5);
+		expect(kitty).toHaveLength(5);
+		expect(stock).toHaveLength(27);
 		const all = [...hands.flat(), ...kitty, ...stock].map(cardId);
 		expect(new Set(all).size).toBe(52);
 	});

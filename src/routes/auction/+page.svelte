@@ -105,8 +105,11 @@
 	 * no card selection, so the hand isn't tappable during the human's draw.
 	 */
 	const drawSelectable = $derived(humanToDraw && !settings.alwaysExchangeNonTrump);
-	/** Cards being chosen: exactly 3 for the kitty discard, 0–5 for the draw. */
-	const maxSelect = $derived(humanToDraw ? 5 : 3);
+	/** Kitty size for the active game (or the next New game's, before one starts) — TODO-059. */
+	const nextGameKittySize = resolveConfig(loadAuctionConfig()).NUM_KITTY;
+	const kittySize = $derived(game?.config.NUM_KITTY ?? nextGameKittySize);
+	/** Cards being chosen: the kitty size for the discard, 0–5 for the draw. */
+	const maxSelect = $derived(humanToDraw ? 5 : kittySize);
 	/**
 	 * True while the human is drawing and holds no trump (A♥ counts as trump, so a
 	 * hand with it does not qualify). Surfaces the "Exchange All" shortcut — the
@@ -354,7 +357,7 @@
 		else if (discardSel.length < maxSelect) discardSel = [...discardSel, card];
 	}
 	function confirmDiscard() {
-		if (!game || discardSel.length !== 3) return;
+		if (!game || discardSel.length !== game.config.NUM_KITTY) return;
 		setGame(discardKitty(game, HUMAN_SEAT, discardSel));
 		discardSel = [];
 		message = '';
@@ -457,7 +460,7 @@
 				return humanToName ? 'Name the trump suit.' : `${name(game.biddingSeat!)} is naming trump…`;
 			case 'discarding':
 				return humanToDiscard
-					? 'Choose three cards to discard.'
+					? `Choose ${kittySize} card${kittySize === 1 ? '' : 's'} to discard.`
 					: `${name(game.biddingSeat!)} is taking the kitty…`;
 			case 'drawing':
 				if (!humanToDraw) return `${name(currentSeat(game)!)} is drawing…`;
@@ -501,7 +504,7 @@
 				<HelpDisclosure label="How to play Auction Forty-Fives" triggerText="How to play">
 					<ul class="help-list">
 						<li>You and your partner sit opposite two opponents.</li>
-						<li>Everyone gets five cards and a three-card kitty waits in the middle.</li>
+						<li>Everyone gets five cards and a {nextGameKittySize}-card kitty waits in the middle.</li>
 						<li>Bid 15, 20, 25 or 30 for the right to name trump and take the kitty; make your bid or be set.</li>
 						{#if nextGameAllowHold}
 							<li>As dealer you may <em>hold</em> the standing bid — match it without raising; the bidder must then raise or concede.</li>
@@ -686,16 +689,19 @@
 
 		{#if humanToDiscard && !lastTrick}
 			<section class="panel" aria-label="Discard the kitty">
-				<h2>Discard three cards</h2>
-				<p>You took the kitty. Tap three cards below to discard ({discardSel.length}/3 chosen).</p>
+				<h2>Discard {kittySize} card{kittySize === 1 ? '' : 's'}</h2>
+				<p>
+					You took the kitty. Tap {kittySize} card{kittySize === 1 ? '' : 's'} below to discard
+					({discardSel.length}/{kittySize} chosen).
+				</p>
 				<div class="panel-buttons">
 					<button
 						type="button"
 						class="big-button"
-						disabled={discardSel.length !== 3}
+						disabled={discardSel.length !== kittySize}
 						onclick={confirmDiscard}
 					>
-						Discard{discardSel.length === 3 ? '' : ` (${discardSel.length}/3)`}
+						Discard{discardSel.length === kittySize ? '' : ` (${discardSel.length}/${kittySize})`}
 					</button>
 				</div>
 			</section>
@@ -770,7 +776,7 @@
 		<section class="your-hand" aria-label="Your hand">
 			{#if game.hands[HUMAN_SEAT].length > 0}
 				<h2 class="hand-heading">
-					Your hand{humanToDiscard ? ' — tap three to discard' : ''}{drawSelectable
+					Your hand{humanToDiscard ? ` — tap ${kittySize} to discard` : ''}{drawSelectable
 						? ' — tap to exchange'
 						: ''}
 					{#if game.trumpSuit}

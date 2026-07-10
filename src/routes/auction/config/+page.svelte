@@ -70,6 +70,12 @@
 		custom = { ...custom, [code]: value };
 	}
 
+	function setInteger(code: 'NUM_KITTY', value: number, min: number, max: number) {
+		if (!isCustom(profile)) return;
+		const clamped = Math.max(min, Math.min(max, value));
+		custom = { ...custom, [code]: clamped };
+	}
+
 	function save() {
 		const next = { profile, custom: { ...custom } };
 		saveAuctionConfig(next);
@@ -149,6 +155,32 @@
 							>
 								{displayed[s.code] ? 'On' : 'Off'}
 							</span>
+						{/if}
+					{:else if s.type === 'integer'}
+						{#if isCustom(profile)}
+							<div class="stepper" role="group" aria-label={s.desc}>
+								<button
+									type="button"
+									class="stepper-btn"
+									aria-label={`Decrease ${s.desc}`}
+									disabled={custom[s.code] <= s.min}
+									onclick={() => setInteger(s.code, custom[s.code] - 1, s.min, s.max)}
+								>
+									−
+								</button>
+								<span class="stepper-value" aria-live="polite">{custom[s.code]}</span>
+								<button
+									type="button"
+									class="stepper-btn"
+									aria-label={`Increase ${s.desc}`}
+									disabled={custom[s.code] >= s.max}
+									onclick={() => setInteger(s.code, custom[s.code] + 1, s.min, s.max)}
+								>
+									+
+								</button>
+							</div>
+						{:else}
+							<span class="value-readonly on">{displayed[s.code]}</span>
 						{/if}
 					{:else if s.type === 'choice'}
 						{#if isCustom(profile)}
@@ -430,6 +462,47 @@
 	.toggle input:focus-visible {
 		outline: 4px solid var(--focus);
 		outline-offset: 2px;
+	}
+
+	.stepper {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.stepper-btn {
+		width: 48px;
+		height: 48px;
+		font-size: 1.5rem;
+		font-weight: 700;
+		line-height: 1;
+		border: 1px solid var(--rule);
+		border-radius: 6px;
+		background: var(--panel);
+		color: var(--ink);
+		cursor: pointer;
+	}
+
+	.stepper-btn:hover:not(:disabled) {
+		border-color: var(--accent);
+	}
+
+	.stepper-btn:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+	}
+
+	.stepper-btn:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	.stepper-value {
+		min-width: 2ch;
+		text-align: center;
+		font-size: 1.2rem;
+		font-weight: 700;
+		color: var(--ink);
 	}
 
 	.value-readonly {

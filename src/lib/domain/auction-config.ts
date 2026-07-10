@@ -17,6 +17,7 @@
 
 export type AuctionSettingCode =
 	| 'USE_KITTY'
+	| 'NUM_KITTY'
 	| 'ALLOW_DISCARD'
 	| 'ALLOW_HOLD'
 	| 'FINISH_RULE'
@@ -42,6 +43,15 @@ interface BooleanSetting {
 	readonly type: 'boolean';
 }
 
+interface IntegerSetting {
+	readonly code: 'NUM_KITTY';
+	readonly desc: string;
+	readonly type: 'integer';
+	/** Inclusive bounds; values outside are rejected by normalizeAuctionConfig. */
+	readonly min: number;
+	readonly max: number;
+}
+
 interface ChoiceSetting<C extends AuctionSettingCode, V extends string> {
 	readonly code: C;
 	readonly desc: string;
@@ -51,12 +61,14 @@ interface ChoiceSetting<C extends AuctionSettingCode, V extends string> {
 
 export type AuctionSetting =
 	| BooleanSetting
+	| IntegerSetting
 	| ChoiceSetting<'FINISH_RULE', FinishGameRule>
 	| ChoiceSetting<'FIRST_LEAD', FirstLeadRule>;
 
 /** The settings, in display order. */
 export const SETTINGS: readonly AuctionSetting[] = [
 	{ code: 'USE_KITTY', desc: 'Use kitty', type: 'boolean' },
+	{ code: 'NUM_KITTY', desc: 'Num cards in kitty', type: 'integer', min: 1, max: 5 },
 	{ code: 'ALLOW_DISCARD', desc: 'Allow discard when not bid-winner', type: 'boolean' },
 	{ code: 'ALLOW_HOLD', desc: 'Allow dealer to hold the bid', type: 'boolean' },
 	{
@@ -82,29 +94,37 @@ export const SETTINGS: readonly AuctionSetting[] = [
 /** Effective value for every setting (heterogeneous: booleans plus the choices). */
 export interface AuctionSettingValues {
 	USE_KITTY: boolean;
+	NUM_KITTY: number;
 	ALLOW_DISCARD: boolean;
 	ALLOW_HOLD: boolean;
 	FINISH_RULE: FinishGameRule;
 	FIRST_LEAD: FirstLeadRule;
 }
 
-export type AuctionProfileId = 'Common PEI' | 'Wikipedia' | 'Rec Hall PEI' | 'Custom';
+export type AuctionProfileId =
+	| 'Common PEI'
+	| 'Wikipedia'
+	| 'Rec Hall PEI'
+	| 'Tignish PEI'
+	| 'Custom';
 
 /** The selectable profiles, in display order (default first). */
 export const PROFILE_IDS: readonly AuctionProfileId[] = [
 	'Common PEI',
 	'Wikipedia',
 	'Rec Hall PEI',
+	'Tignish PEI',
 	'Custom'
 ];
 
 /** Read-only preset values for the built-in profiles. */
 export const BUILTIN_PROFILES: Record<
-	'Common PEI' | 'Wikipedia' | 'Rec Hall PEI',
+	'Common PEI' | 'Wikipedia' | 'Rec Hall PEI' | 'Tignish PEI',
 	AuctionSettingValues
 > = {
 	'Common PEI': {
 		USE_KITTY: true,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: true,
 		ALLOW_HOLD: false,
 		FINISH_RULE: 'POINTS_120',
@@ -112,6 +132,7 @@ export const BUILTIN_PROFILES: Record<
 	},
 	Wikipedia: {
 		USE_KITTY: true,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
 		FINISH_RULE: 'POINTS_120',
@@ -119,9 +140,18 @@ export const BUILTIN_PROFILES: Record<
 	},
 	'Rec Hall PEI': {
 		USE_KITTY: false,
+		NUM_KITTY: 3,
 		ALLOW_DISCARD: true,
 		ALLOW_HOLD: true,
 		FINISH_RULE: 'FOUR_TURNS',
+		FIRST_LEAD: 'LEFT_OF_BIDDER'
+	},
+	'Tignish PEI': {
+		USE_KITTY: true,
+		NUM_KITTY: 5,
+		ALLOW_DISCARD: true,
+		ALLOW_HOLD: false,
+		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	}
 };
@@ -194,6 +224,10 @@ function normalizeValues(value: unknown, fallback: AuctionSettingValues): Auctio
 			const raw = obj[s.code];
 			if (s.type === 'boolean') {
 				if (typeof raw === 'boolean') result[s.code] = raw;
+			} else if (s.type === 'integer') {
+				if (typeof raw === 'number' && Number.isInteger(raw) && raw >= s.min && raw <= s.max) {
+					result[s.code] = raw;
+				}
 			} else if (s.options.some((o) => o.value === raw)) {
 				// raw matched one of this choice setting's declared option values.
 				(result as Record<string, unknown>)[s.code] = raw;

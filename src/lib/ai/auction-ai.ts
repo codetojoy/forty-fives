@@ -157,8 +157,9 @@ export function chooseTrump(state: AuctionGameState, scheme: TrumpScheme, seat: 
 }
 
 /**
- * After taking the kitty (eight cards), discard the three weakest for the named
- * trump — keeping trumps and high cards.
+ * After taking the kitty, discard the weakest cards for the named trump —
+ * keeping trumps and high cards — returning the hand to five (the number to
+ * drop is the kitty size, NUM_KITTY — TODO-059).
  */
 export function chooseKittyDiscards(
 	state: AuctionGameState,
@@ -170,7 +171,7 @@ export function chooseKittyDiscards(
 	const sorted = [...state.hands[seat]].sort(
 		(a, b) => cardValue(a, trumpSuit, scheme) - cardValue(b, trumpSuit, scheme)
 	);
-	return sorted.slice(0, 3);
+	return sorted.slice(0, state.config.NUM_KITTY);
 }
 
 /** Honour ranks worth keeping off-suit (they can still take or protect a trick). */
