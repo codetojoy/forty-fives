@@ -758,7 +758,7 @@
 					<p class="game-result" class:won={game.phase.gameWinner === myTeam}>
 						{game.phase.gameWinner === myTeam
 							? '🎉 Your team wins the game!'
-							: 'The opponents win the game.'}
+							: '🤝 The opponents win the game.'}
 					</p>
 					<div class="panel-buttons">
 						<button type="button" class="big-button" onclick={newGame}>New game</button>
