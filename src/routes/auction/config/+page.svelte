@@ -14,6 +14,8 @@
 		saveAuctionConfig,
 		loadAuctionGame,
 		saveAuctionGame,
+		normalizeAuctionNames,
+		AUCTION_NAME_MAX_LEN,
 		type AuctionGameSettings
 	} from '$lib/ui/persistence.js';
 
@@ -26,12 +28,24 @@
 	let profile = $state<AuctionProfileId>(initial.profile);
 	let custom = $state<AuctionSettingValues>({ ...initial.custom });
 	let prefs = $state<AuctionGameSettings>({ ...savedGame.settings });
+	// AI player names (TODO-060), edited alongside the other prefs. Seat 0 is the
+	// human ("You") and is never editable; the AI seats are the partner (2) and the
+	// two opponents (1, 3). A rename applies live the next time the table loads.
+	let names = $state<string[]>([...savedGame.names]);
 	// A snapshot of what's in storage, to detect unsaved changes.
 	let saved = $state({
 		profile: initial.profile,
 		custom: { ...initial.custom },
-		prefs: { ...savedGame.settings }
+		prefs: { ...savedGame.settings },
+		names: [...savedGame.names]
 	});
+
+	// The AI seats to expose, in reading order: partner first, then the opponents.
+	const NAME_SEATS: { seat: number; label: string }[] = [
+		{ seat: 2, label: 'Partner' },
+		{ seat: 1, label: 'Opponent' },
+		{ seat: 3, label: 'Opponent' }
+	];
 
 	/** The values to show: a built-in preset, or the editable Custom values. */
 	const displayed = $derived<AuctionSettingValues>(
@@ -45,7 +59,8 @@
 			prefs.confirmPlay !== saved.prefs.confirmPlay ||
 			prefs.alwaysExchangeNonTrump !== saved.prefs.alwaysExchangeNonTrump ||
 			prefs.hidePlayers !== saved.prefs.hidePlayers ||
-			prefs.handOrder !== saved.prefs.handOrder
+			prefs.handOrder !== saved.prefs.handOrder ||
+			names.some((n, seat) => n !== saved.names[seat])
 	);
 
 	function selectProfile(next: AuctionProfileId) {
@@ -79,12 +94,17 @@
 	function save() {
 		const next = { profile, custom: { ...custom } };
 		saveAuctionConfig(next);
-		// Persist the prefs back into the game save, preserving any in-progress game.
-		saveAuctionGame({ ...savedGame, settings: { ...prefs } });
+		// Normalize the names on save (trim, cap, per-seat default fallback) so a
+		// blank field commits the default rather than an empty label (TODO-060).
+		const cleanNames = normalizeAuctionNames(names);
+		names = cleanNames;
+		// Persist prefs + names back into the game save, preserving any in-progress game.
+		saveAuctionGame({ ...savedGame, settings: { ...prefs }, names: cleanNames });
 		saved = {
 			profile: next.profile,
 			custom: { ...next.custom },
-			prefs: { ...prefs }
+			prefs: { ...prefs },
+			names: [...cleanNames]
 		};
 	}
 
@@ -204,6 +224,27 @@
 							</span>
 						{/if}
 					{/if}
+				</div>
+			{/each}
+		</fieldset>
+
+		<fieldset class="settings prefs">
+			<legend>Players — always editable</legend>
+			<p class="prefs-note">
+				Rename the AI players. You are always &ldquo;You&rdquo;. A blank name resets to the
+				default. New names appear the next time you open the table.
+			</p>
+			{#each NAME_SEATS as { seat, label } (seat)}
+				<div class="setting">
+					<label class="setting-desc" for={`name-${seat}`}>{label}</label>
+					<input
+						id={`name-${seat}`}
+						class="name-input"
+						type="text"
+						maxlength={AUCTION_NAME_MAX_LEN}
+						placeholder={savedGame.names[seat]}
+						bind:value={names[seat]}
+					/>
 				</div>
 			{/each}
 		</fieldset>
@@ -503,6 +544,26 @@
 		font-size: 1.2rem;
 		font-weight: 700;
 		color: var(--ink);
+	}
+
+	.name-input {
+		min-height: 48px;
+		min-width: 0;
+		flex: 1 1 12rem;
+		max-width: 16rem;
+		padding: 0.5rem 0.75rem;
+		font-size: 1.1rem;
+		font-family: inherit;
+		border: 1px solid var(--rule);
+		border-radius: 6px;
+		background: var(--panel);
+		color: var(--ink);
+	}
+
+	.name-input:focus-visible {
+		outline: 4px solid var(--focus);
+		outline-offset: 2px;
+		border-color: var(--accent);
 	}
 
 	.value-readonly {

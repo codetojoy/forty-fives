@@ -34,6 +34,8 @@ import {
 import {
 	expireFinishedAuctionGame,
 	expireFinishedGame,
+	normalizeAuctionNames,
+	AUCTION_NAME_MAX_LEN,
 	FINISHED_GAME_TTL_MS,
 	type SavedAuctionGame,
 	type SavedGame
@@ -200,5 +202,63 @@ describe('expireFinishedGame (TODO-047)', () => {
 	it('passes a save with no game through unchanged', () => {
 		const saved = envelope1v1(null, null);
 		expect(expireFinishedGame(saved, t)).toEqual(saved);
+	});
+});
+
+// --- AI player names (TODO-060) ------------------------------------------------
+
+describe('normalizeAuctionNames (TODO-060)', () => {
+	const DEFAULTS = ['You', 'Stewart', 'Margaret', 'Bernadette'];
+
+	it('keeps valid custom names for the AI seats', () => {
+		expect(normalizeAuctionNames(['You', 'Angus', 'Fiona', 'Dougal'])).toEqual([
+			'You',
+			'Angus',
+			'Fiona',
+			'Dougal'
+		]);
+	});
+
+	it('always forces seat 0 to "You", ignoring whatever was stored', () => {
+		expect(normalizeAuctionNames(['Cheater', 'Angus', 'Fiona', 'Dougal'])[0]).toBe('You');
+	});
+
+	it('falls back per seat for blank / whitespace-only names without poisoning others', () => {
+		expect(normalizeAuctionNames(['You', 'Angus', '', '   '])).toEqual([
+			'You',
+			'Angus',
+			DEFAULTS[2],
+			DEFAULTS[3]
+		]);
+	});
+
+	it('trims surrounding whitespace', () => {
+		expect(normalizeAuctionNames(['You', '  Angus  ', 'Fiona', 'Dougal'])[1]).toBe('Angus');
+	});
+
+	it('caps a name at the max length', () => {
+		const long = 'X'.repeat(AUCTION_NAME_MAX_LEN + 10);
+		const out = normalizeAuctionNames(['You', long, 'Fiona', 'Dougal']);
+		expect(out[1]).toHaveLength(AUCTION_NAME_MAX_LEN);
+	});
+
+	it('falls back per seat for non-string entries', () => {
+		expect(normalizeAuctionNames(['You', 42, null, 'Dougal'])).toEqual([
+			'You',
+			DEFAULTS[1],
+			DEFAULTS[2],
+			'Dougal'
+		]);
+	});
+
+	it('returns all defaults for a non-array or too-short input', () => {
+		expect(normalizeAuctionNames(null)).toEqual(DEFAULTS);
+		expect(normalizeAuctionNames(undefined)).toEqual(DEFAULTS);
+		expect(normalizeAuctionNames(['You', 'Angus'])).toEqual([
+			'You',
+			'Angus',
+			DEFAULTS[2],
+			DEFAULTS[3]
+		]);
 	});
 });

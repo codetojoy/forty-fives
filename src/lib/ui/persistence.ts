@@ -10,7 +10,7 @@ import { isPlausibleGameState, isGameOver, type GameState } from '$lib/domain/ga
 import {
 	isPlausibleAuctionState,
 	isAuctionGameOver,
-	AUCTION_SEATS,
+	HUMAN_SEAT,
 	type AuctionGameState
 } from '$lib/domain/auction-game-state.js';
 import {
@@ -211,9 +211,29 @@ export interface SavedAuctionGame {
 
 const AUCTION_KEY = 'forty-fives.auction.v1';
 
+/** Max length of a (renamed) AI player name (TODO-060); keeps the table layout intact. */
+export const AUCTION_NAME_MAX_LEN = 18;
+
 /** Default table names — seat 0 is the human, seats 1/3 opponents, seat 2 partner. */
 function auctionNames(): string[] {
 	return ['You', 'Stewart', 'Margaret', 'Bernadette'];
+}
+
+/**
+ * Coerce a (possibly renamed, possibly stored) names array to a valid length-4
+ * list (TODO-060). Per-seat: seat 0 is always "You"; each AI seat keeps its
+ * trimmed, length-capped value, or falls back to that seat's own default when the
+ * value is missing, blank, or not a string. A bad seat never poisons the others.
+ */
+export function normalizeAuctionNames(value: unknown, defaults = auctionNames()): string[] {
+	const arr = Array.isArray(value) ? value : [];
+	return defaults.map((fallback, seat) => {
+		if (seat === HUMAN_SEAT) return fallback; // the human is always "You"
+		const raw = arr[seat];
+		if (typeof raw !== 'string') return fallback;
+		const trimmed = raw.trim().slice(0, AUCTION_NAME_MAX_LEN);
+		return trimmed || fallback;
+	});
 }
 
 function auctionDefaults(): SavedAuctionGame {
@@ -257,12 +277,7 @@ export function loadAuctionGame(): SavedAuctionGame {
 		if (!raw) return auctionDefaults();
 		const parsed = JSON.parse(raw) as SavedAuctionGame;
 		const d = auctionDefaults();
-		const names =
-			Array.isArray(parsed.names) &&
-			parsed.names.length === AUCTION_SEATS &&
-			parsed.names.every((n) => typeof n === 'string' && n)
-				? parsed.names
-				: d.names;
+		const names = normalizeAuctionNames(parsed.names, d.names);
 		return expireFinishedAuctionGame(
 			{
 				game: isPlausibleAuctionState(parsed.game) ? withSavedGameDefaults(parsed.game) : null,
