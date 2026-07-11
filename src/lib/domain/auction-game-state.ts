@@ -35,7 +35,7 @@ import {
 import { trickWinnerMulti } from './trick.js';
 import type { TrumpScheme } from './trump-scheme.js';
 import { cardLabel } from './cards.js';
-import { legalBids, MIN_BID, type BidValue } from './bidding.js';
+import { legalBids, type BidValue } from './bidding.js';
 import { defaultSettingValues, type AuctionSettingValues } from './auction-config.js';
 import type { CompletedTrick, TrickPlay } from './game-state.js';
 
@@ -185,7 +185,7 @@ function advanceBidding(
 	}
 	// Auction resolved.
 	const winner = phase.highBidder ?? state.dealer; // dealer stuck if no one bid
-	const bid = phase.highBid ?? MIN_BID;
+	const bid = phase.highBid ?? state.config.MIN_BID; // stuck at the configured minimum
 	return {
 		...state,
 		bid,
@@ -198,7 +198,7 @@ function advanceBidding(
 export function placeBid(state: AuctionGameState, seat: number, bid: BidValue): AuctionGameState {
 	const phase = requireBidding(state);
 	if (seat !== phase.turn) throw new Error(`It is not seat ${seat}'s turn to bid`);
-	if (!legalBids(phase.highBid).includes(bid)) {
+	if (!legalBids(phase.highBid, state.config.MIN_BID).includes(bid)) {
 		throw new Error(`Bid ${bid} does not beat the standing bid of ${phase.highBid}`);
 	}
 	const raised: Extract<AuctionPhase, { kind: 'bidding' }> = {

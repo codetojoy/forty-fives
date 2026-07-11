@@ -26,6 +26,7 @@ const HOLD_OFF: AuctionSettingValues = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: false,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -37,6 +38,7 @@ const HOLD_ON: AuctionSettingValues = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };

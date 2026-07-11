@@ -146,7 +146,7 @@ export function chooseBid(state: AuctionGameState, scheme: TrumpScheme, seat: nu
 	const ceiling = affordableBid(est.power);
 	if (ceiling === null) return { bid: null, suit: est.suit };
 
-	const options = legalBids(state.phase.highBid).filter((b) => b <= ceiling);
+	const options = legalBids(state.phase.highBid, state.config.MIN_BID).filter((b) => b <= ceiling);
 	if (options.length === 0) return { bid: null, suit: est.suit };
 	return { bid: options[0], suit: est.suit }; // bid just enough to lead
 }

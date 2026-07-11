@@ -75,6 +75,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		}
@@ -86,6 +87,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		}
@@ -97,6 +99,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		}
@@ -108,6 +111,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		}
@@ -119,6 +123,7 @@ const SELF_PLAY_CONFIGS: { label: string; config: AuctionSettingValues }[] = [
 			NUM_KITTY: 5,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: false,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		}
@@ -153,6 +158,7 @@ describe('all-AI self-play terminates under FOUR_TURNS', () => {
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
+		MIN_BID: 15,
 		FINISH_RULE: 'FOUR_TURNS',
 		FIRST_LEAD: 'ELDEST'
 	};
@@ -285,6 +291,7 @@ describe('chooseDraw', () => {
 				NUM_KITTY: 3,
 				ALLOW_DISCARD: true,
 				ALLOW_HOLD: true,
+				MIN_BID: 15,
 				FINISH_RULE: 'POINTS_120',
 				FIRST_LEAD: 'ELDEST'
 			},

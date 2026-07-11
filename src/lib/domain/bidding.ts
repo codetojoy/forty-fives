@@ -24,11 +24,12 @@ export function isBidValue(n: number): n is BidValue {
 
 /**
  * The bids a player may make given the standing high bid (null when no one has
- * bid yet): every bid value strictly greater than it. A player may always pass
- * instead, so an empty result means "pass only".
+ * bid yet): every bid value strictly greater than it, and no lower than `minBid`
+ * (the configurable minimum bid — TODO-062; defaults to MIN_BID). A player may
+ * always pass instead, so an empty result means "pass only".
  */
-export function legalBids(currentHigh: BidValue | null): BidValue[] {
-	return BID_VALUES.filter((b) => currentHigh === null || b > currentHigh);
+export function legalBids(currentHigh: BidValue | null, minBid: BidValue = MIN_BID): BidValue[] {
+	return BID_VALUES.filter((b) => b >= minBid && (currentHigh === null || b > currentHigh));
 }
 
 /** Can a player still raise over the standing high bid? */

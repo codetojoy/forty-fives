@@ -15,11 +15,14 @@
  * "Custom", whose values the user chooses.
  */
 
+import type { BidValue } from './bidding.js';
+
 export type AuctionSettingCode =
 	| 'USE_KITTY'
 	| 'NUM_KITTY'
 	| 'ALLOW_DISCARD'
 	| 'ALLOW_HOLD'
+	| 'MIN_BID'
 	| 'FINISH_RULE'
 	| 'FIRST_LEAD';
 
@@ -52,7 +55,7 @@ interface IntegerSetting {
 	readonly max: number;
 }
 
-interface ChoiceSetting<C extends AuctionSettingCode, V extends string> {
+interface ChoiceSetting<C extends AuctionSettingCode, V extends string | number> {
 	readonly code: C;
 	readonly desc: string;
 	readonly type: 'choice';
@@ -62,6 +65,7 @@ interface ChoiceSetting<C extends AuctionSettingCode, V extends string> {
 export type AuctionSetting =
 	| BooleanSetting
 	| IntegerSetting
+	| ChoiceSetting<'MIN_BID', BidValue>
 	| ChoiceSetting<'FINISH_RULE', FinishGameRule>
 	| ChoiceSetting<'FIRST_LEAD', FirstLeadRule>;
 
@@ -71,6 +75,17 @@ export const SETTINGS: readonly AuctionSetting[] = [
 	{ code: 'NUM_KITTY', desc: 'Num cards in kitty', type: 'integer', min: 1, max: 5 },
 	{ code: 'ALLOW_DISCARD', desc: 'Allow discard when not bid-winner', type: 'boolean' },
 	{ code: 'ALLOW_HOLD', desc: 'Allow dealer to hold the bid', type: 'boolean' },
+	{
+		code: 'MIN_BID',
+		desc: 'Minimum bid',
+		type: 'choice',
+		options: [
+			{ value: 15, label: '15' },
+			{ value: 20, label: '20' },
+			{ value: 25, label: '25' },
+			{ value: 30, label: '30' }
+		]
+	},
 	{
 		code: 'FINISH_RULE',
 		desc: 'Finish Game Rule',
@@ -97,6 +112,7 @@ export interface AuctionSettingValues {
 	NUM_KITTY: number;
 	ALLOW_DISCARD: boolean;
 	ALLOW_HOLD: boolean;
+	MIN_BID: BidValue;
 	FINISH_RULE: FinishGameRule;
 	FIRST_LEAD: FirstLeadRule;
 }
@@ -127,6 +143,7 @@ export const BUILTIN_PROFILES: Record<
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: true,
 		ALLOW_HOLD: false,
+		MIN_BID: 15,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	},
@@ -135,6 +152,7 @@ export const BUILTIN_PROFILES: Record<
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
+		MIN_BID: 15,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'ELDEST'
 	},
@@ -143,6 +161,7 @@ export const BUILTIN_PROFILES: Record<
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: true,
 		ALLOW_HOLD: true,
+		MIN_BID: 15,
 		FINISH_RULE: 'FOUR_TURNS',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	},
@@ -150,7 +169,8 @@ export const BUILTIN_PROFILES: Record<
 		USE_KITTY: true,
 		NUM_KITTY: 5,
 		ALLOW_DISCARD: true,
-		ALLOW_HOLD: false,
+		ALLOW_HOLD: true,
+		MIN_BID: 20,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	}

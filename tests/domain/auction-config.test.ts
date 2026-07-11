@@ -14,12 +14,13 @@ import {
 } from '$lib/domain/auction-config.js';
 
 describe('auction config — settings registry', () => {
-	it('defines the three boolean settings, the integer setting, plus the two choice settings', () => {
+	it('defines the three boolean settings, the integer setting, plus the three choice settings', () => {
 		expect(SETTINGS.map((s) => s.code)).toEqual([
 			'USE_KITTY',
 			'NUM_KITTY',
 			'ALLOW_DISCARD',
 			'ALLOW_HOLD',
+			'MIN_BID',
 			'FINISH_RULE',
 			'FIRST_LEAD'
 		]);
@@ -41,6 +42,18 @@ describe('auction config — settings registry', () => {
 		expect(s?.desc).toBe('Num cards in kitty');
 		expect(s?.type === 'integer' ? s.min : null).toBe(1);
 		expect(s?.type === 'integer' ? s.max : null).toBe(5);
+	});
+
+	it('models the minimum bid as a choice of the four bid amounts (TODO-062)', () => {
+		const s = SETTINGS.find((s) => s.code === 'MIN_BID');
+		expect(s?.type).toBe('choice');
+		expect(s?.desc).toBe('Minimum bid');
+		expect(s?.type === 'choice' ? s.options : []).toEqual([
+			{ value: 15, label: '15' },
+			{ value: 20, label: '20' },
+			{ value: 25, label: '25' },
+			{ value: 30, label: '30' }
+		]);
 	});
 
 	it('models the Finish Game Rule as a two-option choice (TODO-016)', () => {
@@ -75,45 +88,49 @@ describe('auction config — settings registry', () => {
 });
 
 describe('auction config — built-in profiles', () => {
-	it('Common PEI uses a 3-card kitty and the discard, no hold, 120, left-of-bidder leads', () => {
+	it('Common PEI uses a 3-card kitty and the discard, no hold, min bid 15, 120, left-of-bidder leads', () => {
 		expect(BUILTIN_PROFILES['Common PEI']).toEqual({
 			USE_KITTY: true,
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
-	it('Wikipedia uses a 3-card kitty, forbids extra discard, allows hold, 120, eldest leads', () => {
+	it('Wikipedia uses a 3-card kitty, forbids extra discard, allows hold, min bid 15, 120, eldest leads', () => {
 		expect(BUILTIN_PROFILES.Wikipedia).toEqual({
 			USE_KITTY: true,
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'ELDEST'
 		});
 	});
 
-	it('Rec Hall PEI drops the kitty, allows discard and hold, four turns, left-of-bidder leads', () => {
+	it('Rec Hall PEI drops the kitty, allows discard and hold, min bid 15, four turns, left-of-bidder leads', () => {
 		expect(BUILTIN_PROFILES['Rec Hall PEI']).toEqual({
 			USE_KITTY: false,
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'FOUR_TURNS',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
 	});
 
-	it('Tignish PEI matches Common PEI but deals a 5-card kitty (TODO-059)', () => {
+	it('Tignish PEI is Common PEI with a 5-card kitty, hold allowed, min bid 20 (TODO-059/062)', () => {
 		expect(BUILTIN_PROFILES['Tignish PEI']).toEqual({
 			USE_KITTY: true,
 			NUM_KITTY: 5,
 			ALLOW_DISCARD: true,
-			ALLOW_HOLD: false,
+			ALLOW_HOLD: true,
+			MIN_BID: 20,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -140,12 +157,13 @@ describe('auction config — defaults', () => {
 		expect(defaultCustomValues()).toEqual(BUILTIN_PROFILES['Common PEI']);
 	});
 
-	it('defaultSettingValues resolves to the default profile (kitty on, 3 cards, discard on)', () => {
+	it('defaultSettingValues resolves to the default profile (kitty on, 3 cards, discard on, min bid 15)', () => {
 		expect(defaultSettingValues()).toEqual({
 			USE_KITTY: true,
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -167,6 +185,7 @@ describe('auction config — resolveConfig', () => {
 				NUM_KITTY: 4,
 				ALLOW_DISCARD: false,
 				ALLOW_HOLD: false,
+				MIN_BID: 30,
 				FINISH_RULE: 'POINTS_120',
 				FIRST_LEAD: 'ELDEST'
 			}
@@ -176,6 +195,7 @@ describe('auction config — resolveConfig', () => {
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: true,
+			MIN_BID: 15,
 			FINISH_RULE: 'FOUR_TURNS',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -189,6 +209,7 @@ describe('auction config — resolveConfig', () => {
 				NUM_KITTY: 2,
 				ALLOW_DISCARD: false,
 				ALLOW_HOLD: false,
+				MIN_BID: 25,
 				FINISH_RULE: 'FOUR_TURNS',
 				FIRST_LEAD: 'LEFT_OF_BIDDER'
 			}
@@ -198,6 +219,7 @@ describe('auction config — resolveConfig', () => {
 			NUM_KITTY: 2,
 			ALLOW_DISCARD: false,
 			ALLOW_HOLD: false,
+			MIN_BID: 25,
 			FINISH_RULE: 'FOUR_TURNS',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -221,6 +243,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 				NUM_KITTY: 3,
 				ALLOW_DISCARD: true,
 				ALLOW_HOLD: false,
+				MIN_BID: 20,
 				FINISH_RULE: 'FOUR_TURNS',
 				FIRST_LEAD: 'LEFT_OF_BIDDER'
 			}
@@ -250,6 +273,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -278,6 +302,7 @@ describe('auction config — normalizeAuctionConfig', () => {
 			NUM_KITTY: 3,
 			ALLOW_DISCARD: true,
 			ALLOW_HOLD: false,
+			MIN_BID: 15,
 			FINISH_RULE: 'POINTS_120',
 			FIRST_LEAD: 'LEFT_OF_BIDDER'
 		});
@@ -324,6 +349,22 @@ describe('auction config — normalizeAuctionConfig', () => {
 			custom: { USE_KITTY: true, ALLOW_DISCARD: false, FIRST_LEAD: 'SOMEONE' }
 		});
 		expect(rejected.custom.FIRST_LEAD).toBe('LEFT_OF_BIDDER');
+	});
+
+	it('keeps a valid minimum bid and rejects a bogus one (TODO-062)', () => {
+		const kept = normalizeAuctionConfig({
+			profile: 'Custom',
+			custom: { USE_KITTY: true, ALLOW_DISCARD: false, MIN_BID: 20 }
+		});
+		expect(kept.custom.MIN_BID).toBe(20);
+
+		// Not one of the four bid amounts, or the wrong type → default (15).
+		expect(
+			normalizeAuctionConfig({ profile: 'Custom', custom: { MIN_BID: 22 } }).custom.MIN_BID
+		).toBe(15);
+		expect(
+			normalizeAuctionConfig({ profile: 'Custom', custom: { MIN_BID: '20' } }).custom.MIN_BID
+		).toBe(15);
 	});
 
 	it('defaults custom entirely when it is missing', () => {

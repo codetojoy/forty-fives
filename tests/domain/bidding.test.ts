@@ -27,6 +27,15 @@ describe('legalBids', () => {
 		expect(legalBids(25)).toEqual([30]);
 		expect(legalBids(30)).toEqual([]);
 	});
+
+	it('respects a raised minimum bid (TODO-062)', () => {
+		// With a floor of 20, the opening 15 is off the table.
+		expect(legalBids(null, 20)).toEqual([20, 25, 30]);
+		expect(legalBids(null, 25)).toEqual([25, 30]);
+		// The floor and the strictly-higher rule combine (both must hold).
+		expect(legalBids(20, 20)).toEqual([25, 30]);
+		expect(legalBids(15, 20)).toEqual([20, 25, 30]);
+	});
 });
 
 describe('canRaise', () => {

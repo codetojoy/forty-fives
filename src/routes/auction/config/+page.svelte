@@ -77,7 +77,7 @@
 		custom = { ...custom, [code]: !custom[code] };
 	}
 
-	function setChoice<C extends 'FINISH_RULE' | 'FIRST_LEAD'>(
+	function setChoice<C extends 'MIN_BID' | 'FINISH_RULE' | 'FIRST_LEAD'>(
 		code: C,
 		value: AuctionSettingValues[C]
 	) {

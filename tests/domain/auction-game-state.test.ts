@@ -27,6 +27,7 @@ const NO_KITTY: AuctionSettingValues = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -35,6 +36,7 @@ const KITTY_DRAW: AuctionSettingValues = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: true,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -43,6 +45,7 @@ const NOKITTY_DRAW: AuctionSettingValues = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: true,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -54,6 +57,7 @@ const KITTY_NO_DRAW: AuctionSettingValues = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -63,6 +67,7 @@ const BIG_KITTY: AuctionSettingValues = {
 	NUM_KITTY: 5,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 };
@@ -116,6 +121,33 @@ describe('bidding', () => {
 		const g = startAuction(scheme, createRng(5), 0);
 		expect(() => placeBid(g, 2, 15)).toThrow();
 		expect(() => passBid(g, 0)).toThrow();
+	});
+
+	it('honours a raised minimum bid (MIN_BID, TODO-062)', () => {
+		const MIN_BID_20: AuctionSettingValues = {
+			USE_KITTY: true,
+			NUM_KITTY: 3,
+			ALLOW_DISCARD: false,
+			ALLOW_HOLD: false,
+			MIN_BID: 20,
+			FINISH_RULE: 'POINTS_120',
+			FIRST_LEAD: 'ELDEST'
+		};
+		// An opening 15 is below the floor and is rejected; 20 is legal.
+		let g = startAuction(scheme, createRng(7), 0, MIN_BID_20);
+		expect(() => placeBid(g, 1, 15)).toThrow();
+		g = placeBid(g, 1, 20);
+		expect(g.phase.kind).toBe('bidding');
+
+		// A dealer stuck with no bids is stuck at the configured minimum (20, not 15).
+		let s = startAuction(scheme, createRng(8), 0, MIN_BID_20);
+		s = passBid(s, 1);
+		s = passBid(s, 2);
+		s = passBid(s, 3);
+		s = passBid(s, 0);
+		expect(s.phase.kind).toBe('naming-trump');
+		expect(s.biddingSeat).toBe(0);
+		expect(s.bid).toBe(20);
 	});
 });
 
@@ -371,6 +403,7 @@ describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
+		MIN_BID: 15,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'ELDEST'
 	};
@@ -379,6 +412,7 @@ describe('first-trick leader (FIRST_LEAD, TODO-017)', () => {
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
+		MIN_BID: 15,
 		FINISH_RULE: 'POINTS_120',
 		FIRST_LEAD: 'LEFT_OF_BIDDER'
 	};
@@ -437,6 +471,7 @@ describe('FOUR_TURNS finish rule (TODO-018)', () => {
 		NUM_KITTY: 3,
 		ALLOW_DISCARD: false,
 		ALLOW_HOLD: true,
+		MIN_BID: 15,
 		FINISH_RULE: 'FOUR_TURNS',
 		FIRST_LEAD: 'ELDEST'
 	};

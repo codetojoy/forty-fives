@@ -132,7 +132,9 @@
 			: null
 	);
 	const myLegalBids = $derived(
-		game?.phase.kind === 'bidding' && humanToBid ? legalBids(game.phase.highBid) : []
+		game?.phase.kind === 'bidding' && humanToBid
+			? legalBids(game.phase.highBid, game.config.MIN_BID)
+			: []
 	);
 	/** The dealer's hold (ALLOW_HOLD, TODO-042): only ever offered to the human. */
 	const canHold = $derived(

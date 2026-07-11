@@ -51,6 +51,7 @@ const KITTY_NO_DRAW = {
 	NUM_KITTY: 3,
 	ALLOW_DISCARD: false,
 	ALLOW_HOLD: true,
+	MIN_BID: 15,
 	FINISH_RULE: 'POINTS_120',
 	FIRST_LEAD: 'ELDEST'
 } as const;
