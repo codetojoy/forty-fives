@@ -24,14 +24,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Ranking Reference — Forty-Fives</title>
-	<meta
-		name="description"
-		content="A quick reference for the Forty-Fives card rankings: the order of every suit, both as trump and off-trump."
-	/>
-</svelte:head>
-
 <main>
 	<BackLink href="{base}/trainer" label="Back to Trainer" />
 	<header>

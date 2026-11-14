@@ -3,6 +3,7 @@
 	import { dev } from '$app/environment';
 	import { base } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
+	import Seo from '$lib/ui/Seo.svelte';
 
 	let { children } = $props();
 
@@ -20,6 +21,9 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
+
+<!-- Per-route <title>, description, canonical, robots (TODO-063; text in seo.ts). -->
+<Seo />
 
 {@render children()}
 

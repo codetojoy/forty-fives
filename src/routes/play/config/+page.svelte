@@ -22,11 +22,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Play Settings — Forty-Fives</title>
-	<meta name="description" content="Display and interaction preferences for Forty-Fives." />
-</svelte:head>
-
 <main>
 	<BackLink href="{base}/play" label="Back to Play" />
 

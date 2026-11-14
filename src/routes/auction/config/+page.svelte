@@ -115,11 +115,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Auction Settings — Forty-Fives</title>
-	<meta name="description" content="Choose the rules profile for Auction Forty-Fives." />
-</svelte:head>
-
 <main>
 	<BackLink href="{base}/auction" label="Back to Auction" />
 

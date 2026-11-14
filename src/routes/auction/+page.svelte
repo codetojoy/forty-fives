@@ -484,21 +484,13 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Auction Forty-Fives</title>
-	<meta
-		name="description"
-		content="Play Auction Forty-Fives for four: bid, name trump, take the kitty, and play in partnership to 120."
-	/>
-</svelte:head>
-
 <main>
 	<BackLink href="{base}/" label="Home" />
 
 	{#if game === null}
 		<header>
 			<h1>Auction Forty-Fives</h1>
-			<p class="subtitle">Four players · partners · bid, name trump, take the kitty</p>
+			<p class="subtitle">Auction 45s · four players · partners · bid, name trump, take the kitty</p>
 		</header>
 		<section class="intro">
 			<div class="tagline">

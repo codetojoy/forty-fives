@@ -262,21 +262,13 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Play Forty-Fives</title>
-	<meta
-		name="description"
-		content="Play Forty-Fives head-to-head: five tricks a hand, five points a trick, first to 45 wins."
-	/>
-</svelte:head>
-
 <main>
 	<BackLink href="{base}/" label="Home" />
 
 	{#if game === null}
 		<header>
 			<h1>Play Forty-Fives</h1>
-			<p class="subtitle">Five tricks a hand · five points a trick · first to 45 wins</p>
+			<p class="subtitle">45s for two · five tricks a hand · first to 45 wins</p>
 		</header>
 		<section class="intro">
 			<div class="tagline">

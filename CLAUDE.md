@@ -66,6 +66,10 @@ The AI (`tests/ai/heuristic.test.ts`) is tested by property: it plays hundreds o
 
 SPEC §10's proposed structure is mapped onto SvelteKit: `src/domain/` → `src/lib/domain/`, `src/ai/` → `src/lib/ai/`, `src/ui/` → `src/lib/ui/` + `src/routes/` (`/` mode chooser; `/trainer` + `/trainer/reference`; `/play` and `/auction`, each with `config` and `stats` subpages; `/about`), scheme JSON under `src/lib/assets/`. Tests live in `tests/domain/` and `tests/ai/` (the `tests/**` include is wired into `vite.config.ts`). Svelte 5 **runes mode** is forced project-wide in `vite.config.ts`. The service worker precaches `prerendered` routes — keep that import in sync if routes are added.
 
+### SEO head tags (TODO-063)
+
+Routes do **not** write their own `<title>` or meta description. Every route's title, description, and `noindex` flag live in one table, `PAGE_SEO` in `src/lib/ui/seo.ts`, keyed by route id; `src/lib/ui/Seo.svelte`, mounted once in the root layout, renders them plus `<link rel="canonical">` (always the apex `https://45s.ca`, no trailing slash, built from the route id so a `BASE_PATH` build canonicalizes correctly). **A new route needs a `PAGE_SEO` entry** — a missing one throws during prerender, and `tests/ui/seo.test.ts` checks the table against `src/routes/` (one entry per route, titles ≤60 chars, indexed descriptions 120–160, no hand-written `<title>` left in route files). Settings, stats, and `/about` are `noindex, follow`. Each game page owns its own search phrase — `/play` is "Forty-Fives (45s)", `/auction` is "Auction Forty-Fives (Auction 45s)", home names both — so keep them from competing. Don't add `<meta name="keywords">` (ignored by Google) or analytics/verification tags (privacy).
+
 ## Constraints worth remembering
 
 - Accessibility is a hard requirement, not polish (SPEC §7): ≥48px tap targets (prefer 56+), large high-contrast card faces, no swipe-only gestures, respect OS font scaling.

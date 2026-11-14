@@ -1,6 +1,7 @@
 <!-- The stats-page chrome shared by /play/stats and /auction/stats (TODO-045):
      back link, header, grouped stat rows, and the armed reset button. The
-     routes keep their own <svelte:head>, persistence wiring, and reset logic,
+     routes keep their own persistence wiring and reset logic (head tags come
+     from the shared <Seo> in the root layout, TODO-063),
      and describe everything else as data. -->
 <script module lang="ts">
 	export interface StatRow {

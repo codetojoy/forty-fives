@@ -7,11 +7,6 @@
 	const commit = __GIT_COMMIT__;
 </script>
 
-<svelte:head>
-	<title>About — Forty-Fives</title>
-	<meta name="description" content="Build information for the Forty-Fives app." />
-</svelte:head>
-
 <main>
 	<header>
 		<h1>About</h1>

@@ -33,11 +33,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Auction Stats — Forty-Fives</title>
-	<meta name="description" content="Your lifetime tallies for Auction Forty-Fives." />
-</svelte:head>
-
 <StatsPage
 	title="Auction Stats"
 	subtitle="Lifetime totals for your team. Stored only on this device."

@@ -2,19 +2,16 @@
 	import { base } from '$app/paths';
 </script>
 
-<svelte:head>
-	<title>Forty-Fives</title>
-	<meta
-		name="description"
-		content="Play and learn Forty-Fives, the Maritime Canadian trick-taking card game. Free, open source, works offline."
-	/>
-</svelte:head>
-
 <main>
 	<header>
 		<h1>Forty-Fives</h1>
 		<p class="subtitle">For Maritimers!</p>
 	</header>
+
+	<p class="intro">
+		Play Forty-Fives (45s) head-to-head or Auction 45s with a partner — and learn the
+		tricky trump rankings.
+	</p>
 
 	<nav class="modes" aria-label="Choose a mode">
 		<a class="mode" href="{base}/trainer">
@@ -82,6 +79,15 @@
 		font-style: italic;
 		font-size: 1.15rem;
 		color: var(--muted);
+	}
+
+	/* Names both games in visible text, matching the page title (TODO-063). */
+	.intro {
+		margin: 0 0 1.5rem;
+		text-align: center;
+		font-size: 1.05rem;
+		line-height: 1.5;
+		color: var(--ink);
 	}
 
 	.modes {

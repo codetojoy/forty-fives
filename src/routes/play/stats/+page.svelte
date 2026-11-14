@@ -33,11 +33,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Stats — Forty-Fives</title>
-	<meta name="description" content="Your lifetime tallies for Forty-Fives." />
-</svelte:head>
-
 <StatsPage
 	title="Your Stats"
 	subtitle="Lifetime totals. Stored only on this device."

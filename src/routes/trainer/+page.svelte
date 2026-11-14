@@ -78,14 +78,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Forty-Fives Ranking Trainer</title>
-	<meta
-		name="description"
-		content="Learn the unusual card rankings of Forty-Fives, the Maritime Canadian trick-taking game."
-	/>
-</svelte:head>
-
 <main>
 	<BackLink href="{base}/" label="Home" />
 	<header>

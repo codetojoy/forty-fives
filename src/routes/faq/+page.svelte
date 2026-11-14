@@ -40,11 +40,6 @@
 	];
 </script>
 
-<svelte:head>
-	<title>FAQ — Forty-Fives</title>
-	<meta name="description" content="Frequently asked questions about the Forty-Fives app." />
-</svelte:head>
-
 <main>
 	<header>
 		<h1>FAQ</h1>

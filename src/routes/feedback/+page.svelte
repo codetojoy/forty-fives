@@ -7,11 +7,6 @@
 	const issuesUrl = 'https://github.com/codetojoy/forty-fives/issues';
 </script>
 
-<svelte:head>
-	<title>Feedback — Forty-Fives</title>
-	<meta name="description" content="Send feedback about the Forty-Fives app." />
-</svelte:head>
-
 <main>
 	<header>
 		<h1>Feedback</h1>
