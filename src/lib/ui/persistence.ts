@@ -81,6 +81,12 @@ export interface GameSettings {
 	highlightLegal: boolean;
 	/** Tap once to raise, tap again to play (SPEC §7, default on). */
 	confirmPlay: boolean;
+	/**
+	 * Draw the 1v1 table as a 3D scene (experimental, doc/BRAINSTORM-3D.md).
+	 * Optional so older saves and the auction settings need no migration;
+	 * absent means on.
+	 */
+	table3d?: boolean;
 }
 
 export interface SavedGame {
@@ -98,7 +104,7 @@ function gameDefaults(): SavedGame {
 		game: null,
 		// Defaults: highlighting on, confirm-before-play off (TODO-027). These prefs
 		// are now edited on /play/config, not in the game footer.
-		settings: { highlightLegal: true, confirmPlay: false },
+		settings: { highlightLegal: true, confirmPlay: false, table3d: true },
 		opponentName: 'Margaret',
 		finishedAt: null
 	};
@@ -116,7 +122,8 @@ export function loadGame(): SavedGame {
 				game: isPlausibleGameState(parsed.game) ? parsed.game : null,
 				settings: {
 					highlightLegal: parsed.settings?.highlightLegal ?? d.settings.highlightLegal,
-					confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay
+					confirmPlay: parsed.settings?.confirmPlay ?? d.settings.confirmPlay,
+					table3d: parsed.settings?.table3d ?? d.settings.table3d
 				},
 				opponentName:
 					typeof parsed.opponentName === 'string' && parsed.opponentName
@@ -287,6 +294,7 @@ export function loadAuctionGame(): SavedAuctionGame {
 					alwaysExchangeNonTrump:
 						parsed.settings?.alwaysExchangeNonTrump ?? d.settings.alwaysExchangeNonTrump,
 					hidePlayers: parsed.settings?.hidePlayers ?? d.settings.hidePlayers,
+					table3d: parsed.settings?.table3d ?? true,
 					handOrder: parsed.settings?.handOrder ?? d.settings.handOrder
 				},
 				names,

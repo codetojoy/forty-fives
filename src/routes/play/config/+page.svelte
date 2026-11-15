@@ -12,7 +12,9 @@
 	let saved = $state<GameSettings>({ ...savedGame.settings });
 
 	const dirty = $derived(
-		prefs.highlightLegal !== saved.highlightLegal || prefs.confirmPlay !== saved.confirmPlay
+		prefs.highlightLegal !== saved.highlightLegal ||
+			prefs.confirmPlay !== saved.confirmPlay ||
+			prefs.table3d !== saved.table3d
 	);
 
 	function save() {
@@ -59,6 +61,17 @@
 						bind:checked={prefs.confirmPlay}
 					/>
 					<span class="toggle-value">{prefs.confirmPlay ? 'On' : 'Off'}</span>
+				</label>
+			</div>
+			<div class="setting">
+				<span class="setting-desc">3D table (experimental)</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="3D table (experimental)"
+						bind:checked={prefs.table3d}
+					/>
+					<span class="toggle-value">{prefs.table3d ? 'On' : 'Off'}</span>
 				</label>
 			</div>
 		</fieldset>

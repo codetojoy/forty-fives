@@ -31,6 +31,8 @@
 	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import TrumpRankingHelp from '$lib/ui/TrumpRankingHelp.svelte';
+	import Table3D from '$lib/ui/table3d/Table3D.svelte';
+	import { layoutTable, tableArrangement, tableViewFromGame } from '$lib/ui/table3d/layout.js';
 	import { PERSONA_AVATARS } from '$lib/ui/personas.js';
 	import { loadGame, saveGame, loadPlayStats, savePlayStats } from '$lib/ui/persistence.js';
 
@@ -55,6 +57,13 @@
 	let message = $state('');
 	let lastTrick = $state<{ trick: CompletedTrick; explanation: string } | null>(null);
 	let aiTimer: ReturnType<typeof setTimeout> | undefined;
+
+	// Experimental 3D table (doc/BRAINSTORM-3D.md). On by default on this branch,
+	// switchable on /play/config; if WebGL can't start we quietly use the 2D table.
+	let table3dFailed = $state(false);
+	const use3d = $derived(settings.table3d !== false && !table3dFailed);
+	// The hand button that has keyboard focus, so the 3D scene can show it.
+	let focusedCard = $state<Card | null>(null);
 
 	const humanTurn = $derived(
 		game !== null &&
@@ -240,6 +249,41 @@
 		return !analysis.legal.some((c) => sameCard(c, card));
 	}
 
+	const dimmedCards = $derived(game ? game.hands[HUMAN].filter(isDimmed) : []);
+
+	/** Card placements for the 3D table, for the wide or compact arrangement. */
+	const tableLayout = $derived.by(() => {
+		if (!game) return () => [];
+		const view = tableViewFromGame(game, {
+			humanSeat: HUMAN,
+			shownTrick: lastTrick ? lastTrick.trick : null,
+			pickable: humanTurn || robPicking,
+			dimmed: dimmedCards,
+			selected,
+			focused: focusedCard
+		});
+		return (compact: boolean) => layoutTable(view, { compact });
+	});
+
+	/** Text alternative for the 3D picture: what is on the table right now. */
+	const tableLabel = $derived.by(() => {
+		if (!game) return '';
+		const parts = [`Card table. ${opponentName} holds ${game.hands[AI].length} cards.`];
+		parts.push(
+			game.turnUpTaken ? 'The turn-up was robbed.' : `Turn-up: ${cardLabel(game.turnUp)}.`
+		);
+		if (shownPlays.length > 0) {
+			parts.push(
+				'Trick: ' +
+					shownPlays
+						.map((p, i) => `${seatName(p.seat)} ${i === 0 ? 'led' : 'played'} ${cardLabel(p.card)}`)
+						.join(', ') +
+					'.'
+			);
+		}
+		return parts.join(' ');
+	});
+
 	/** The two cards shown in the trick area: the live trick, or the just-finished one. */
 	const shownPlays = $derived(
 		lastTrick ? lastTrick.trick.plays : (game?.currentTrick ?? [])
@@ -310,6 +354,19 @@
 			</div>
 		</header>
 
+		{#if use3d}
+			{#key opponentName}
+				<Table3D
+					layout={tableLayout}
+					arrangement={tableArrangement}
+					portraits={[{ name: opponentName, avatarUrl: PERSONA_AVATARS[opponentName] }]}
+					activePortrait={aiTurn ? 0 : null}
+					label={tableLabel}
+					onpick={tapCard}
+					onerror={() => (table3dFailed = true)}
+				/>
+			{/key}
+		{:else}
 		<section class="opponent" aria-label="{opponentName}'s side">
 			<div class="opponent-row">
 				{#if PERSONA_AVATARS[opponentName]}
@@ -332,12 +389,13 @@
 				</div>
 			</div>
 		</section>
+		{/if}
 
-		<section class="trick-area" aria-label="Current trick">
+		<section class="trick-area" class:compact={use3d} aria-label="Current trick">
 			{#if shownPlays.length === 0}
 				<p class="trick-placeholder">{turnPrompt}</p>
 			{:else}
-				<div class="trick-cards" style="--card-width: clamp(96px, 26vw, 140px)">
+				<div class="trick-cards" class:visually-hidden={use3d} style="--card-width: clamp(96px, 26vw, 140px)">
 					{#each shownPlays as play (play.seat)}
 						<PlayingCard
 							card={play.card}
@@ -443,7 +501,7 @@
 
 		{#if game.hands[HUMAN].length > 0}
 			<section class="your-hand" aria-label="Your hand">
-				<h2 class="hand-heading">
+				<h2 class="hand-heading" class:visually-hidden={use3d}>
 					Your hand
 					{#if game.trumpSuit}
 						<span class="hand-trump" style="color: {trumpColor}">
@@ -451,15 +509,23 @@
 						</span>
 					{/if}
 				</h2>
-				<div class="hand-cards" style="--card-width: clamp(88px, 18vw, 120px)">
+				<!-- With the 3D table the hand is drawn in the scene; these stay as the
+				     real, focusable buttons (visually hidden) for keyboard and screen readers. -->
+				<div class="hand-cards" class:visually-hidden={use3d} style="--card-width: clamp(88px, 18vw, 120px)">
 					{#each game.hands[HUMAN] as card (cardLabel(card))}
-						<PlayingCard
-							{card}
-							onpick={() => tapCard(card)}
-							disabled={!humanTurn && !robPicking}
-							selected={selected !== null && sameCard(selected, card)}
-							dimmed={isDimmed(card)}
-						/>
+						<span
+							class="hand-slot"
+							onfocusin={() => (focusedCard = card)}
+							onfocusout={() => (focusedCard = null)}
+						>
+							<PlayingCard
+								{card}
+								onpick={() => tapCard(card)}
+								disabled={!humanTurn && !robPicking}
+								selected={selected !== null && sameCard(selected, card)}
+								dimmed={isDimmed(card)}
+							/>
+						</span>
 					{/each}
 				</div>
 				{#if settings.confirmPlay && humanTurn}
@@ -692,6 +758,17 @@
 		border: 1px solid var(--rule);
 		background: rgba(61, 58, 53, 0.04);
 		text-align: center;
+	}
+
+	/* 3D table: the cards are in the scene, so this is just the prompt/verdict. */
+	.trick-area.compact {
+		min-height: 3.5rem;
+		margin: 0.75rem 0;
+		padding: 0.75rem;
+	}
+
+	.hand-slot {
+		display: contents;
 	}
 
 	.trick-cards {

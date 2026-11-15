@@ -59,6 +59,7 @@
 			prefs.confirmPlay !== saved.prefs.confirmPlay ||
 			prefs.alwaysExchangeNonTrump !== saved.prefs.alwaysExchangeNonTrump ||
 			prefs.hidePlayers !== saved.prefs.hidePlayers ||
+			prefs.table3d !== saved.prefs.table3d ||
 			prefs.handOrder !== saved.prefs.handOrder ||
 			names.some((n, seat) => n !== saved.names[seat])
 	);
@@ -292,6 +293,17 @@
 						bind:checked={prefs.hidePlayers}
 					/>
 					<span class="toggle-value">{prefs.hidePlayers ? 'On' : 'Off'}</span>
+				</label>
+			</div>
+			<div class="setting">
+				<span class="setting-desc">3D table (experimental)</span>
+				<label class="toggle">
+					<input
+						type="checkbox"
+						aria-label="3D table (experimental)"
+						bind:checked={prefs.table3d}
+					/>
+					<span class="toggle-value">{prefs.table3d ? 'On' : 'Off'}</span>
 				</label>
 			</div>
 			<div class="setting">

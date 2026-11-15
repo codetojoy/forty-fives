@@ -46,6 +46,14 @@
 	import PlayingCard from '$lib/ui/PlayingCard.svelte';
 	import HelpDisclosure from '$lib/ui/HelpDisclosure.svelte';
 	import TrumpRankingHelp from '$lib/ui/TrumpRankingHelp.svelte';
+	import Table3D from '$lib/ui/table3d/Table3D.svelte';
+	import {
+		AUCTION_PORTRAIT_SIDES,
+		auctionArrangement,
+		auctionTableView,
+		layoutAuctionTable,
+		sideOf
+	} from '$lib/ui/table3d/auction-layout.js';
 	import { PERSONA_AVATARS } from '$lib/ui/personas.js';
 	import {
 		loadAuctionGame,
@@ -83,6 +91,19 @@
 	let message = $state('');
 	let lastTrick = $state<{ plays: { seat: number; card: Card }[]; winner: number } | null>(null);
 	let aiTimer: ReturnType<typeof setTimeout> | undefined;
+
+	// Experimental 3D table (doc/BRAINSTORM-3D.md). On by default on this branch,
+	// switchable on /auction/config; if WebGL can't start we quietly use the 2D table.
+	let table3dFailed = $state(false);
+	const use3d = $derived(settings.table3d !== false && !table3dFailed);
+	// The hand button that has keyboard focus, so the 3D scene can show it.
+	let focusedCard = $state<Card | null>(null);
+	/** Seats of the three portraits, in the order the 3D scene is given them. */
+	const PORTRAIT_SEATS = [1, 2, 3].sort(
+		(a, b) =>
+			AUCTION_PORTRAIT_SIDES.indexOf(sideOf(a, HUMAN_SEAT)) -
+			AUCTION_PORTRAIT_SIDES.indexOf(sideOf(b, HUMAN_SEAT))
+	);
 
 	function name(seat: number): string {
 		return names[seat] ?? `Seat ${seat}`;
@@ -434,6 +455,64 @@
 	/** The cards shown in the trick area: the live trick, or the just-finished one. */
 	const shownPlays = $derived(lastTrick ? lastTrick.plays : (game?.currentTrick ?? []));
 
+	/** Card placements for the 3D table, for the wide or compact arrangement. */
+	const tableLayout = $derived.by(() => {
+		if (!game) return () => [];
+		const hand = displayHand;
+		const view = auctionTableView(game, {
+			humanSeat: HUMAN_SEAT,
+			displayHand: hand,
+			shownTrick: lastTrick,
+			pickable: humanToPlay || humanToDiscard || drawSelectable,
+			dimmed: hand.filter(isDimmed),
+			raised: hand.filter(
+				(c) => isSelected(c) || (focusedCard !== null && sameCard(focusedCard, c))
+			)
+		});
+		return (compact: boolean) => layoutAuctionTable(view, { compact });
+	});
+
+	/** The other players as the 3D scene draws them; your partner is ringed green. */
+	const tablePortraits = $derived(
+		PORTRAIT_SEATS.map((seat) => ({
+			name: name(seat),
+			avatarUrl: AVATARS[seat],
+			accent: teamOf(seat) === teamOf(HUMAN_SEAT) ? '#3f8f63' : undefined
+		}))
+	);
+
+	/** Which portrait (if any) the table is waiting on. */
+	const activePortrait = $derived.by(() => {
+		if (!game || lastTrick || game.phase.kind === 'hand-over') return null;
+		const seat = actor(game);
+		const i = seat === null ? -1 : PORTRAIT_SEATS.indexOf(seat);
+		return i >= 0 ? i : null;
+	});
+
+	/** Text alternative for the 3D picture: what is on the table right now. */
+	const tableLabel = $derived.by(() => {
+		if (!game) return '';
+		const g = game;
+		const parts = [
+			'Card table. ' +
+				[2, 1, 3]
+					.map((seat) => `${name(seat)} (${role(seat).toLowerCase()}) holds ${g.hands[seat].length}`)
+					.join(', ') +
+				'.'
+		];
+		if (g.kitty.length > 0) parts.push(`Kitty: ${g.kitty.length} cards, face down.`);
+		if (shownPlays.length > 0) {
+			parts.push(
+				'Trick: ' +
+					shownPlays
+						.map((p, i) => `${name(p.seat)} ${i === 0 ? 'led' : 'played'} ${cardLabel(p.card)}`)
+						.join(', ') +
+					'.'
+			);
+		}
+		return parts.join(' ');
+	});
+
 	/** Per-seat bidding status line. */
 	function bidStatus(seat: number): string {
 		if (!game || game.phase.kind !== 'bidding') return '';
@@ -542,14 +621,28 @@
 				{/if}
 				· {name(game.dealer)} dealt
 			</div>
-			{#if settings.hidePlayers && game.phase.kind === 'bidding'}
+			{#if (settings.hidePlayers || use3d) && game.phase.kind === 'bidding'}
 				<!-- Stand-in for the hidden seat panels' per-seat bid status (TODO-048). -->
 				<div class="bid-summary" aria-label="Bidding status">{bidSummary}</div>
 			{/if}
 		</header>
 
-		<div class="table-layout" class:players-hidden={settings.hidePlayers}>
-			{#if !settings.hidePlayers}
+		{#if use3d}
+			{#key names.join('|')}
+				<Table3D
+					layout={tableLayout}
+					arrangement={auctionArrangement}
+					portraits={tablePortraits}
+					{activePortrait}
+					label={tableLabel}
+					onpick={tapCard}
+					onerror={() => (table3dFailed = true)}
+				/>
+			{/key}
+		{/if}
+
+		<div class="table-layout" class:players-hidden={settings.hidePlayers} class:scene3d={use3d}>
+			{#if !settings.hidePlayers && !use3d}
 			<section class="seats" aria-label="The other players">
 			{#each [2, 1, 3] as seat (seat)}
 				<div
@@ -587,7 +680,7 @@
 			{#if shownPlays.length === 0}
 				<p class="trick-placeholder">{turnPrompt}</p>
 			{:else}
-				<div class="trick-cards">
+				<div class="trick-cards" class:visually-hidden={use3d}>
 					{#each shownPlays as play (play.seat)}
 						<PlayingCard
 							card={play.card}
@@ -769,7 +862,7 @@
 
 		<section class="your-hand" aria-label="Your hand">
 			{#if game.hands[HUMAN_SEAT].length > 0}
-				<h2 class="hand-heading">
+				<h2 class="hand-heading" class:visually-hidden={use3d}>
 					Your hand{humanToDiscard ? ` — tap ${kittySize} to discard` : ''}{drawSelectable
 						? ' — tap to exchange'
 						: ''}
@@ -779,15 +872,23 @@
 						</span>
 					{/if}
 				</h2>
-				<div class="hand-cards" style="--card-width: clamp(72px, 16vw, 104px)">
+				<!-- With the 3D table the hand is drawn in the scene; these stay as the
+				     real, focusable buttons (visually hidden) for keyboard and screen readers. -->
+				<div class="hand-cards" class:visually-hidden={use3d} style="--card-width: clamp(72px, 16vw, 104px)">
 					{#each displayHand as card (cardLabel(card))}
-						<PlayingCard
-							{card}
-							onpick={() => tapCard(card)}
-							disabled={!humanToPlay && !humanToDiscard && !drawSelectable}
-							selected={isSelected(card)}
-							dimmed={isDimmed(card)}
-						/>
+						<span
+							class="hand-slot"
+							onfocusin={() => (focusedCard = card)}
+							onfocusout={() => (focusedCard = null)}
+						>
+							<PlayingCard
+								{card}
+								onpick={() => tapCard(card)}
+								disabled={!humanToPlay && !humanToDiscard && !drawSelectable}
+								selected={isSelected(card)}
+								dimmed={isDimmed(card)}
+							/>
+						</span>
 					{/each}
 				</div>
 				{#if settings.confirmPlay && humanToPlay}
@@ -1338,5 +1439,32 @@
 		.panel-slot {
 			grid-area: panels;
 		}
+
+		/* 3D table: the seats, trick and hand are in the scene, so what is left
+		   (prompt, messages, action panels) simply stacks beneath it. */
+		.table-layout.scene3d {
+			display: block;
+		}
+		.table-layout.scene3d .trick-area {
+			height: auto;
+			margin: 0.75rem 0;
+		}
+	}
+
+	.table-layout.scene3d .trick-area {
+		min-height: 3.5rem;
+		margin: 0.75rem 0;
+		padding: 0.75rem;
+	}
+
+	.table-layout.scene3d .your-hand {
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.hand-slot {
+		display: contents;
 	}
 </style>
