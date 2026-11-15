@@ -1,5 +1,5 @@
 
-### TODO-063 [COMPLETE: items 1, 3, 5, 7]
+### TODO-063 [COMPLETE: items 1, 3, 4, 5, 7]
 
 Improve SEO for Google using `<meta>` tags (and the small amount of adjacent
 head/static-file work that makes the meta tags actually useful).
@@ -222,7 +222,8 @@ Suggested order if you only do part of this: **1 (canonical) → 7 (titles) → 
 
 ### Implementation notes (done: items 1, 3, 5, 7)
 
-Items 2 (Open Graph), 4 (sitemap), 6 (JSON-LD), and 8 (`lang`) were not done.
+Items 2 (Open Graph), 6 (JSON-LD), and 8 (`lang`) were not done. Item 4
+(sitemap) was added in a follow-up — see the end of these notes.
 
 Answered open questions (from `doc/BRAINSTORM-SEO.md` §0/§4, verified against
 production): canonical form is `https://45s.ca/faq` (no trailing slash; `/faq/`
@@ -264,7 +265,18 @@ differently?" text is real content and recruits regional players).
   This does not adopt `doc/BRAINSTORM-branding.md`'s "45s" wordmark — the `<h1>`
   stays "Forty-Fives".
 
+* **Sitemap (item 4, follow-up).** Generated, not hand-written: `sitemapXml()`
+  in `seo.ts` emits every indexed `PAGE_SEO` route by canonical URL (the five
+  `noindex` pages are excluded — listing them would contradict their robots
+  tag), and `src/routes/sitemap.xml/+server.ts` prerenders it to
+  `build/sitemap.xml`. `static/robots.txt` gained the `Sitemap:` line. No
+  `<lastmod>` (no honest per-page date). Because it derives from the table, a
+  new route needs no sitemap upkeep. Submit `https://45s.ca/sitemap.xml` in
+  Search Console → Sitemaps after deploying.
+
 ### Files
+
+* `src/routes/sitemap.xml/+server.ts` (new, item 4), `static/robots.txt` (`Sitemap:` line)
 
 * `src/lib/ui/seo.ts` (new: `SITE_URL`, `PAGE_SEO`, `pageTitle`, `canonicalUrl`)
 * `src/lib/ui/Seo.svelte` (new: head tags for the current route)
