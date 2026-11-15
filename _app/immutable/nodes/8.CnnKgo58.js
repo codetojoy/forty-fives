@@ -1,4 +1,4 @@
-import{C as e,L as t,T as n,U as r,V as i,tt as a,u as o}from"../chunks/DwKVMzQ2.js";import{s}from"../chunks/CGo8vIX9.js";import"../chunks/xihTtKlq.js";var c=n(`<main class="svelte-c3f7w"><header class="svelte-c3f7w"><h1 class="svelte-c3f7w">Feedback</h1> <p class="subtitle svelte-c3f7w">Tell us what you think</p></header> <p class="lead svelte-c3f7w">This app is made by a fellow player, and your notes genuinely shape it. Found
+import{C as e,L as t,T as n,U as r,V as i,tt as a,u as o}from"../chunks/DwKVMzQ2.js";import{s}from"../chunks/DZNKS7CM.js";import"../chunks/xihTtKlq.js";var c=n(`<main class="svelte-c3f7w"><header class="svelte-c3f7w"><h1 class="svelte-c3f7w">Feedback</h1> <p class="subtitle svelte-c3f7w">Tell us what you think</p></header> <p class="lead svelte-c3f7w">This app is made by a fellow player, and your notes genuinely shape it. Found
 		a bug, have a suggestion, or just want to say hello? We'd love to hear from
 		you.</p> <p class="lead svelte-c3f7w">Most of all: <strong>if your table plays Forty-Fives differently</strong> —
 		different trumps, a different kitty, its own scoring — please tell us how, and
